@@ -1,13 +1,18 @@
 from sqlalchemy.orm import Session
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioCreate
+from app.core.security import get_password_hash
 
 def criar_usuario(db: Session, usuario: UsuarioCreate):
+   print(usuario.senha)
+   print(len(usuario.senha))
+   senha_hash = get_password_hash(usuario.senha)
    try:
         novo_usuario = Usuario(
             nome = usuario.nome,
             email_login = usuario.email_login,
-            senha = usuario.senha
+            senha = senha_hash,
+            funcao = "user"
             )
         db.add(novo_usuario)
         db.commit()

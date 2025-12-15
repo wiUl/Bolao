@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 
+from app.core.roles import UserRole
+
 class UsuarioCreate(BaseModel):
     nome: str
     email_login: str
@@ -16,6 +18,7 @@ class UsuarioResponse(BaseModel):
     id: int
     nome: str
     email_login: str
+    funcao: UserRole
     
     
     class Config:
