@@ -14,4 +14,11 @@ Sessionlocal = sessionmaker(
     bind = engine
 )
 
+def get_db():
+    db = Sessionlocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 Base = declarative_base()
