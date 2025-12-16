@@ -1,1 +1,1 @@
-from app.models.usuario import Usuario
+from app.models import usuario, liga, liga_membro, jogo, palpite  
