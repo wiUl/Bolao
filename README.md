@@ -1,15 +1,55 @@
-# Bolão do Brasileirão
 
-Sistema web para gerenciamento de bolão do Campeonato Brasileiro.
+---
 
-## Funcionalidades (MVP)
-- Cadastro e login de usuários
+## 🛠️ Tecnologias Utilizadas
+
+### Backend
+- **Python**
+- **FastAPI**
+- **SQLAlchemy**
+- **Pydantic**
+- **JWT (OAuth2 Password Flow)**
+- **Passlib + bcrypt**
+
+### Banco de Dados
+- **SQLite** (ambiente de desenvolvimento)
+
+
+
+---
+
+## ⚙️ Funcionalidades em Desenvolvimento
+
 - Cadastro de jogos e rodadas
 - Envio de palpites
 - Cálculo automático de pontuação
-- Ranking dos participantes
+- Ranking dos participantes por liga
+- Papéis avançados (ex: criador de liga, moderador)
+- Migrações com Alembic
+- Frontend web
 
-## Tecnologias (planejadas)
-- Backend: a definir
-- Frontend: a definir
-- Banco de dados: a definir
+---
+
+## 📍 Próximos Passos Planejados
+
+- Modelagem de jogos e rodadas
+- Sistema de palpites
+- Cálculo de pontuação
+- Ranking por liga e temporada
+- Permissões avançadas dentro da liga
+- Deploy
+
+---
+
+## 📄 Status do Projeto
+
+🚧 **Em desenvolvimento ativo**
+
+Este projeto está sendo desenvolvido com foco em aprendizado, boas práticas e escalabilidade.
+
+---
+
+## ✍️ Autor
+
+**Willian Gomes**  
+Projeto pessoal para estudo e evolução em desenvolvimento backend.
