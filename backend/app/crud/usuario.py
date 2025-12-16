@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.usuario import Usuario
-from app.schemas.usuario import UsuarioCreate
+from app.schemas.usuario import UsuarioCreate, UsuarioMeUpdate
 from app.core.security import get_password_hash
 
 def criar_usuario(db: Session, usuario: UsuarioCreate):
@@ -37,6 +37,22 @@ def atualizar_usuario(db: Session, usuario_id: int, dados):
         return None
     
     for campo, valor in dados.model_dump(exclude_unset=True).items():
+        setattr(usuario, campo, valor)
+
+    db.commit()
+    db.refresh(usuario)
+
+    return usuario
+
+def atualizar_me_usuario(db: Session, usuario: Usuario, dados: UsuarioMeUpdate):
+    payload = dados.model_dump(exclude_unset=True)
+
+    if "senha" in payload and payload['senha']:
+        payload['senha'] = get_password_hash(payload['senha'])
+    else:
+        payload.pop("senha", None)
+
+    for campo, valor in payload.items():
         setattr(usuario, campo, valor)
 
     db.commit()

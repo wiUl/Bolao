@@ -3,15 +3,17 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.schemas.usuario import UsuarioCreate, UsuarioResponse, UsuarioUpdate
-from app.crud.usuario import criar_usuario, listar_usuarios, buscar_usuario_por_id, atualizar_usuario, deletar_usuario
+from app.schemas.usuario import UsuarioCreate, UsuarioResponse, UsuarioUpdate, UsuarioMeUpdate
+from app.crud.usuario import criar_usuario, listar_usuarios, buscar_usuario_por_id, atualizar_usuario, deletar_usuario, atualizar_me_usuario
 from app.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.usuario import Usuario
+from app.core.permissions import require_admin
 
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
+# region Rotas públicas
 @router.post("/", response_model=UsuarioResponse)
 
 def cadastrar(
@@ -28,15 +30,39 @@ def cadastrar(
             status_code=400,
             detail="Email ou username já cadastrado!"
         )
-    
+#endregion
+
+# region Rotas Usuário comum
+@router.get("/me", response_model=UsuarioResponse)
+
+def me(usuario_logado: Usuario = Depends(get_current_user)):
+    return usuario_logado
+
+@router.put("/me", response_model=UsuarioResponse)
+
+def atualizar_me(dados: UsuarioMeUpdate, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+    return atualizar_me_usuario(db, usuario_logado, dados)
+
+@router.delete("/me")
+
+def deletar_me(db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+    sucesso = deletar_usuario(db, usuario_logado.id)
+    if not sucesso:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return {"message": "Sua conta foi deletada com sucesso!"}
+
+#endregion
+
+
+# region Rotas Admin    
 @router.get("/", response_model=List[UsuarioResponse])
 
-def listar(db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+def listar(db: Session = Depends(get_db), admin = Depends(require_admin)):
     return listar_usuarios(db)
 
 @router.get("/{usuario_id}", response_model=UsuarioResponse)
 
-def buscar(usuario_id: int, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+def buscar(usuario_id: int, db: Session = Depends(get_db), admin = Depends(require_admin)):
     usuario = buscar_usuario_por_id(db, usuario_id)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -44,7 +70,7 @@ def buscar(usuario_id: int, db: Session = Depends(get_db), usuario_logado: Usuar
 
 @router.put("/{usuario_id}", response_model=UsuarioResponse)
 
-def atualizar(usuario_id: int, dados: UsuarioUpdate, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+def atualizar(usuario_id: int, dados: UsuarioUpdate, db: Session = Depends(get_db), admin = Depends(require_admin)):
     usuario = atualizar_usuario(db, usuario_id, dados)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -52,11 +78,17 @@ def atualizar(usuario_id: int, dados: UsuarioUpdate, db: Session = Depends(get_d
 
 @router.delete("/{usuario_id}")
 
-def deletar(usuario_id: int, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+def deletar(usuario_id: int, db: Session = Depends(get_db), admin = Depends(require_admin)):
     sucesso = deletar_usuario(db, usuario_id)
     if not sucesso:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     
     return {"message" : f"O usuário {usuario_id} foi deletado com sucesso."}
+
+#endregion
+
+
+
+
 
     

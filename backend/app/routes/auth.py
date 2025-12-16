@@ -22,7 +22,10 @@ def login(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login ou senha incorretos")
     
     token =  create_access_token(
-        data={"sub": str(usuario.id)}
+        data={
+            "sub": str(usuario.id),
+            "funcao": usuario.funcao
+              }
     )
 
     return {"access_token": token, "token_type": "bearer"}
