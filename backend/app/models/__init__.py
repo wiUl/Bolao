@@ -1,1 +1,8 @@
-from app.models import usuario, liga, liga_membro, jogo, palpite  
+from app.models.usuario import Usuario
+from app.models.liga import Liga
+from app.models.liga_membro import LigaMembro
+from app.models.time import Time
+from app.models.competicao import Competicao
+from app.models.temporada import Temporada
+from app.models.jogo import Jogo
+from app.models.palpite import Palpite
