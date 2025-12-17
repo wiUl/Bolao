@@ -4,8 +4,6 @@ from app.schemas.usuario import UsuarioCreate, UsuarioMeUpdate
 from app.core.security import get_password_hash
 
 def criar_usuario(db: Session, usuario: UsuarioCreate):
-   print(usuario.senha)
-   print(len(usuario.senha))
    senha_hash = get_password_hash(usuario.senha)
    try:
         novo_usuario = Usuario(
