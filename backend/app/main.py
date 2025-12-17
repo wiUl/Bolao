@@ -16,6 +16,7 @@ app.include_router(auth.router)
 app.include_router(liga.router)
 app.include_router(liga_membro.router)
 
+
 @app.get("/")
 def root():
     return {"message": "API do Bolão do Brasileirão está rodando!"}

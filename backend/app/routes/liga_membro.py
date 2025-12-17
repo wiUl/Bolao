@@ -6,10 +6,12 @@ from app.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.permissions import require_admin, require_liga_roles
 from app.models.liga_membro import LigaMembro
-from app.schemas.liga_membro import LigaMembroComUsuarioResponse, LigaMembroResponse, LigaMembroUpdate
+from app.schemas.liga_membro import LigaMembroComUsuarioResponse, LigaMembroResponse, LigaMembroUpdate, SairLiga
 from app.core.liga_roles import LigaRole
-from app.crud.liga_membro import atualizar_papel_membro, remover_membro_liga
+from app.crud.liga_membro import atualizar_papel_membro, listar_membros_liga, remover_membro_liga
 from app.models.usuario import Usuario
+from app.schemas.usuario import UsuarioResponse
+from app.services.liga_service import transferir_posse_liga
 
 router = APIRouter(prefix="/membro_ligas", tags=["Membro de Liga"])
 
@@ -57,7 +59,7 @@ def listar_membros(
     db: Session = Depends(get_db),
     papel: str = Depends(require_liga_roles(roles=[LigaRole.dono, LigaRole.admin_liga, LigaRole.membro])),
 ):
-    return listar_membros(db, liga_id)
+    return listar_membros_liga(db, liga_id)
 
 
 @router.delete("/{liga_id}/membros/{usuario_id}", status_code=204)
@@ -93,9 +95,14 @@ def remover_membro(
         raise HTTPException(status_code=404, detail="Membro não encontrado.")
     
 
-@router.delete("/{liga_id}/membros/me", status_code=204)
+@router.get("/me", response_model=UsuarioResponse)
 
-def sair_liga(liga_id: int, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+def me(usuario_logado: Usuario = Depends(get_current_user)):
+    return usuario_logado
+
+@router.delete("/{liga_id}/membros/me/sair", status_code=204)
+
+def sair_liga(liga_id: int, body: SairLiga | None = None, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
 
     membro = db.query(LigaMembro).filter(
         LigaMembro.liga_id == liga_id,
@@ -105,9 +112,17 @@ def sair_liga(liga_id: int, db: Session = Depends(get_db), usuario_logado: Usuar
     if not membro:
         raise HTTPException(status_code=404, detail="Você não é membro desta liga.")
     
-    if membro.papel == LigaRole.dono:
-        raise HTTPException(status_code=400, detail="Dono não pode sair da liga, sem transferir posse.")
+    if membro.papel != LigaRole.dono:
+        ok = remover_membro_liga(db, liga_id, usuario_logado.id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Você não é membro desta liga.")
+        return
+
+    if not body or not body.novo_dono_usuario_id:
+        raise HTTPException(status_code=400, detail="Para sair da liga sendo o dono, informe o novo dono.")
+
+    transferir_posse_liga(db=db, liga_id=liga_id, dono_atual_id=usuario_logado.id, novo_dono_id=body.novo_dono_usuario_id)
+
+    remover_membro_liga(db, liga_id, usuario_logado.id) 
     
-    ok = remover_membro_liga(db, liga_id, usuario_logado.id)
-    if not ok:
-        raise HTTPException(status_code=404, detail="Você não é membro desta liga.")
+    

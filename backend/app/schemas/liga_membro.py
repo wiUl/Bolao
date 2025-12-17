@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -29,3 +30,6 @@ class LigaMembroComUsuarioResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class SairLiga(BaseModel):
+    novo_dono_usuario_id: Optional[int] = None
