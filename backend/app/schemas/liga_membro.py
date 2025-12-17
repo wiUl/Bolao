@@ -1,14 +1,30 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-from app.core.roles import UserRole
+from app.core.liga_roles import LigaRole
 
 
 class LigaMembroResponse(BaseModel):
     id: int
     liga_id: int
     usuario_id: int
-    papel: UserRole
+    papel: LigaRole
+    data_ingresso: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LigaMembroUpdate(BaseModel):
+    papel: LigaRole
+
+
+class LigaMembroComUsuarioResponse(BaseModel):
+    id: int
+    liga_id: int
+    usuario_id: int
+    nome: str
+    papel: LigaRole
     data_ingresso: datetime
 
     class Config:

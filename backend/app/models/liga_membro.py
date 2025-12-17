@@ -1,8 +1,9 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, Enum as SqlEnum
 from sqlalchemy.orm import relationship
 
 from app.database import Base
+from app.core.liga_roles import LigaRole
 
 
 class LigaMembro(Base):
@@ -14,7 +15,7 @@ class LigaMembro(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # papel dentro da liga: dono, admin_liga, membro
-    papel = Column(String, nullable=False, default="membro", index=True)
+    papel = Column(SqlEnum(LigaRole, name = "liga_role_enum"), nullable=False, default=LigaRole.membro, index=True)
 
     data_ingresso = Column(DateTime, default=datetime.utcnow, nullable=False)
 
