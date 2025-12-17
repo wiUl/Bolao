@@ -23,3 +23,8 @@ class LigaResponse(BaseModel):
 
 class LigaUpdate(BaseModel):
     nome: Optional[str] = Field(default=None, min_length=3, max_length=60)
+
+
+class TransferirPosse(BaseModel):
+    novo_dono_usuario_id: int
+
