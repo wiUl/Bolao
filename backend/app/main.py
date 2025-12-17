@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from app.database import engine, Base
-from app.routes import usuario, auth, liga, liga_membro
+from app.routes import usuario, auth, liga, liga_membro, liga_services, time
 from app import models
+
 
 
 
@@ -15,6 +16,8 @@ app.include_router(usuario.router)
 app.include_router(auth.router)
 app.include_router(liga.router)
 app.include_router(liga_membro.router)
+app.include_router(liga_services.router)
+app.include_router(time.router)
 
 
 @app.get("/")

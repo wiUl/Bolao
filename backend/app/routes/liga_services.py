@@ -12,9 +12,9 @@ from app.models.usuario import Usuario
 from app.services.liga_service import transferir_posse_liga
 
 
-router = APIRouter(prefix="/serviços", tags=["Liga"])
+router = APIRouter(prefix="/servicos", tags=["Serviços Liga"])
 
-@router.post("/{liga_id}/transferir-posse", response_model = LigaResponse)
+@router.post("/{liga_id}/transferir_posse", response_model = LigaResponse)
 
 def transferir_posse(
     liga_id: int,
