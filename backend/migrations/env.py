@@ -16,9 +16,8 @@ if config.config_file_name is not None:
 # ================================
 from app.database import Base, engine
 
-# IMPORTANTE: importar TODOS os models
-# Isso garante que Base.metadata esteja populado
-import app.models  # noqa: F401
+
+import app.models
 
 # Metadata que o Alembic vai usar
 target_metadata = Base.metadata
