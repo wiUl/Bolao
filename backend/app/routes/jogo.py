@@ -43,7 +43,7 @@ def get_jogos(
 def get_jogo(jogo_id: int, db: Session = Depends(get_db)):
     jogo = buscar_jogo(db, jogo_id)
     if not jogo:
-        raise HTTPException(404, detail="Jogo não encontrado.")
+        raise HTTPException(status_code=404, detail="Jogo não encontrado.")
     return jogo
 
 @router.put("/{jogo_id}", response_model=JogoResponse)

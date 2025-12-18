@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 
 class PalpiteCreate(BaseModel):
-    jogo_id: int
     placar_casa: int = Field(ge=0,le=20)
     placar_fora: int = Field(ge=0,le=20)
 

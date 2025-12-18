@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.models.jogo import Jogo
 from app.schemas.jogo import JogoCreate, JogoUpdate, JogoResultadoUpdate
 
@@ -18,7 +18,15 @@ def listar_jogos(db: Session, temporada_id: int | None = None, rodada: int | Non
     return q.order_by(Jogo.data_hora.asc()).all()
 
 def buscar_jogo(db: Session, jogo_id: int) -> Jogo | None:
-    return db.query(Jogo).filter(Jogo.id == jogo_id).first()
+    return (
+        db.query(Jogo)
+        .options(
+            selectinload(Jogo.time_casa),
+            selectinload(Jogo.time_fora),
+        )
+        .filter(Jogo.id == jogo_id)
+        .first()
+    )
 
 def atualizar_jogo(db: Session, jogo: Jogo, body: JogoUpdate) -> Jogo:
     data = body.model_dump(exclude_unset=True)

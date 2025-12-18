@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 
@@ -16,7 +16,7 @@ class Liga(Base):
 
     id_dono = Column(Integer, ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True)
 
-    data_criacao = Column(DateTime, default=datetime.utcnow, nullable=False)
+    data_criacao = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
 
     #Relacionamentos
 
