@@ -7,7 +7,9 @@ class TimeBase(BaseModel):
     escudo_url: Optional[str] = None
 
 class TimeCreate(BaseModel):
-    pass 
+    nome: str
+    sigla: Optional[str] = None
+    escudo_url: Optional[str] = None 
 
 class TimeUpdate(BaseModel):
     nome: Optional[str] = None

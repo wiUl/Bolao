@@ -40,9 +40,16 @@ def validar_temporada_liga_vs_jogo(liga: Liga, jogo: Jogo) -> None:
             raise HTTPException(status_code=400, detail="Este jogo não pertence à temporada da liga.")
 
 def validar_lock(jogo: Jogo) -> None:
+    if jogo.data_hora is None:
+        return
+    
+    dt = jogo.data_hora
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+
     if not jogo.data_hora:
         raise HTTPException(status_code=400, detail="Jogo sem data/hora definida; palpite indisponível.")
-    if utcnow() >= jogo.data_hora:
+    if utcnow() >= dt:
         raise HTTPException(status_code=400, detail="Palpites estão bloqueados para este jogo (já começou).")
 
 def upsert_palpite(db: Session, liga_id: int, usuario_id: int, jogo_id: int, placar_casa: int, placar_fora: int) -> Palpite:
@@ -91,3 +98,25 @@ def remover_meu_palpite(db: Session, liga_id: int, usuario_id: int, jogo_id: int
 
     db.delete(palpite)
     db.commit()
+
+
+def calcular_pontuacao(gols_casa_palpite: int, gols_fora_palpite: int, gols_casa_real: int, gols_fora_real: int) -> int:
+    #acertou placar exato leva 5 pontos
+    if gols_casa_palpite == gols_casa_real and gols_fora_palpite == gols_fora_real:
+        return 5
+    
+    diferenca_palpite = gols_casa_palpite - gols_fora_palpite
+    diferenca_real = gols_casa_real - gols_fora_real
+
+    #empate houve, então ganha 3 se acertou o empate e 0 se errou
+    if diferenca_real == 0:
+        return 3 if diferenca_palpite == 0 else 0
+    
+    #não houve empate, mas acertou a diferença de gols do resultado real, então leva 4 pontos
+    if diferenca_palpite == diferenca_real:
+        return 4
+
+    #não houve empate e acertou o lado vencedor então leva 3 pontos
+    if (diferenca_palpite > 0 and diferenca_real > 0) or (diferenca_palpite < 0 and diferenca_real < 0):
+        return 3
+

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/ligas", tags=["Ligas"])
 
 def criar(dados: LigaCreate, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
     try:
-        return criar_liga(db, usuario_logado.id, dados.nome, dados.temporada)
+        return criar_liga(db, usuario_logado.id, dados.nome, dados.temporada_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
@@ -36,8 +36,8 @@ def entrar(dados: LigaEntrar, db: Session = Depends(get_db), usuario_logado: Usu
 
 @router.get("/minhas_ligas", response_model=List[LigaResponse])
 
-def minhas_ligas(temporada: Optional[int] = None, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
-    return listar_ligas_do_usuario(db, usuario_logado.id, temporada)
+def minhas_ligas(temporada_id: Optional[int] = None, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
+    return listar_ligas_do_usuario(db, usuario_logado.id, temporada_id)
 
 @router.put("/{liga_id}", response_model=LigaResponse)
 
@@ -47,7 +47,7 @@ def atualizar(liga_id: int, dados: LigaUpdate, db: Session = Depends(get_db), us
     if not liga:
         raise HTTPException(status_code=404, detail="Liga não encontrada.")
     
-    require_liga_papel(db, liga_id, usuario_logado.id, roles=["dono_liga", "admin_liga"])
+    require_liga_papel(db, liga_id, usuario_logado.id, roles=["dono", "admin_liga"])
 
     return atualizar_liga(db, liga, dados)
 
@@ -56,7 +56,7 @@ def deletar(liga_id: int, db: Session = Depends(get_db), usuario_logado: Usuario
     liga = buscar_liga_por_id(db, liga_id)
     if not liga:
         raise HTTPException(status_code=404, detail="Liga não encontrada")
-    require_liga_papel(db, liga_id, usuario_logado.id, roles=["dono_liga"])
+    require_liga_papel(db, liga_id, usuario_logado.id, roles=["dono"])
 
     deletar_liga(db, liga)
 

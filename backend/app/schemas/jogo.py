@@ -17,7 +17,7 @@ class JogoUpdate(BaseModel):
 class JogoResultadoUpdate(BaseModel):
     gols_casa: int
     gols_fora: int
-    status: Optional[str] = "finalizado"
+    
 
 class TimeResumo(BaseModel):
     id: int

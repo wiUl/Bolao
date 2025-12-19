@@ -48,7 +48,7 @@ def seed_admin(db: Session) -> Usuario:
         return admin
 
     admin = Usuario(
-        nome="Admin",
+        nome="Willian Raphael Rosa Gomes",
         email_login=login,
         senha=get_password_hash(senha),
         funcao="admin",
@@ -57,6 +57,44 @@ def seed_admin(db: Session) -> Usuario:
     db.flush()  # pega id sem commit
     print("✅ Admin criado.")
     return admin
+
+def seed_usuarios(db: Session):
+    i = 1
+    criados = 0
+    existentes = 0
+
+    while True:
+        nome = os.getenv(f"USER_{i}_NOME")
+        email = os.getenv(f"USER_{i}_LOGIN")
+        senha = os.getenv(f"USER_{i}_SENHA")
+
+        # fim da lista
+        if not nome and not email and not senha:
+            break
+
+        # usuário incompleto
+        if not nome or not email or not senha:
+            raise RuntimeError(
+                f"USER_{i}_* incompleto no .env. "
+                f"NOME={bool(nome)} EMAIL={bool(email)} SENHA={bool(senha)}"
+            )
+
+        if db.query(Usuario).filter(Usuario.email_login == email).first():
+            existentes += 1
+            i += 1
+            continue
+
+        db.add(Usuario(
+            nome=nome,
+            email_login=email,
+            senha=get_password_hash(senha),
+            funcao="user",
+        ))
+        criados += 1
+        i += 1
+
+    db.commit()
+    print(f"✅ Usuários seed: {criados} criados, {existentes} já existiam.")
 
 def seed_competicao_temporada(db: Session):
     # Competição (ajuste nomes/colunas conforme seu model)
@@ -96,6 +134,7 @@ def run_seed():
     db = Sessionlocal()
     try:
         seed_admin(db)
+        seed_usuarios(db)
         seed_competicao_temporada(db)
         seed_times(db)
         db.commit()

@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session, selectinload
 from app.models.jogo import Jogo
 from app.schemas.jogo import JogoCreate, JogoUpdate, JogoResultadoUpdate
+from app.models.palpite import Palpite
+from app.services.palpites import calcular_pontuacao 
 
 def criar_jogo(db: Session, body: JogoCreate) -> Jogo:
     jogo = Jogo(**body.model_dump())
@@ -37,10 +39,17 @@ def atualizar_jogo(db: Session, jogo: Jogo, body: JogoUpdate) -> Jogo:
     return jogo
 
 def atualizar_resultado(db: Session, jogo: Jogo, body: JogoResultadoUpdate) -> Jogo:
+    
+
     jogo.gols_casa = body.gols_casa
     jogo.gols_fora = body.gols_fora
-    if body.status:
-        jogo.status = body.status
+    jogo.status = "finalizado"
+
+    palpites = db.query(Palpite).filter(Palpite.jogo_id == jogo.id).all()
+
+    for p in palpites:
+        p.pontos = calcular_pontuacao(p.placar_casa, p.placar_fora, jogo.gols_casa, jogo.gols_fora)
+
     db.commit()
     db.refresh(jogo)
     return jogo
