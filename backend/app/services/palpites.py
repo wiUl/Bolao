@@ -120,3 +120,4 @@ def calcular_pontuacao(gols_casa_palpite: int, gols_fora_palpite: int, gols_casa
     if (diferenca_palpite > 0 and diferenca_real > 0) or (diferenca_palpite < 0 and diferenca_real < 0):
         return 3
 
+    return 0
