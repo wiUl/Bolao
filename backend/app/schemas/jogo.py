@@ -35,7 +35,7 @@ class JogoResponse(BaseModel):
     time_fora: TimeResumo
     gols_casa: Optional[int] = None
     gols_fora: Optional[int] = None
-    data_hora: datetime
+    data_hora: Optional[datetime]
     status: str
 
     class Config:
