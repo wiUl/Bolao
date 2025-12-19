@@ -1,8 +1,8 @@
 """init schema
 
-Revision ID: b059cf70a011
+Revision ID: ec9150df9474
 Revises: 
-Create Date: 2025-12-17 19:00:13.676039
+Create Date: 2025-12-18 17:24:58.716337
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b059cf70a011'
+revision: str = 'ec9150df9474'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,27 +29,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('nome')
     )
-    op.create_table('jogos',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('temporada', sa.Integer(), nullable=False),
-    sa.Column('rodada', sa.Integer(), nullable=False),
-    sa.Column('time_casa', sa.String(), nullable=False),
-    sa.Column('time_fora', sa.String(), nullable=False),
-    sa.Column('gols_casa', sa.Integer(), nullable=True),
-    sa.Column('gols_fora', sa.Integer(), nullable=True),
-    sa.Column('data_hora', sa.DateTime(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('temporada', 'rodada', 'time_casa', 'time_fora', name='uq_jogo_temporada_rodada_times')
-    )
-    with op.batch_alter_table('jogos', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_jogos_id'), ['id'], unique=False)
-        batch_op.create_index(batch_op.f('ix_jogos_rodada'), ['rodada'], unique=False)
-        batch_op.create_index(batch_op.f('ix_jogos_status'), ['status'], unique=False)
-        batch_op.create_index(batch_op.f('ix_jogos_temporada'), ['temporada'], unique=False)
-        batch_op.create_index(batch_op.f('ix_jogos_time_casa'), ['time_casa'], unique=False)
-        batch_op.create_index(batch_op.f('ix_jogos_time_fora'), ['time_fora'], unique=False)
-
     op.create_table('times',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('nome', sa.String(length=80), nullable=False),
@@ -74,24 +53,6 @@ def upgrade() -> None:
         batch_op.create_index(batch_op.f('ix_usuarios_email_login'), ['email_login'], unique=True)
         batch_op.create_index(batch_op.f('ix_usuarios_id'), ['id'], unique=False)
 
-    op.create_table('ligas',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('nome', sa.String(), nullable=False),
-    sa.Column('temporada', sa.Integer(), nullable=False),
-    sa.Column('codigo_convite', sa.String(), nullable=False),
-    sa.Column('id_dono', sa.Integer(), nullable=False),
-    sa.Column('data_criacao', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['id_dono'], ['usuarios.id'], ondelete='RESTRICT'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('codigo_convite', name='uq_liga_codigo_convite'),
-    sa.UniqueConstraint('id_dono', 'temporada', 'nome', name='uq_liga_dono_temporada_nome')
-    )
-    with op.batch_alter_table('ligas', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_ligas_codigo_convite'), ['codigo_convite'], unique=True)
-        batch_op.create_index(batch_op.f('ix_ligas_id'), ['id'], unique=False)
-        batch_op.create_index(batch_op.f('ix_ligas_id_dono'), ['id_dono'], unique=False)
-        batch_op.create_index(batch_op.f('ix_ligas_temporada'), ['temporada'], unique=False)
-
     op.create_table('temporadas',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('competicao_id', sa.Integer(), nullable=False),
@@ -103,6 +64,50 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('competicao_id', 'ano', name='uq_temporada_competicao_ano')
     )
+    op.create_table('jogos',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('temporada_id', sa.Integer(), nullable=False),
+    sa.Column('rodada', sa.Integer(), nullable=False),
+    sa.Column('time_casa_id', sa.Integer(), nullable=False),
+    sa.Column('time_fora_id', sa.Integer(), nullable=False),
+    sa.Column('gols_casa', sa.Integer(), nullable=True),
+    sa.Column('gols_fora', sa.Integer(), nullable=True),
+    sa.Column('data_hora', sa.DateTime(), nullable=True),
+    sa.Column('status', sa.String(), nullable=False),
+    sa.CheckConstraint('time_casa_id != time_fora_id', name='ck_jogo_times_diferentes'),
+    sa.ForeignKeyConstraint(['temporada_id'], ['temporadas.id'], ),
+    sa.ForeignKeyConstraint(['time_casa_id'], ['times.id'], ),
+    sa.ForeignKeyConstraint(['time_fora_id'], ['times.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('temporada_id', 'rodada', 'time_casa_id', 'time_fora_id', name='uq_jogo_temporada_rodada_times')
+    )
+    with op.batch_alter_table('jogos', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_jogos_id'), ['id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_jogos_rodada'), ['rodada'], unique=False)
+        batch_op.create_index(batch_op.f('ix_jogos_status'), ['status'], unique=False)
+        batch_op.create_index(batch_op.f('ix_jogos_temporada_id'), ['temporada_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_jogos_time_casa_id'), ['time_casa_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_jogos_time_fora_id'), ['time_fora_id'], unique=False)
+
+    op.create_table('ligas',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('nome', sa.String(), nullable=False),
+    sa.Column('temporada_id', sa.Integer(), nullable=True),
+    sa.Column('codigo_convite', sa.String(), nullable=False),
+    sa.Column('id_dono', sa.Integer(), nullable=False),
+    sa.Column('data_criacao', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['id_dono'], ['usuarios.id'], ondelete='RESTRICT'),
+    sa.ForeignKeyConstraint(['temporada_id'], ['temporadas.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('codigo_convite', name='uq_liga_codigo_convite'),
+    sa.UniqueConstraint('id_dono', 'temporada_id', 'nome', name='uq_liga_dono_temporada_nome')
+    )
+    with op.batch_alter_table('ligas', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_ligas_codigo_convite'), ['codigo_convite'], unique=True)
+        batch_op.create_index(batch_op.f('ix_ligas_id'), ['id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_ligas_id_dono'), ['id_dono'], unique=False)
+        batch_op.create_index(batch_op.f('ix_ligas_temporada_id'), ['temporada_id'], unique=False)
+
     op.create_table('liga_membros',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('liga_id', sa.Integer(), nullable=False),
@@ -128,8 +133,10 @@ def upgrade() -> None:
     sa.Column('placar_casa', sa.Integer(), nullable=False),
     sa.Column('placar_fora', sa.Integer(), nullable=False),
     sa.Column('pontos', sa.Integer(), nullable=True),
-    sa.Column('data_criacao', sa.DateTime(), nullable=False),
-    sa.Column('ultima_atualizacao', sa.DateTime(), nullable=False),
+    sa.Column('data_criacao', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('ultima_atualizacao', sa.DateTime(timezone=True), nullable=False),
+    sa.CheckConstraint('placar_casa >= 0', name='ck_palpite_placar_casa_nao_negativo'),
+    sa.CheckConstraint('placar_fora >= 0', name='ck_palpite_placar_fora_nao_negativo'),
     sa.ForeignKeyConstraint(['jogo_id'], ['jogos.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['liga_id'], ['ligas.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['usuario_id'], ['usuarios.id'], ondelete='CASCADE'),
@@ -164,14 +171,23 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_liga_membros_id'))
 
     op.drop_table('liga_membros')
-    op.drop_table('temporadas')
     with op.batch_alter_table('ligas', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_ligas_temporada'))
+        batch_op.drop_index(batch_op.f('ix_ligas_temporada_id'))
         batch_op.drop_index(batch_op.f('ix_ligas_id_dono'))
         batch_op.drop_index(batch_op.f('ix_ligas_id'))
         batch_op.drop_index(batch_op.f('ix_ligas_codigo_convite'))
 
     op.drop_table('ligas')
+    with op.batch_alter_table('jogos', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_jogos_time_fora_id'))
+        batch_op.drop_index(batch_op.f('ix_jogos_time_casa_id'))
+        batch_op.drop_index(batch_op.f('ix_jogos_temporada_id'))
+        batch_op.drop_index(batch_op.f('ix_jogos_status'))
+        batch_op.drop_index(batch_op.f('ix_jogos_rodada'))
+        batch_op.drop_index(batch_op.f('ix_jogos_id'))
+
+    op.drop_table('jogos')
+    op.drop_table('temporadas')
     with op.batch_alter_table('usuarios', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_usuarios_id'))
         batch_op.drop_index(batch_op.f('ix_usuarios_email_login'))
@@ -183,14 +199,5 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_times_id'))
 
     op.drop_table('times')
-    with op.batch_alter_table('jogos', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_jogos_time_fora'))
-        batch_op.drop_index(batch_op.f('ix_jogos_time_casa'))
-        batch_op.drop_index(batch_op.f('ix_jogos_temporada'))
-        batch_op.drop_index(batch_op.f('ix_jogos_status'))
-        batch_op.drop_index(batch_op.f('ix_jogos_rodada'))
-        batch_op.drop_index(batch_op.f('ix_jogos_id'))
-
-    op.drop_table('jogos')
     op.drop_table('competicoes')
     # ### end Alembic commands ###

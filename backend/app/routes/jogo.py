@@ -12,7 +12,7 @@ from app.models.time import Time
 router = APIRouter(prefix="/jogos", tags=["Jogos"])
 
 @router.post("", response_model=JogoResponse, status_code=status.HTTP_201_CREATED)
-def create_jogo(
+def cria_jogo(
     body: JogoCreate,
     db: Session = Depends(get_db),
     _=Depends(require_admin),
@@ -32,7 +32,7 @@ def create_jogo(
     return criar_jogo(db, body)
 
 @router.get("", response_model=list[JogoResponse])
-def get_jogos(
+def lista_jogos(
     temporada_id: int | None = None,
     rodada: int | None = None,
     db: Session = Depends(get_db),
@@ -40,14 +40,14 @@ def get_jogos(
     return listar_jogos(db, temporada_id=temporada_id, rodada=rodada)
 
 @router.get("/{jogo_id}", response_model=JogoResponse)
-def get_jogo(jogo_id: int, db: Session = Depends(get_db)):
+def busca_jogo(jogo_id: int, db: Session = Depends(get_db)):
     jogo = buscar_jogo(db, jogo_id)
     if not jogo:
         raise HTTPException(status_code=404, detail="Jogo não encontrado.")
     return jogo
 
 @router.put("/{jogo_id}", response_model=JogoResponse)
-def update_jogo(
+def atualiza_jogo(
     jogo_id: int,
     body: JogoUpdate,
     db: Session = Depends(get_db),
@@ -59,7 +59,7 @@ def update_jogo(
     return atualizar_jogo(db, jogo, body)
 
 @router.patch("/{jogo_id}/resultado", response_model=JogoResponse)
-def set_resultado(
+def atualiza_resultado(
     jogo_id: int,
     body: JogoResultadoUpdate,
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ def set_resultado(
     return atualizar_resultado(db, jogo, body)
 
 @router.delete("/{jogo_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_jogo(
+def exclui_jogo(
     jogo_id: int,
     db: Session = Depends(get_db),
     _=Depends(require_admin),

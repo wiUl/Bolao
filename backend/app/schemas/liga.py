@@ -5,7 +5,7 @@ from datetime import datetime
 
 class LigaCreate(BaseModel):
     nome: str = Field(min_length=3, max_length=60)
-    temporada: int = Field(ge=2000, le=2100)
+    temporada_id: int = Field(gt=0)
 
 class LigaEntrar(BaseModel):
     codigo_convite: str
@@ -13,7 +13,7 @@ class LigaEntrar(BaseModel):
 class LigaResponse(BaseModel):
     id: int
     nome: str
-    temporada: int
+    temporada_id: int
     codigo_convite: str
     id_dono: int
     data_criacao: datetime

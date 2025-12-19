@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.usuario import Usuario
-from app.schemas.palpite import PalpiteCreateUpdate, PalpiteResponse
+from app.schemas.palpite import PalpiteCreate, PalpiteResponse
 from app.services.palpites import upsert_palpite, remover_meu_palpite, validar_membro_liga
 from app.models.palpite import Palpite
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/palpites", tags=["Palpites"])
 def criar_ou_atualizar_meu_palpite(
     liga_id: int,
     jogo_id: int,
-    body: PalpiteCreateUpdate,
+    body: PalpiteCreate,
     db: Session = Depends(get_db),
     usuario_logado: Usuario = Depends(get_current_user),
 ):
