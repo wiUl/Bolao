@@ -1,0 +1,381 @@
+rodada,time_casa,gols_casa,gols_fora,time_fora
+1,Bahia,1,1,Corinthians
+1,Bragantino,2,2,Ceará
+1,Cruzeiro,2,1,Mirassol
+1,Flamengo,1,1,Internacional
+1,Fortaleza,2,0,Fluminense
+1,Grêmio,2,1,Atlético MG
+1,Juventude,2,0,Vitória
+1,Palmeiras,0,0,Botafogo
+1,São Paulo,0,0,Sport
+1,Vasco,2,1,Santos
+2,Atlético MG,0,0,São Paulo
+2,Botafogo,2,0,Juventude
+2,Ceará,2,0,Grêmio
+2,Corinthians,3,0,Vasco
+2,Fluminense,2,1,Bragantino
+2,Internacional,3,0,Cruzeiro
+2,Mirassol,1,1,Fortaleza
+2,Santos,2,2,Bahia
+2,Sport,1,2,Palmeiras
+2,Vitória,1,2,Flamengo
+3,Atlético MG,2,2,Vitória
+3,Bahia,1,1,Mirassol
+3,Bragantino,1,0,Botafogo
+3,Fluminense,1,0,Santos
+3,Fortaleza,0,0,Internacional
+3,Grêmio,0,2,Flamengo
+3,Juventude,2,1,Ceará
+3,Palmeiras,2,0,Corinthians
+3,São Paulo,1,1,Cruzeiro
+3,Vasco,3,1,Sport
+4,Botafogo,2,2,São Paulo
+4,Ceará,2,1,Vasco
+4,Corinthians,0,2,Fluminense
+4,Cruzeiro,3,0,Bahia
+4,Flamengo,6,0,Juventude
+4,Internacional,0,1,Palmeiras
+4,Mirassol,4,1,Grêmio
+4,Santos,2,0,Atlético MG
+4,Sport,0,1,Bragantino
+4,Vitória,2,1,Fortaleza
+5,Atlético MG,1,0,Botafogo
+5,Bahia,1,0,Ceará
+5,Bragantino,1,0,Cruzeiro
+5,Corinthians,2,1,Sport
+5,Fluminense,1,1,Vitória
+5,Fortaleza,1,2,Palmeiras
+5,Grêmio,1,1,Internacional
+5,Juventude,2,2,Mirassol
+5,São Paulo,2,1,Santos
+5,Vasco,0,0,Flamengo
+6,Botafogo,2,0,Fluminense
+6,Ceará,1,1,São Paulo
+6,Cruzeiro,1,0,Vasco
+6,Flamengo,4,0,Corinthians
+6,Internacional,3,1,Juventude
+6,Mirassol,2,2,Atlético MG
+6,Palmeiras,0,1,Bahia
+6,Santos,1,2,Bragantino
+6,Sport,0,0,Fortaleza
+6,Vitória,1,1,Grêmio
+7,Bahia,1,0,Botafogo
+7,Bragantino,1,0,Mirassol
+7,Ceará,1,0,Vitória
+7,Corinthians,4,2,Internacional
+7,Cruzeiro,2,1,Flamengo
+7,Fluminense,2,1,Sport
+7,Grêmio,1,0,Santos
+7,Juventude,0,1,Atlético MG
+7,São Paulo,0,0,Fortaleza
+7,Vasco,0,1,Palmeiras
+8,Atlético MG,3,2,Fluminense
+8,Botafogo,4,0,Internacional
+8,Flamengo,1,0,Bahia
+8,Fortaleza,5,0,Juventude
+8,Grêmio,1,1,Bragantino
+8,Mirassol,2,1,Corinthians
+8,Palmeiras,1,0,São Paulo
+8,Santos,0,0,Ceará
+8,Sport,0,4,Cruzeiro
+8,Vitória,2,1,Vasco
+9,Bahia,2,1,Vitória
+9,Bragantino,1,2,Palmeiras
+9,Ceará,2,0,Sport
+9,Corinthians,1,0,Santos
+9,Cruzeiro,0,0,Atlético MG
+9,Flamengo,0,0,Botafogo
+9,Internacional,1,1,Mirassol
+9,Juventude,1,1,Fluminense
+9,São Paulo,2,1,Grêmio
+9,Vasco,3,0,Fortaleza
+10,Atlético MG,0,0,Corinthians
+10,Botafogo,3,2,Ceará
+10,Bragantino,1,0,Juventude
+10,Fluminense,2,1,Vasco
+10,Fortaleza,0,2,Cruzeiro
+10,Grêmio,1,0,Bahia
+10,Palmeiras,0,2,Flamengo
+10,Sport,1,1,Internacional
+10,São Paulo,0,2,Mirassol
+10,Vitória,0,1,Santos
+11,Bahia,2,1,São Paulo
+11,Ceará,0,1,Atlético MG
+11,Corinthians,0,0,Vitória
+11,Cruzeiro,2,1,Palmeiras
+11,Flamengo,5,0,Fortaleza
+11,Internacional,0,2,Fluminense
+11,Juventude,0,2,Grêmio
+11,Mirassol,1,0,Sport
+11,Santos,0,1,Botafogo
+11,Vasco,0,2,Bragantino
+12,Atlético MG,2,0,Internacional
+12,Botafogo,3,3,Mirassol
+12,Bragantino,0,3,Bahia
+12,Fluminense,1,0,Ceará
+12,Fortaleza,2,3,Santos
+12,Grêmio,1,1,Corinthians
+12,Palmeiras,4,1,Juventude
+12,Sport,1,5,Flamengo
+12,São Paulo,1,3,Vasco
+12,Vitória,0,0,Cruzeiro
+13,Bahia,2,1,Atlético MG
+13,Corinthians,1,2,Bragantino
+13,Cruzeiro,4,1,Grêmio
+13,Flamengo,2,0,São Paulo
+13,Fortaleza,0,1,Ceará
+13,Internacional,1,0,Vitória
+13,Juventude,2,0,Sport
+13,Mirassol,2,1,Fluminense
+13,Santos,1,0,Palmeiras
+13,Vasco,0,2,Botafogo
+14,Atlético MG,3,1,Sport
+14,Bahia,1,0,Internacional
+14,Botafogo,0,0,Vitória
+14,Bragantino,2,2,São Paulo
+14,Ceará,0,1,Corinthians
+14,Fluminense,0,2,Cruzeiro
+14,Grêmio,2,1,Fortaleza
+14,Juventude,2,0,Vasco
+14,Palmeiras,1,1,Mirassol
+14,Santos,1,0,Flamengo
+15,Cruzeiro,4,0,Juventude
+15,Flamengo,1,0,Fluminense
+15,Fortaleza,1,1,Bahia
+15,Internacional,1,0,Ceará
+15,Mirassol,3,0,Santos
+15,Palmeiras,3,2,Atlético MG
+15,Sport,0,1,Botafogo
+15,São Paulo,2,0,Corinthians
+15,Vasco,1,1,Grêmio
+15,Vitória,1,0,Bragantino
+16,Atlético MG,3,3,Fortaleza
+16,Bragantino,1,2,Flamengo
+16,Ceará,0,2,Mirassol
+16,Corinthians,0,0,Cruzeiro
+16,Fluminense,1,2,Palmeiras
+16,Grêmio,1,1,Botafogo
+16,Juventude,0,1,São Paulo
+16,Santos,1,2,Internacional
+16,Vasco,3,1,Bahia
+16,Vitória,2,2,Sport
+17,Bahia,3,0,Juventude
+17,Botafogo,1,1,Corinthians
+17,Cruzeiro,1,2,Ceará
+17,Flamengo,1,0,Atlético MG
+17,Fortaleza,3,1,Bragantino
+17,Internacional,2,2,Vasco
+17,Mirassol,1,1,Vitória
+17,Palmeiras,1,0,Grêmio
+17,Sport,2,2,Santos
+17,São Paulo,3,1,Fluminense
+18,Atlético MG,2,1,Bragantino
+18,Botafogo,0,2,Cruzeiro
+18,Ceará,1,1,Flamengo
+18,Corinthians,1,1,Fortaleza
+18,Fluminense,1,0,Grêmio
+18,Internacional,1,2,São Paulo
+18,Mirassol,3,2,Vasco
+18,Santos,3,1,Juventude
+18,Sport,0,0,Bahia
+18,Vitória,2,2,Palmeiras
+19,Bahia,3,3,Fluminense
+19,Bragantino,1,3,Internacional
+19,Cruzeiro,1,2,Santos
+19,Flamengo,2,1,Mirassol
+19,Fortaleza,0,5,Botafogo
+19,Grêmio,0,1,Sport
+19,Juventude,2,1,Corinthians
+19,Palmeiras,2,1,Ceará
+19,São Paulo,2,0,Vitória
+19,Vasco,1,1,Atlético MG
+20,Atlético MG,1,3,Grêmio
+20,Botafogo,0,1,Palmeiras
+20,Ceará,1,0,Bragantino
+20,Corinthians,1,2,Bahia
+20,Fluminense,2,1,Fortaleza
+20,Internacional,1,3,Flamengo
+20,Mirassol,1,1,Cruzeiro
+20,Santos,0,6,Vasco
+20,Sport,2,2,São Paulo
+20,Vitória,2,2,Juventude
+21,Bahia,2,0,Santos
+21,Bragantino,4,2,Fluminense
+21,Cruzeiro,2,1,Internacional
+21,Flamengo,8,0,Vitória
+21,Fortaleza,0,1,Mirassol
+21,Grêmio,0,0,Ceará
+21,Juventude,1,3,Botafogo
+21,Palmeiras,3,0,Sport
+21,São Paulo,2,0,Atlético MG
+21,Vasco,2,3,Corinthians
+22,Botafogo,4,1,Bragantino
+22,Ceará,0,1,Juventude
+22,Corinthians,1,1,Palmeiras
+22,Cruzeiro,1,0,São Paulo
+22,Flamengo,1,1,Grêmio
+22,Internacional,2,1,Fortaleza
+22,Mirassol,5,1,Bahia
+22,Santos,0,0,Fluminense
+22,Sport,2,3,Vasco
+22,Vitória,1,0,Atlético MG
+23,Atlético MG,1,1,Santos
+23,Bahia,1,2,Cruzeiro
+23,Bragantino,1,1,Sport
+23,Fluminense,0,1,Corinthians
+23,Fortaleza,2,0,Vitória
+23,Grêmio,0,1,Mirassol
+23,Juventude,0,2,Flamengo
+23,Palmeiras,4,1,Internacional
+23,São Paulo,1,0,Botafogo
+23,Vasco,2,2,Ceará
+24,Botafogo,1,0,Atlético MG
+24,Ceará,1,1,Bahia
+24,Cruzeiro,2,1,Bragantino
+24,Flamengo,1,1,Vasco
+24,Internacional,2,3,Grêmio
+24,Mirassol,2,0,Juventude
+24,Palmeiras,4,1,Fortaleza
+24,Santos,1,0,São Paulo
+24,Sport,1,0,Corinthians
+24,Vitória,0,1,Fluminense
+25,Atlético MG,1,0,Mirassol
+25,Bahia,1,0,Palmeiras
+25,Bragantino,2,2,Santos
+25,Corinthians,1,2,Flamengo
+25,Fluminense,2,0,Botafogo
+25,Fortaleza,1,0,Sport
+25,Grêmio,3,1,Vitória
+25,Juventude,1,1,Internacional
+25,São Paulo,0,1,Ceará
+25,Vasco,2,0,Cruzeiro
+26,Atlético MG,0,0,Juventude
+26,Botafogo,2,1,Bahia
+26,Flamengo,0,0,Cruzeiro
+26,Fortaleza,0,2,São Paulo
+26,Internacional,1,1,Corinthians
+26,Mirassol,1,1,Bragantino
+26,Palmeiras,3,0,Vasco
+26,Santos,1,1,Grêmio
+26,Sport,2,2,Fluminense
+26,Vitória,1,0,Ceará
+27,Bahia,1,0,Flamengo
+27,Bragantino,1,0,Grêmio
+27,Ceará,3,0,Santos
+27,Corinthians,3,0,Mirassol
+27,Cruzeiro,1,1,Sport
+27,Fluminense,3,0,Atlético MG
+27,Internacional,2,0,Botafogo
+27,Juventude,1,2,Fortaleza
+27,São Paulo,2,3,Palmeiras
+27,Vasco,4,3,Vitória
+28,Atlético MG,1,1,Cruzeiro
+28,Botafogo,0,3,Flamengo
+28,Fluminense,1,0,Juventude
+28,Fortaleza,0,2,Vasco
+28,Grêmio,2,0,São Paulo
+28,Mirassol,3,1,Internacional
+28,Palmeiras,5,1,Bragantino
+28,Santos,3,1,Corinthians
+28,Sport,1,1,Ceará
+28,Vitória,2,1,Bahia
+29,Bahia,4,0,Grêmio
+29,Ceará,0,2,Botafogo
+29,Corinthians,1,0,Atlético MG
+29,Cruzeiro,1,0,Fortaleza
+29,Flamengo,3,2,Palmeiras
+29,Internacional,2,0,Sport
+29,Juventude,1,0,Bragantino
+29,Mirassol,3,0,São Paulo
+29,Santos,0,1,Vitória
+29,Vasco,2,0,Fluminense
+30,Atlético MG,1,0,Ceará
+30,Botafogo,2,2,Santos
+30,Bragantino,0,3,Vasco
+30,Fluminense,1,0,Internacional
+30,Fortaleza,1,0,Flamengo
+30,Grêmio,3,1,Juventude
+30,Palmeiras,0,0,Cruzeiro
+30,Sport,1,2,Mirassol
+30,São Paulo,2,0,Bahia
+30,Vitória,0,1,Corinthians
+31,Bahia,2,1,Bragantino
+31,Ceará,2,0,Fluminense
+31,Corinthians,2,0,Grêmio
+31,Cruzeiro,3,1,Vitória
+31,Flamengo,3,0,Sport
+31,Internacional,0,0,Atlético MG
+31,Juventude,0,2,Palmeiras
+31,Mirassol,0,0,Botafogo
+31,Santos,1,1,Fortaleza
+31,Vasco,0,2,São Paulo
+32,Atlético MG,3,0,Bahia
+32,Botafogo,3,0,Vasco
+32,Bragantino,2,1,Corinthians
+32,Ceará,1,1,Fortaleza
+32,Fluminense,1,0,Mirassol
+32,Grêmio,0,1,Cruzeiro
+32,Palmeiras,2,0,Santos
+32,Sport,0,2,Juventude
+32,São Paulo,2,2,Flamengo
+32,Vitória,1,0,Internacional
+33,Corinthians,0,1,Ceará
+33,Cruzeiro,0,0,Fluminense
+33,Flamengo,3,2,Santos
+33,Fortaleza,2,2,Grêmio
+33,Internacional,2,2,Bahia
+33,Mirassol,2,1,Palmeiras
+33,Sport,2,4,Atlético MG
+33,São Paulo,0,1,Bragantino
+33,Vasco,1,3,Juventude
+33,Vitória,0,0,Botafogo
+34,Atlético MG,0,3,Palmeiras
+34,Bahia,2,3,Fortaleza
+34,Botafogo,3,2,Sport
+34,Bragantino,4,0,Vitória
+34,Ceará,1,2,Internacional
+34,Corinthians,3,1,São Paulo
+34,Fluminense,2,1,Flamengo
+34,Grêmio,2,0,Vasco
+34,Juventude,3,3,Cruzeiro
+34,Santos,1,1,Mirassol
+35,Bahia,1,0,Vasco
+35,Botafogo,3,2,Grêmio
+35,Cruzeiro,3,0,Corinthians
+35,Flamengo,3,0,Bragantino
+35,Fortaleza,1,0,Atlético MG
+35,Internacional,1,1,Santos
+35,Mirassol,3,0,Ceará
+35,Palmeiras,0,0,Fluminense
+35,Sport,1,3,Vitória
+35,São Paulo,2,1,Juventude
+36,Atlético MG,1,1,Flamengo
+36,Bragantino,0,1,Fortaleza
+36,Ceará,1,1,Cruzeiro
+36,Corinthians,2,2,Botafogo
+36,Fluminense,6,0,São Paulo
+36,Grêmio,3,2,Palmeiras
+36,Juventude,1,1,Bahia
+36,Santos,3,0,Sport
+36,Vasco,5,1,Internacional
+36,Vitória,2,0,Mirassol
+37,Bahia,2,0,Sport
+37,Bragantino,2,0,Atlético MG
+37,Cruzeiro,2,2,Botafogo
+37,Flamengo,1,0,Ceará
+37,Fortaleza,2,1,Corinthians
+37,Grêmio,1,2,Fluminense
+37,Juventude,0,3,Santos
+37,Palmeiras,0,0,Vitória
+37,São Paulo,3,0,Internacional
+37,Vasco,0,2,Mirassol
+38,Atlético MG,5,0,Vasco
+38,Botafogo,4,2,Fortaleza
+38,Ceará,1,3,Palmeiras
+38,Corinthians,1,1,Juventude
+38,Fluminense,2,0,Bahia
+38,Internacional,3,1,Bragantino
+38,Mirassol,3,3,Flamengo
+38,Santos,3,0,Cruzeiro
+38,Sport,0,4,Grêmio
+38,Vitória,1,0,São Paulo
