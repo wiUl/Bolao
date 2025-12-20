@@ -41,6 +41,47 @@ O projeto segue uma separação clara de responsabilidades:
 Essa abordagem evita lógica complexa nos endpoints e facilita manutenção, testes e evolução do sistema.
 
 ---
+## 🗂️ Organização do Projeto
+
+A estrutura de pastas foi pensada para manter uma **separação clara de responsabilidades**, facilitando manutenção, leitura do código e evolução do sistema.
+
+- **backend/**  
+  Contém toda a implementação do servidor e das regras de negócio do sistema. É onde está concentrado o desenvolvimento atual do projeto.
+
+  - **app/**  
+    Núcleo da aplicação backend. Reúne toda a lógica principal.
+
+    - **models/**  
+      Define as entidades do domínio e seus relacionamentos utilizando SQLAlchemy.
+
+    - **schemas/**  
+      Contém os modelos Pydantic responsáveis pela validação, entrada e saída de dados da API.
+
+    - **crud/**  
+      Operações básicas de persistência no banco de dados (create, read, update, delete).
+
+    - **services/**  
+      Camada de regras de negócio e consultas mais complexas, como cálculo de pontuação, rankings e estatísticas.
+
+    - **api/**  
+      Definição dos endpoints da aplicação (FastAPI), organizados por contexto.
+
+    - **core/**  
+      Configurações centrais da aplicação, como autenticação, segurança, variáveis de ambiente e utilitários.
+
+  - **migrations/**  
+    Estrutura destinada ao versionamento do banco de dados (Alembic).
+
+  - **tests/**  
+    Testes automatizados da aplicação.
+
+- **frontend/**  
+  Pasta reservada para a futura implementação do frontend da aplicação.  
+  Será responsável pela interface do usuário, consumo da API e visualização de rankings, gráficos e estatísticas.
+
+Essa organização segue padrões comuns de projetos fullstack, permitindo evolução independente entre backend e frontend.
+
+---
 
 ## ⚙️ Funcionalidades Implementadas
 
