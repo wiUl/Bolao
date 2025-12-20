@@ -74,6 +74,9 @@ A estrutura de pastas foi pensada para manter uma **separação clara de respons
 
   - **tests/**  
     Testes automatizados da aplicação.
+    
+  - **scripts/**  
+  Scripts auxiliares utilizados para tarefas específicas, como carga inicial de dados, manutenção do banco, ajustes pontuais ou experimentações durante o desenvolvimento.
 
 - **frontend/**  
   Pasta reservada para a futura implementação do frontend da aplicação.  
