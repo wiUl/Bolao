@@ -63,7 +63,7 @@ A estrutura de pastas foi pensada para manter uma **separação clara de respons
     - **services/**  
       Camada de regras de negócio e consultas mais complexas, como cálculo de pontuação, rankings e estatísticas.
 
-    - **api/**  
+    - **routes/**  
       Definição dos endpoints da aplicação (FastAPI), organizados por contexto.
 
     - **core/**  
