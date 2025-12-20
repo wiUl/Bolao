@@ -5,6 +5,7 @@ from app.database import get_db
 from app.core.permissions import require_admin
 from app.schemas.time import TimeCreate, TimeUpdate, TimeResponse
 from app.crud.time import criar_time, listar_times, buscar_time, atualizar_time, deletar_time
+from app.core.dependencies import get_current_user
 
 
 router = APIRouter(prefix="/times", tags=["Times"])
@@ -16,12 +17,12 @@ def criar(body: TimeCreate, db: Session = Depends(get_db), admin = Depends(requi
 
 @router.get("", response_model=list[TimeResponse])
 
-def listar(db: Session = Depends(get_db)):
+def listar(db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     return listar_times(db)
 
 @router.get("/{time_id}", response_model=TimeResponse)
 
-def busca_time(time_id: int, db: Session = Depends(get_db)):
+def busca_time(time_id: int, db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     time = buscar_time(db, time_id)
     if not time:
         raise HTTPException(status_code=404, detail="Time não encontrado.")

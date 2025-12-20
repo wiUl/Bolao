@@ -1,12 +1,15 @@
 # app/services/palpites.py  (pode ser app/crud/palpite.py se preferir)
 from datetime import datetime, timezone
-from sqlalchemy.orm import Session
+from sqlalchemy import and_
+from sqlalchemy.orm import Session, aliased
 from fastapi import HTTPException
 
 from app.models.liga_membro import LigaMembro
 from app.models.liga import Liga
 from app.models.jogo import Jogo
 from app.models.palpite import Palpite
+from app.models.time import Time
+from app.models.usuario import Usuario
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -121,3 +124,195 @@ def calcular_pontuacao(gols_casa_palpite: int, gols_fora_palpite: int, gols_casa
         return 3
 
     return 0
+
+def palpites_usuario_na_rodada(db: Session, liga_id: int, usuario_id: int, rodada: int):
+    temporada_id = db.query(Liga.temporada_id).filter(Liga.id == liga_id).scalar()
+
+    Casa = aliased(Time)
+    Fora = aliased(Time)
+
+    rows = (
+        db.query(
+            Jogo.id.label("jogo_id"),
+            Jogo.data_hora,
+            Casa.nome.label("time_casa"),
+            Fora.nome.label("time_fora"),
+            Jogo.gols_casa,
+            Jogo.gols_fora,
+            Jogo.status,
+
+            Palpite.placar_casa,
+            Palpite.placar_fora,
+            Palpite.pontos,
+        )
+        .join(Casa, Casa.id == Jogo.time_casa_id)
+        .join(Fora, Fora.id == Jogo.time_fora_id)
+        .outerjoin(
+            Palpite,
+            and_(
+                Palpite.jogo_id == Jogo.id,
+                Palpite.liga_id == liga_id,
+                Palpite.usuario_id == usuario_id,
+            ),
+        )
+        .filter(
+            Jogo.temporada_id == temporada_id,
+            Jogo.rodada == rodada,
+        )
+        .order_by(Jogo.data_hora.asc().nullslast(), Jogo.id.asc())
+        .all()
+    )
+
+    return [
+    {
+        "jogo_id": r.jogo_id,
+        "time_casa": r.time_casa,
+        "placar_real_casa": r.gols_casa,
+        "placar_real_fora": r.gols_fora,
+        "time_fora": r.time_fora,
+        "data_hora": r.data_hora,
+        "status": r.status,
+        "palpite_casa": r.placar_casa,
+        "palpite_fora": r.placar_fora,
+        "pontos": r.pontos,
+    }
+    for r in rows
+]
+
+def meu_palpite_no_jogo(db: Session, liga_id: int, usuario_id: int, jogo_id: int):
+    Casa = aliased(Time)
+    Fora = aliased(Time)
+
+    r = (
+        db.query(
+            Jogo.id.label("jogo_id"),
+            Casa.nome.label("time_casa"),
+            Fora.nome.label("time_fora"),
+            Jogo.gols_casa,
+            Jogo.gols_fora,
+            Jogo.data_hora,
+            Jogo.status,
+            Palpite.placar_casa,
+            Palpite.placar_fora,
+            Palpite.pontos,
+        )
+        .join(Casa, Casa.id == Jogo.time_casa_id)
+        .join(Fora, Fora.id == Jogo.time_fora_id)
+        .outerjoin(
+            Palpite,
+            and_(
+                Palpite.jogo_id == Jogo.id,
+                Palpite.liga_id == liga_id,
+                Palpite.usuario_id == usuario_id,
+            ),
+        )
+        .filter(Jogo.id == jogo_id)
+        .first()
+    )
+    if not r:
+        return None
+
+    return {
+        "jogo_id": r.jogo_id,
+        "time_casa": r.time_casa,
+        "placar_real_casa": r.gols_casa,
+        "placar_real_fora": r.gols_fora,
+        "time_fora": r.time_fora,
+        "data_hora": r.data_hora,
+        "status": r.status,
+        "palpite_casa": r.placar_casa,
+        "palpite_fora": r.placar_fora,
+        "pontos": r.pontos,
+    }
+
+
+def palpites_do_jogo_na_liga(db: Session, liga_id: int, jogo_id: int):
+    Casa = aliased(Time)
+    Fora = aliased(Time)
+
+    rows = (
+        db.query(
+            Usuario.nome.label("usuario_nome"),
+            Casa.nome.label("time_casa"),
+            Fora.nome.label("time_fora"),
+            Jogo.gols_casa,
+            Jogo.gols_fora,
+            Palpite.ultima_atualizacao,
+            Jogo.status,
+            Palpite.placar_casa,
+            Palpite.placar_fora,
+            Palpite.pontos,
+        )
+        .join(LigaMembro, LigaMembro.usuario_id == Usuario.id)
+        .filter(LigaMembro.liga_id == liga_id)
+        .join(Jogo, Jogo.id == jogo_id)
+        .join(Casa, Casa.id == Jogo.time_casa_id)
+        .join(Fora, Fora.id == Jogo.time_fora_id)
+        .outerjoin(
+            Palpite,
+            and_(
+                Palpite.liga_id == liga_id,
+                Palpite.usuario_id == Usuario.id,
+                Palpite.jogo_id == Jogo.id,
+            ),
+        )
+        .order_by(Usuario.nome.asc())
+        .all()
+    )
+
+    return [
+        {
+            "usuario_nome": r.usuario_nome,
+            "time_casa": r.time_casa,
+            "placar_real_casa": r.gols_casa,
+            "placar_real_fora": r.gols_fora,
+            "time_fora": r.time_fora,
+            "data_hora": r.ultima_atualizacao,
+            "status": r.status,
+            "palpite_casa": r.placar_casa,
+            "palpite_fora": r.placar_fora,
+            "pontos": r.pontos,
+        }
+        for r in rows
+    ]
+
+def palpite_response_do_jogo(db: Session, liga_id: int, usuario_id: int, jogo_id: int):
+    Casa = aliased(Time)
+    Fora = aliased(Time)
+
+    r = (
+        db.query(
+            Jogo.id.label("jogo_id"),
+            Casa.nome.label("time_casa"),
+            Fora.nome.label("time_fora"),
+            Jogo.status.label("status"),
+            Palpite.placar_casa.label("palpite_casa"),
+            Palpite.placar_fora.label("palpite_fora"),
+            Palpite.data_criacao.label("data_criacao"),
+        )
+        .join(Casa, Casa.id == Jogo.time_casa_id)
+        .join(Fora, Fora.id == Jogo.time_fora_id)
+        .outerjoin(
+            Palpite,
+            and_(
+                Palpite.jogo_id == Jogo.id,
+                Palpite.liga_id == liga_id,
+                Palpite.usuario_id == usuario_id,
+            ),
+        )
+        .filter(Jogo.id == jogo_id)
+        .first()
+    )
+
+    if not r:
+        return None
+
+    return {
+        "jogo_id": r.jogo_id,
+        "time_casa": r.time_casa,
+        "palpite_casa": r.palpite_casa,
+        "palpite_fora": r.palpite_fora,
+        "time_fora": r.time_fora,
+        "data_criacao": r.data_criacao,
+        "status_jogo": r.status,
+    }

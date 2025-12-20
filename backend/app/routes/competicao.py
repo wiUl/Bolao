@@ -5,33 +5,34 @@ from app.database import get_db
 from app.core.permissions import require_admin
 from app.schemas.competicao import CompeticaoCreate, CompeticaoUpdate, CompeticaoResponse
 from app.crud.competicao import criar_competicao, listar_competicoes, buscar_competicao, atualizar_competicao, deletar_competicao
+from app.core.dependencies import get_current_user
 
 router = APIRouter(prefix="/competicoes", tags=["Competições"])
 
 @router.post("", response_model=CompeticaoResponse, status_code=status.HTTP_201_CREATED)
-def cria_competicao(body: CompeticaoCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
+def cria_competicao(body: CompeticaoCreate, db: Session = Depends(get_db), admin=Depends(require_admin)):
     return criar_competicao(db, body)
 
 @router.get("", response_model=list[CompeticaoResponse])
-def lista_competicoes(db: Session = Depends(get_db)):
+def lista_competicoes(db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     return listar_competicoes(db)
 
 @router.get("/{competicao_id}", response_model=CompeticaoResponse)
-def busca_competicao(competicao_id: int, db: Session = Depends(get_db)):
+def busca_competicao(competicao_id: int, db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     obj = buscar_competicao(db, competicao_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Competição não encontrada.")
     return obj
 
 @router.put("/{competicao_id}", response_model=CompeticaoResponse)
-def atualiza_competicao(competicao_id: int, body: CompeticaoUpdate, db: Session = Depends(get_db), _=Depends(require_admin)):
+def atualiza_competicao(competicao_id: int, body: CompeticaoUpdate, db: Session = Depends(get_db), admin=Depends(require_admin)):
     obj = buscar_competicao(db, competicao_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Competição não encontrada.")
     return atualizar_competicao(db, obj, body)
 
 @router.delete("/{competicao_id}", status_code=status.HTTP_204_NO_CONTENT)
-def exclui_competicao(competicao_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
+def exclui_competicao(competicao_id: int, db: Session = Depends(get_db), admin=Depends(require_admin)):
     obj = buscar_competicao(db, competicao_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Competição não encontrada.")
