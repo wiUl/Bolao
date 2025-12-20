@@ -1,6 +1,6 @@
 # 🏆 Projeto Bolão Brasileirão
 
-Backend de um sistema de **Bolão do Campeonato Brasileiro**, desenvolvido com foco em regras de negócio claras, organização em camadas e padrões próximos aos utilizados em aplicações de mercado. O projeto foi pensado tanto como **produto funcional** quanto como **peça de portfólio**, demonstrando modelagem de domínio, SQLAlchemy, FastAPI e boas práticas de backend.
+Backend de um sistema de **Bolão do Campeonato Brasileiro**, desenvolvido com foco em regras de negócio claras, organização em camadas e padrões próximos aos utilizados em aplicações de mercado. O projeto foi pensado tanto como **produto funcional** quanto como **peça de portfólio**, demonstrando modelagem de domínio, SQLAlchemy, FastAPI e boas práticas de backend. A ideia surgiu de um bolão que eu geri com meu grupo de amigos em 2025 do campeonato brasileiro, controlei todos os dados manualmente através de uma planilha no Google Spreadsheets que está disponível aqui[https://docs.google.com/spreadsheets/d/1N4oWhcUq2zaDHTtEgslIRE229h59WKnImzfjltVu7K4/edit?usp=sharing]. Ao fim do campeonato brasileiro me surgiu a ideia de juntar o útil ao agradável e tentar implementar um sistema de bolão simples que servisse de portfólio e ao mesmo tempo fosse um produto para ser utilizado com meus amigos em forma de descontração que dá forma através desse projeto. 
 
 ---
 
@@ -77,6 +77,7 @@ Essa abordagem evita lógica complexa nos endpoints e facilita manutenção, tes
 ### 🧮 Pontuação e Rankings
 
 * Cálculo automático de pontuação
+* * Pontuação segue a regra de 5 pontos para placar exato, 4 pontos se acertar o vencedor e a diferença de gols, 3 pontos para acertar o resultado vitoria/empate e 0 pontos em caso de erro
 * Diferenciação por tipo de acerto
 * **Ranking geral da liga**
 * **Ranking por rodada**
@@ -166,4 +167,4 @@ Este projeto vai além de um CRUD simples, explorando regras de negócio, consul
 
 ---
 
-📫 Em caso de dúvidas ou sugestões, fique à vontade para entrar em contato.
+Desenvolvido por: Willian Gomes
