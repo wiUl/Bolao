@@ -1,86 +1,169 @@
-# ⚽ Bolão de Futebol 
+# 🏆 Projeto Bolão Brasileirão
 
-Este projeto é sobre um sistema de bolão de futebol desenvolvido com foco em **boas práticas**, **clareza de domínio** e **escalabilidade**, utilizando FastAPI e SQLAlchemy.
+Backend de um sistema de **Bolão do Campeonato Brasileiro**, desenvolvido com foco em regras de negócio claras, organização em camadas e padrões próximos aos utilizados em aplicações de mercado. O projeto foi pensado tanto como **produto funcional** quanto como **peça de portfólio**, demonstrando modelagem de domínio, SQLAlchemy, FastAPI e boas práticas de backend.
 
-O projeto permite a criação de ligas privadas, envio de palpites, cálculo automático de pontuação e geração de rankings por temporada.
+---
+
+## 🎯 Objetivo do Projeto
+
+Permitir que usuários participem de ligas privadas para palpitar resultados dos jogos do Brasileirão, com cálculo automático de pontuação, rankings detalhados e histórico de desempenho ao longo das rodadas.
+
+O sistema foi modelado para ser **flexível**, permitindo temporadas com diferentes quantidades de rodadas e regras de pontuação extensíveis.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
 ### Backend
-- **Python**
-- **FastAPI**
-- **SQLAlchemy (ORM)**
-- **Pydantic**
-- **JWT (OAuth2 Password Flow)**
-- **Passlib + bcrypt**
+
+* **Python**
+* **FastAPI**
+* **SQLAlchemy (ORM)**
+* **Pydantic**
+* **JWT (OAuth2 Password Flow)**
+* **Passlib + bcrypt**
 
 ### Banco de Dados
-- **SQLite** (ambiente de desenvolvimento)
-- Preparado para **PostgreSQL / MySQL** em produção
 
-### Infraestrutura
-- **Alembic** para migrações
-- **Seeds idempotentes** para dados iniciais
+* **SQLite** (ambiente de desenvolvimento)
+
+---
+
+## 🧱 Arquitetura do Projeto
+
+O projeto segue uma separação clara de responsabilidades:
+
+* **Models**: definição das entidades e relacionamentos (SQLAlchemy)
+* **Schemas**: validação e serialização de dados (Pydantic)
+* **CRUD / Services**: regras de negócio e operações no banco
+* **Endpoints (Routes)**: exposição da API REST
+
+Essa abordagem evita lógica complexa nos endpoints e facilita manutenção, testes e evolução do sistema.
 
 ---
 
 ## ⚙️ Funcionalidades Implementadas
 
-### 🔐 Autenticação e Usuários
-- Autenticação com JWT
-- Criação de admin via `.env`
-- Seed de usuários comuns
-- Hash seguro de senha
-- Dependência `get_current_user`
+### 👤 Usuários e Autenticação
 
-### 🧩 Domínio do Sistema
-- Competições e temporadas
-- Times
-- Jogos com rodadas, data/hora e resultado
-- Ligas privadas por temporada
-- Membros de liga com papéis (dono, admin, membro)
-- Palpites por jogo
+* Cadastro e login de usuários
+* Autenticação via JWT
+* Hash seguro de senhas
 
-### 🧮 Pontuação
-- Cálculo automático de pontos baseado no resultado real:
-  - **5 pontos**: placar exato
-  - **4 pontos**: acerto da diferença de gols e vencedor
-  - **3 pontos**: acerto do vencedor ou empate
-  - **0 pontos**: erro total
+### 🏟️ Ligas
 
----
+* Criação de ligas por temporada
+* Sistema de convite por código
+* Associação de usuários às ligas
+* Controle de papéis:
 
-## 📊 Funcionalidades em Andamento
+  * Dono da liga
+  * Membros
+* Endpoints para listar membros e alterar papéis
 
-- Ranking por liga e temporada
-- Pontuação por rodada
-- Consulta de palpites por usuário
-- Recalcular pontuação automaticamente ao atualizar resultado do jogo
-- Endpoints otimizados para frontend
+### 📅 Temporadas, Rodadas e Jogos
 
----
+* Cadastro de temporadas
+* Cadastro de rodadas
+* Associação de jogos às rodadas
+* Suporte a campeonatos com número variável de rodadas
 
-## 📍 Próximos Passos Planejados
+### ✍️ Palpites
 
-- Endpoints de leitura (ranking, rodada, histórico)
-- Ajustes finais de regras de negócio
-- Preparação completa para PostgreSQL
-- Frontend web (React / mobile)
-- Deploy
+* Envio de palpites por jogo
+* Validações para evitar palpites inválidos
+* Associação correta entre usuário, liga, rodada e jogo
 
----
+### 🧮 Pontuação e Rankings
 
-## 📄 Status do Projeto
+* Cálculo automático de pontuação
+* Diferenciação por tipo de acerto
+* **Ranking geral da liga**
+* **Ranking por rodada**
+* **Pontuação total da rodada**
+* **Quantidade de acertos por tipo**
 
-🚧 **Em desenvolvimento ativo**
+### 📈 Consultas Analíticas
 
-Projeto pessoal com foco em aprendizado, boas práticas e escalável.
+* Pontuação acumulada por rodada
+* Histórico de evolução do usuário
+* Pontuação acumulada de um único usuário
+* Listagem de palpites de todos os usuários em uma rodada específica
+
+Essas consultas permitem a criação de gráficos, tabelas comparativas e dashboards no frontend.
 
 ---
 
-## ✍️ Autor
+## 🔄 Fluxo Geral do Sistema
 
-**Willian Gomes**  
-Projeto pessoal para estudo e evolução em desenvolvimento backend.
+1. Usuário cria uma conta e se autentica
+2. Usuário cria ou entra em uma liga via código de convite
+3. A liga está associada a uma temporada
+4. Cada temporada possui rodadas
+5. Cada rodada possui jogos
+6. Usuários enviam palpites para os jogos
+7. Jogos são finalizados
+8. O sistema calcula a pontuação automaticamente
+9. Rankings e estatísticas ficam disponíveis
+
+---
+
+## 📦 Estado Atual do Projeto
+
+O backend já possui:
+
+* Modelagem sólida do domínio
+* Regras de negócio bem definidas
+* Consultas de leitura avançadas
+* Base pronta para integração com frontend web ou mobile
+
+Funcionalidades futuras (em stand-by):
+
+* Dashboard visual no frontend
+* Gráficos de evolução em tempo real
+* Migrações com Alembic
+* Deploy em ambiente de produção
+
+---
+
+## 🚀 Como Executar o Projeto
+
+```bash
+# criar ambiente virtual
+python -m venv venv
+
+# ativar ambiente virtual
+# Windows
+venv\Scripts\activate
+
+# Linux / Mac
+source venv/bin/activate
+
+# instalar dependências
+pip install -r requirements.txt
+
+# rodar a aplicação
+uvicorn app.main:app --reload
+```
+
+A API ficará disponível em:
+
+```
+http://127.0.0.1:8000
+```
+
+Documentação automática (Swagger):
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## 📌 Considerações Finais
+
+Este projeto vai além de um CRUD simples, explorando regras de negócio, consultas analíticas e organização arquitetural. Ele foi desenvolvido com foco em aprendizado profundo de backend, SQLAlchemy e FastAPI, servindo tanto como base para um produto real quanto como **projeto de portfólio**.
+
+---
+
+📫 Em caso de dúvidas ou sugestões, fique à vontade para entrar em contato.
