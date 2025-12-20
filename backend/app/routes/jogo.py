@@ -8,6 +8,7 @@ from app.crud.jogo import criar_jogo, listar_jogos, buscar_jogo, atualizar_jogo,
 
 from app.models.temporada import Temporada
 from app.models.time import Time
+from app.core.dependencies import get_current_user
 
 router = APIRouter(prefix="/jogos", tags=["Jogos"])
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/jogos", tags=["Jogos"])
 def cria_jogo(
     body: JogoCreate,
     db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    admin=Depends(require_admin),
 ):
     if body.time_casa_id == body.time_fora_id:
         raise HTTPException(400, detail="Time da casa e fora não podem ser iguais.")
@@ -36,11 +37,12 @@ def lista_jogos(
     temporada_id: int | None = None,
     rodada: int | None = None,
     db: Session = Depends(get_db),
+    usuario_logado = Depends(get_current_user)
 ):
     return listar_jogos(db, temporada_id=temporada_id, rodada=rodada)
 
 @router.get("/{jogo_id}", response_model=JogoResponse)
-def busca_jogo(jogo_id: int, db: Session = Depends(get_db)):
+def busca_jogo(jogo_id: int, db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     jogo = buscar_jogo(db, jogo_id)
     if not jogo:
         raise HTTPException(status_code=404, detail="Jogo não encontrado.")
@@ -51,7 +53,7 @@ def atualiza_jogo(
     jogo_id: int,
     body: JogoUpdate,
     db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    admin=Depends(require_admin),
 ):
     jogo = buscar_jogo(db, jogo_id)
     if not jogo:
@@ -63,7 +65,7 @@ def atualiza_resultado(
     jogo_id: int,
     body: JogoResultadoUpdate,
     db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    admin=Depends(require_admin),
 ):
     jogo = buscar_jogo(db, jogo_id)
     if not jogo:
@@ -74,7 +76,7 @@ def atualiza_resultado(
 def exclui_jogo(
     jogo_id: int,
     db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    admin=Depends(require_admin),
 ):
     jogo = buscar_jogo(db, jogo_id)
     if not jogo:
