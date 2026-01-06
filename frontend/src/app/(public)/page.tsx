@@ -4,7 +4,7 @@ import { AuthCard } from "@/app/components/AuthCard";
 export default function HomePage() {
   return (
     <AuthCard>
-      <h1 style={{ marginTop: 0 , textAlign: "center", fontSize: "32px"}}>Bolão dos Casados</h1>
+      <h1 style={{ marginTop: 0 , textAlign: "center", fontSize: '32px'}}>Bolão dos Casados</h1>
 
       <p style={{ marginBottom: 20 }}>
         Entre para palpitar jogos, acompanhar rankings e evolução por rodada.
