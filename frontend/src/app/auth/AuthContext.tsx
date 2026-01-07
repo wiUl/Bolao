@@ -12,6 +12,7 @@ import { setupInterceptors } from "@/app/interceptors";
 import { clearToken, getToken, setToken } from "@/app/auth/tokenStorage";
 import type { LoginRequest } from "@/app/types/auth";
 import type { User } from "@/app/types/user";
+import { useRouter } from "next/navigation";
 
 /**
  * O que o AuthContext disponibiliza para o app inteiro
@@ -21,6 +22,7 @@ type AuthContextValue = {
   user: User | null;
   login: (data: LoginRequest) => Promise<void>;
   logout: () => void;
+  reloadUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokenState, setTokenState] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   /**
    * 1️⃣ Inicialização do app
@@ -43,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token) {
       setTokenState(token);
       loadUser(); // 🔑 carrega /usuarios/me
+
     } else {
       setLoading(false);
     }
@@ -93,6 +97,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function reloadUser(): Promise<void> {
+    setLoading(true);
+    await loadUser();
+  }
+
   /**
    * 4️⃣ Logout
    */
@@ -100,6 +109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearToken();
     setTokenState(null);
     setUser(null);
+
+    router.replace("/login")
   }
 
   /**
@@ -111,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       login,
       logout,
+      reloadUser,
     };
   }, [tokenState, user]);
 
