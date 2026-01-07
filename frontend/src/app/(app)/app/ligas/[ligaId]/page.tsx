@@ -360,6 +360,20 @@ export default function LigaPage() {
                 </button>
               </Link>            
             </div>   
+          </section>
+
+          <section style={sectionStyle}>
+            <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
+              <div>
+                <h2 style={{marginTop: 0, marginBottom: 4}}>Ranking</h2>
+                <p style={{margin: 0, opacity: 0.85}}>
+                  Visualizar Ranking Geral e por Rodada
+                </p>
+              </div>
+              <Link href={`/app/ligas/${ligaId}/ranking`} style={{ textDecoration: "none" }}>
+                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>Ver ranking</button>
+              </Link>           
+            </div>   
           </section>  
 
           {/* Sair */}
