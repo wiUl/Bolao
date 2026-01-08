@@ -226,12 +226,12 @@ export default function PalpitesRodadaPage() {
       {/* Header em card */}
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <h1 style={{ marginTop: 0, marginBottom: 0 }}>
+          <h1 style={{ marginTop: 0, marginBottom: 0 , fontWeight: 600}}>
             Palpites — Rodada {rodada}
           </h1>
 
           <div style={{ display: "flex", gap: 12 }}>
-            <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 500 }}>
+            <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 600 }}>
               Voltar
             </Link>
           </div>
@@ -262,7 +262,7 @@ export default function PalpitesRodadaPage() {
 
       {/* Seletor de rodada */}
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0 }}>Rodada</h2>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Rodada</h2>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <button
@@ -300,7 +300,7 @@ export default function PalpitesRodadaPage() {
       {/* Lista de jogos */}
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <h2 style={{ marginTop: 0 }}>Jogos</h2>
+          <h2 style={{ marginTop: 0 , fontWeight: 600}}>Jogos</h2>
           {loading ? <span style={{ fontSize: 14, opacity: 0.8 }}>Carregando...</span> : null}
         </div>
 
