@@ -175,7 +175,7 @@ export default function PerfilPage() {
 
 
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0 }}>Dados</h2>
+        <h2 style={{ marginTop: 0 , fontWeight: 600}}>Dados</h2>
 
         <div style={gridStyle}>
           <label style={labelStyle}>
@@ -230,7 +230,7 @@ export default function PerfilPage() {
       </section>
 
       <section style={{ ...sectionStyle, borderColor: "#f3c2c2" }}>
-        <h2 style={{ marginTop: 0 }}>Zona de perigo</h2>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Zona de perigo</h2>
         <p style={{ marginTop: 0 }}>
           Excluir sua conta é uma ação <strong>irreversível</strong>.
         </p>

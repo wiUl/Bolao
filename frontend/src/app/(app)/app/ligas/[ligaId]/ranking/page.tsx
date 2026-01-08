@@ -116,9 +116,9 @@ export default function RankingPage() {
       {/* Header */}
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <h1 style={{ marginTop: 0, marginBottom: 0 }}>Ranking</h1>
+          <h1 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>Ranking</h1>
 
-          <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 500 }}>
+          <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 600 }}>
             Voltar
           </Link>
         </div>
@@ -200,7 +200,7 @@ export default function RankingPage() {
       {/* Tabela */}
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <h2 style={{ marginTop: 0, marginBottom: 0 }}>
+          <h2 style={{ marginTop: 0, marginBottom: 0 , fontWeight: 600}}>
             {tab === "geral" ? "Classificação geral" : `Classificação — rodada ${rodada}`}
           </h2>
           {loading ? <span style={{ fontSize: 14, opacity: 0.75 }}>Carregando...</span> : null}

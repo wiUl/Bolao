@@ -1,5 +1,6 @@
 import { api } from "./clients";
 import type { MeuPalpiteRodadaItem, PalpiteCreate } from "@/app/types/palpite";
+import type { PalpiteLigaJogoItem } from "@/app/types/palpiteLigaJogo";
 
 export async function listarMeusPalpitesNaRodada(
   ligaId: number,
@@ -22,3 +23,14 @@ export async function upsertMeuPalpite(
 export async function deletarMeuPalpite(ligaId: number, jogoId: number): Promise<void> {
   await api.delete(`/palpites/ligas/${ligaId}/jogos/${jogoId}/meu`);
 }
+
+export async function listarPalpitesDoJogoNaLiga(
+  ligaId: number,
+  jogoId: number
+): Promise<PalpiteLigaJogoItem[]> {
+  const res = await api.get<PalpiteLigaJogoItem[]>(
+    `/palpites/ligas/${ligaId}/jogos/${jogoId}`
+  );
+  return res.data;
+}
+

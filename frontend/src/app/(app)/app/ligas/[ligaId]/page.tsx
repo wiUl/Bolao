@@ -187,7 +187,7 @@ export default function LigaPage() {
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             {!editNomeOpen ? (
-              <h1 style={{ marginTop: 0, marginBottom: 0 }}>{liga ? liga.nome : "Liga"}</h1>
+              <h1 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>{liga ? liga.nome : "Liga"}</h1>
             ) : (
               <input
                 value={nomeEdit}
@@ -232,7 +232,7 @@ export default function LigaPage() {
           </div>
 
 
-          <Link href="/app/ligas" style={{ textDecoration: "none", fontWeight: 500 }}>
+          <Link href="/app/ligas" style={{ textDecoration: "none", fontWeight: 600 }}>
             Voltar
           </Link>
         </div>
@@ -260,7 +260,7 @@ export default function LigaPage() {
         <>
           {/* Info da liga */}
           <section style={sectionStyle}>
-            <h2 style={{ marginTop: 0 }}>Informações</h2>
+            <h2 style={{ marginTop: 0, fontWeight: 600 }}>Informações</h2>
 
             <div style={infoGrid}>
               <div style={infoItem}>
@@ -287,7 +287,7 @@ export default function LigaPage() {
           {/* Membros */}
           <section style={sectionStyle}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <h2 style={{ marginTop: 0 }}>Membros</h2>
+              <h2 style={{ marginTop: 0 , fontWeight: 600}}>Membros</h2>
               <span style={{ fontSize: 14, opacity: 0.8 }}>{membros.length} membro(s)</span>
             </div>
 
@@ -349,14 +349,14 @@ export default function LigaPage() {
           <section style={sectionStyle}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
               <div>
-                <h2 style={{marginTop: 0, marginBottom: 4}}>Palpites</h2>
+                <h2 style={{marginTop: 0, marginBottom: 4, fontWeight: 600}}>Meus Palpites</h2>
                 <p style={{margin: 0, opacity: 0.85}}>
                   Criar, editar e acompanhar seus palpites por rodada
                 </p>
               </div>
               <Link href={`/app/ligas/${ligaId}/palpites`} style={{ textDecoration: "none" }}>
                 <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>
-                Ir para Palpites
+                Ir para meus Palpites
                 </button>
               </Link>            
             </div>   
@@ -365,7 +365,7 @@ export default function LigaPage() {
           <section style={sectionStyle}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
               <div>
-                <h2 style={{marginTop: 0, marginBottom: 4}}>Ranking</h2>
+                <h2 style={{marginTop: 0, marginBottom: 4, fontWeight: 600}}>Ranking</h2>
                 <p style={{margin: 0, opacity: 0.85}}>
                   Visualizar Ranking Geral e por Rodada
                 </p>
@@ -374,11 +374,25 @@ export default function LigaPage() {
                 <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>Ver ranking</button>
               </Link>           
             </div>   
-          </section>  
+          </section>
+
+          <section style={sectionStyle}>
+            <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
+              <div>
+                <h2 style={{marginTop: 0, marginBottom: 4, fontWeight: 600}}>Palpites da Liga</h2>
+                <p style={{margin: 0, opacity: 0.85}}>
+                  Compare palpites dos membros e veja a pontuação por jogo
+                </p>
+              </div>
+              <Link href={`/app/ligas/${ligaId}/rodadas/1`} style={{ textDecoration: "none" }}>
+                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>Ver palpites da rodada</button>
+              </Link>           
+            </div>   
+          </section>   
 
           {/* Sair */}
           <section style={{ ...sectionStyle, borderColor: "#f2ddb0" }}>
-            <h2 style={{ marginTop: 0 }}>Sair da liga</h2>
+            <h2 style={{ marginTop: 0 , fontWeight: 600}}>Sair da liga</h2>
 
             {!leaveOpen ? (
               <button onClick={() => setLeaveOpen(true)} style={secondaryBtnStyle} type="button">

@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 import { listarMinhasLigas, criarLiga, entrarNaLiga } from "@/app/api/ligas";
 import { listarTemporadas } from "@/app/api/temporadas";
 
+import { listarCompeticoes } from "@/app/api/competicoes";
+import type { Competicao } from "@/app/types/competicao";
+
 import type { Liga } from "@/app/types/liga";
 import type { Temporada } from "@/app/types/temporada";
 
@@ -36,12 +39,82 @@ export default function LigasPage() {
   const [codigoConvite, setCodigoConvite] = useState("");
   const [joining, setJoining] = useState(false);
 
+  const [competicoes, setCompeticoes] = useState<Competicao[]>([]);
+
+  const [competicaoId, setCompeticaoId] = useState<number | "">("");
+  const [temporadaId, setTemporadaId] = useState<number | "">("");
+
+  const [loadingCompeticoes, setLoadingCompeticoes] = useState(false);
+  const [loadingTemporadas, setLoadingTemporadas] = useState(false);
+
+
   // auto-hide do sucesso (padrão UX)
   useEffect(() => {
     if (!msg) return;
     const t = setTimeout(() => setMsg(null), 3000);
     return () => clearTimeout(t);
   }, [msg]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadCompeticoes() {
+      setLoadingCompeticoes(true);
+      try {
+        const lista = await listarCompeticoes();
+        if (!mounted) return;
+        setCompeticoes(lista);
+      } catch (e: any) {
+        if (!mounted) return;
+        setErr(extractApiErrorMessage(e));
+      } finally {
+        if (!mounted) return;
+        setLoadingCompeticoes(false);
+      }
+    }
+
+    loadCompeticoes();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadTemporadas() {
+      // reset quando não tem competição
+      if (competicaoId === "") {
+        setTemporadas([]);
+        setTemporadaId("");
+        return;
+      }
+
+      setLoadingTemporadas(true);
+      try {
+        const lista = await listarTemporadas({ competicao_id: Number(competicaoId) });
+        if (!mounted) return;
+
+        setTemporadas(lista);
+        setTemporadaId(""); // força o usuário escolher de novo
+      } catch (e: any) {
+        if (!mounted) return;
+        setErr(extractApiErrorMessage(e));
+      } finally {
+        if (!mounted) return;
+        setLoadingTemporadas(false);
+      }
+    }
+
+    loadTemporadas();
+
+    return () => {
+      mounted = false;
+    };
+  }, [competicaoId]);
+
+
 
   async function carregarTudo() {
     setErr(null);
@@ -128,8 +201,8 @@ export default function LigasPage() {
     <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
       <section style={sectionStyle}> 
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-        <h1 style={{ marginTop: 0 }}>Minhas Ligas</h1>
-        <Link href="/app" style={{ textDecoration: "none" }}>
+        <h1 style={{ marginTop: 0, fontWeight: 600 }}>Minhas Ligas</h1>
+        <Link href="/app" style={{ textDecoration: "none" , fontWeight: 600}}>
           Voltar
         </Link>
       </div>
@@ -153,10 +226,10 @@ export default function LigasPage() {
 
       {/* Ações */}
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0 }}>Ações</h2>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Ações</h2>
 
         <div style={gridStyle}>
-          {/* Criar liga */}
+          {/* Card: Criar liga */}
           <div style={cardStyle}>
             <strong>Criar liga</strong>
 
@@ -171,14 +244,43 @@ export default function LigasPage() {
             </label>
 
             <label style={labelStyle}>
-              <span>Temporada</span>
+              <span>Competição</span>
               <select
-                value={temporadaCriar}
-                onChange={(e) => setTemporadaCriar(Number(e.target.value))}
+                value={competicaoId}
+                onChange={(e) =>
+                  setCompeticaoId(e.target.value ? Number(e.target.value) : "")
+                }
                 style={inputStyle}
+                disabled={loadingCompeticoes}
               >
                 <option value="">Selecione</option>
-                {temporadasOrdenadas.map((t) => (
+                {competicoes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label style={labelStyle}>
+              <span>Temporada</span>
+              <select
+                value={temporadaId}
+                onChange={(e) =>
+                  setTemporadaId(e.target.value ? Number(e.target.value) : "")
+                }
+                style={inputStyle}
+                disabled={competicaoId === "" || loadingTemporadas}
+              >
+                <option value="">
+                  {competicaoId === ""
+                    ? "Selecione uma competição primeiro"
+                    : loadingTemporadas
+                    ? "Carregando..."
+                    : "Selecione"}
+                </option>
+
+                {temporadas.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.ano}
                   </option>
@@ -196,7 +298,7 @@ export default function LigasPage() {
             </button>
           </div>
 
-          {/* Entrar em liga */}
+          {/* Card: Entrar por convite */}
           <div style={cardStyle}>
             <strong>Entrar por convite</strong>
 
@@ -222,6 +324,7 @@ export default function LigasPage() {
         </div>
       </section>
 
+
       {/* Lista */}
       <section style={sectionStyle}>
         <div
@@ -232,7 +335,7 @@ export default function LigasPage() {
             gap: 12,
           }}
         >
-          <h2 style={{ marginTop: 0 }}>Suas ligas</h2>
+          <h2 style={{ marginTop: 0, fontWeight: 600 }}>Suas ligas</h2>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 14 }}>Filtrar por temporada:</span>
@@ -360,6 +463,19 @@ const inputStyle: React.CSSProperties = {
   padding: "10px 12px",
 };
 
+const fieldStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+  marginTop: 10,
+};
+
+const actionCardStyle: React.CSSProperties = {
+  border: "1px solid #eee",
+  borderRadius: 12,
+  padding: 16,
+};
+
 function primaryBtnStyle(disabled: boolean): React.CSSProperties {
   return {
     padding: "10px 12px",
@@ -370,3 +486,5 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
     fontWeight: 600,
   };
 }
+
+
