@@ -346,6 +346,8 @@ export default function LigaPage() {
               </div>
             ) : null}
           </section>
+
+          {/* Meus Palpites */}
           <section style={sectionStyle}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
               <div>
@@ -362,6 +364,7 @@ export default function LigaPage() {
             </div>   
           </section>
 
+          {/* Ranking */}    
           <section style={sectionStyle}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
               <div>
@@ -376,6 +379,7 @@ export default function LigaPage() {
             </div>   
           </section>
 
+          {/* Palpites da Liga */}  
           <section style={sectionStyle}>
             <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
               <div>
@@ -388,7 +392,36 @@ export default function LigaPage() {
                 <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>Ver palpites da rodada</button>
               </Link>           
             </div>   
-          </section>   
+          </section>
+          
+          {/* Gráficos */}
+          <section style={sectionStyle}>
+            <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap"}}>
+              <div>
+                <h2 style={{marginTop: 0, marginBottom: 4, fontWeight: 600}}>Gráficos</h2>
+                <p style={{margin: 0, opacity: 0.85}}>
+                  Visualize sua evolução e comparações na liga
+                </p>
+              </div>
+
+              <Link href={`/app/ligas/${ligaId}/graficos`} style={{ textDecoration: "none" }}>
+                <button
+                  type="button"
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    border: "1px solid #ddd",
+                    background: "white",
+                    cursor: "pointer",
+                    fontWeight: 600
+                  }}
+                >
+                  Ver gráficos
+                </button>
+              </Link>
+            </div>
+          </section>
+   
 
           {/* Sair */}
           <section style={{ ...sectionStyle, borderColor: "#f2ddb0" }}>
