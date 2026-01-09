@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/app/auth/AuthContext";
+import { isAdmin } from "@/app/auth/isAdmin";
 
 export default function AppHomePage() {
   const { user } = useAuth();
@@ -44,6 +45,45 @@ export default function AppHomePage() {
           </Link>
         </div>
       </section>
+
+      {isAdmin(user) ? (
+      <section style={{ marginTop: 18 }}>
+        <h2 style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>
+          Admin
+        </h2>
+
+        <div style={gridStyle}>
+          <Link href="/admin/competicoes" style={{ textDecoration: "none", color: "inherit" }}>
+            <div style={cardStyle}>
+              <h3 style={{ marginTop: 0, marginBottom: 6, fontWeight: 600 }}>Competições</h3>
+              <p style={{ margin: 0, opacity: 0.85 }}>Gerenciar competições</p>
+            </div>
+          </Link>
+
+          <Link href="/admin/temporadas" style={{ textDecoration: "none", color: "inherit" }}>
+            <div style={cardStyle}>
+              <h3 style={{ marginTop: 0, marginBottom: 6, fontWeight: 600 }}>Temporadas</h3>
+              <p style={{ margin: 0, opacity: 0.85 }}>Gerenciar temporadas</p>
+            </div>
+          </Link>
+
+          <Link href="/admin/times" style={{ textDecoration: "none", color: "inherit" }}>
+            <div style={cardStyle}>
+              <h3 style={{ marginTop: 0, marginBottom: 6, fontWeight: 600 }}>Times</h3>
+              <p style={{ margin: 0, opacity: 0.85 }}>Gerenciar times</p>
+            </div>
+          </Link>
+
+          <Link href="/admin/jogos" style={{ textDecoration: "none", color: "inherit" }}>
+            <div style={cardStyle}>
+              <h3 style={{ marginTop: 0, marginBottom: 6, fontWeight: 600 }}>Jogos</h3>
+              <p style={{ margin: 0, opacity: 0.85 }}>Gerenciar jogos e resultados</p>
+            </div>
+          </Link>
+        </div>
+      </section>
+    ) : null}
+
     </main>
   );
 }
@@ -58,3 +98,11 @@ const cardStyle: React.CSSProperties = {
   textDecoration: "none",
   color: "inherit",
 };
+
+const gridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 14,
+};
+
+

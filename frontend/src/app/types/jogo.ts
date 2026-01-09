@@ -1,8 +1,4 @@
-export type Time = {
-  id: number;
-  nome: string;
-  sigla: string;
-};
+import type {Time} from "@/app/types/time"
 
 export type Jogo = {
   id: number;
