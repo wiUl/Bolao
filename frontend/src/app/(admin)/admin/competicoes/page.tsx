@@ -389,7 +389,7 @@ export default function AdminCompeticoesPage() {
 
       {/* Buscar por ID */}
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Buscar por ID</h2>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Buscar</h2>
 
         <div style={rowStyle}>
           <label style={fieldStyle}>
@@ -446,7 +446,7 @@ export default function AdminCompeticoesPage() {
 
       {/* Atualizar por ID */}
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Atualizar por ID</h2>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Atualizar</h2>
 
         <div style={rowStyle}>
           <label style={fieldStyle}>
@@ -508,7 +508,7 @@ export default function AdminCompeticoesPage() {
 
       {/* Excluir por ID */}
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Excluir por ID</h2>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Excluir</h2>
 
         <div style={rowStyle}>
           <label style={fieldStyle}>

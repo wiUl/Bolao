@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { AuthCard } from "@/app/components/AuthCard";
+import { useAuth } from "@/app/auth/AuthContext";
 
 export default function NotFound() {
+  const { user } = useAuth();
+  const href = user ? "/app" : "/";
+
   return (
     <AuthCard title="404">
       <p style={{ textAlign: "center", marginBottom: 20 }}>
@@ -9,7 +15,7 @@ export default function NotFound() {
       </p>
 
       <Link
-        href="/"
+        href={href}
         style={{
           padding: 10,
           borderRadius: 8,

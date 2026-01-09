@@ -344,7 +344,7 @@ export default function PalpitesRodadaPage() {
     <img
       src={getEscudoSrc(j.time_casa.sigla)}
       alt={`Escudo ${j.time_casa.nome}`}
-      style={logoStyle}
+      style={{ width: 28, height: 28, objectFit: "contain" }}
       onError={(e) => {
         // esconde a imagem se não existir (evita ícone quebrado)
         (e.currentTarget as HTMLImageElement).style.display = "none";
@@ -380,7 +380,7 @@ export default function PalpitesRodadaPage() {
         <img
         src={getEscudoSrc(j.time_fora.sigla)}
         alt={`Escudo ${j.time_fora.nome}`}
-        style={logoStyle}
+        style={{ width: 28, height: 28, objectFit: "contain" }}
         onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = "none";
         }}
@@ -532,11 +532,12 @@ const dangerBtnStyle: React.CSSProperties = {
 };
 
 
-function getEscudoSrc(sigla: string) {
-  // ✅ Padrão simples: você pode colocar as imagens em /public/escudos/XXX.png
-  // Ex: public/escudos/FLA.png, public/escudos/COR.png etc.
-  return `/escudos/${sigla}.png`;
+function getEscudoSrc(sigla: string | null | undefined): string {
+  if (!sigla) return "/escudos/default.png";
+  return `/escudos/${sigla.toLowerCase()}.png`;
 }
+
+
 
 const logoStyle: React.CSSProperties = {
   width: 22,

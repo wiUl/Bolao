@@ -1,26 +1,34 @@
 import { api } from "./clients";
-import type { Temporada } from "@/app/types/temporada";
+import type { Temporada, TemporadaCreate, TemporadaUpdate } from "@/app/types/temporada";
 
-export async function listarTemporadas(params?: { Temporada_id?: number }): Promise<Temporada[]> {
-  const res = await api.get<Temporada[]>("/temporadas", { params });
+export type ListarTemporadasParams = {
+  competicao_id?: number;
+  ano?: number;
+};
+
+export async function listarTemporadas(params?: ListarTemporadasParams): Promise<Temporada[]> {
+  const res = await api.get<Temporada[]>("/temporadas", {params});
   return res.data;
 }
 
-export async function criarTemporada(payload: { nome: string }): Promise<Temporada> {
+export async function buscarTemporada(temporadaId: number): Promise<Temporada> {
+  const res = await api.get<Temporada>(`/temporadas/${temporadaId}`);
+  return res.data;
+}
+
+export async function criarTemporada(payload: TemporadaCreate): Promise<Temporada> {
   const res = await api.post<Temporada>("/temporadas", payload);
   return res.data;
 }
 
-export async function buscarTemporada(id: number): Promise<Temporada> {
-  const res = await api.get<Temporada>(`/temporadas/${id}`)
-  return res.data
-}
-
-export async function atualizarTemporada(id: number, payload: { nome: string }): Promise<Temporada> {
-  const res = await api.put<Temporada>(`/temporadas/${id}`, payload);
+export async function atualizarTemporada(
+  temporadaId: number,
+  payload: TemporadaUpdate
+): Promise<Temporada> {
+  const res = await api.put<Temporada>(`/temporadas/${temporadaId}`, payload);
   return res.data;
 }
 
-export async function deletarTemporada(id: number): Promise<void> {
-  await api.delete(`/temporadas/${id}`);
+export async function deletarTemporada(temporadaId: number): Promise<void> {
+  await api.delete(`/temporadas/${temporadaId}`);
 }
