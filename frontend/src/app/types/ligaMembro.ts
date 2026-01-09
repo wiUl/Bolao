@@ -16,3 +16,4 @@ export type LigaMembroUpdateRequest = {
 export type SairLigaRequest = {
   novo_dono_usuario_id?: number;
 };
+
