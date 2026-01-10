@@ -17,7 +17,7 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
       }}
     >
       <Link href={homeHref} style={{ textDecoration: "none", color: "inherit" }}>
-        <strong>Bolão</strong>
+        <strong>FutBolão</strong>
       </Link>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

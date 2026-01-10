@@ -14,7 +14,7 @@ export default function AppHomePage() {
       </h1>
 
       <p>
-        Bem-vindo ao Bolão. Aqui você pode gerenciar suas ligas,
+        Bem-vindo ao FutBolão. Aqui você pode gerenciar suas ligas,
         palpitar jogos e acompanhar rankings.
       </p>
 

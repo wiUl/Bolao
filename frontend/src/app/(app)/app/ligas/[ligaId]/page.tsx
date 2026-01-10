@@ -284,68 +284,43 @@ export default function LigaPage() {
             </div>
           </section>
 
-          {/* Membros */}
-          <section style={sectionStyle}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <h2 style={{ marginTop: 0 , fontWeight: 600}}>Membros</h2>
-              <span style={{ fontSize: 14, opacity: 0.8 }}>{membros.length} membro(s)</span>
-            </div>
+          {/* Pagamentos (somente dono/admin_liga) */}
+          {canManage ? (
+            <section style={sectionStyle}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <h2 style={{ marginTop: 0, marginBottom: 4, fontWeight: 600 }}>Pagamentos</h2>
+                  <p style={{ margin: 0, opacity: 0.85 }}>
+                    Controle de mensalidades da liga
+                  </p>
+                </div>
 
-            {membros.length === 0 ? <p>Nenhum membro encontrado.</p> : null}
-
-            {membros.length > 0 ? (
-              <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-                {membros.map((m) => {
-                  const isMe = user?.id === m.usuario_id;
-
-                  return (
-                    <div key={m.id} style={memberCard}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                        <div>
-                          <strong>{m.nome}</strong>{" "}
-                          {isMe ? <span style={{ opacity: 0.75 }}>(você)</span> : null}
-                          <div style={{ fontSize: 14, opacity: 0.85 }}>
-                            Papel: <code>{m.papel}</code>
-                          </div>
-                        </div>
-
-                        {/* Ações: somente se pode gerenciar */}
-                        {canManage ? (
-                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                            {/* Alterar papel (backend bloqueia: não pode virar dono, não pode alterar a si mesmo, admin não mexe em admin/dono) */}
-                            {canChangeRoles && !isMe ? (
-                              <select
-                                value={m.papel}
-                                onChange={(e) =>
-                                  handleAlterarPapel(
-                                    m.usuario_id,
-                                    e.target.value as Exclude<LigaRole, "dono">
-                                  )
-                                }
-                                style={{ ...inputStyle, padding: "8px 10px" }}
-                                disabled={m.papel === "dono"}
-                                title={m.papel === "dono" ? "Não é possível alterar o dono por aqui" : ""}
-                              >
-                                <option value="membro">membro</option>
-                                <option value="admin_liga">admin_liga</option>
-                              </select>
-                            ) : null}
-
-                            {/* Remover (não remover a si mesmo) */}
-                            {!isMe ? (
-                              <button onClick={() => handleRemover(m.usuario_id)} style={dangerBtnStyle} type="button">
-                                Remover
-                              </button>
-                            ) : null}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
+                <Link href={`/app/ligas/${ligaId}/pagamentos`} style={{ textDecoration: "none" }}>
+                  <button
+                    type="button"
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid #ddd",
+                      background: "white",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Abrir pagamentos
+                  </button>
+                </Link>
               </div>
-            ) : null}
-          </section>
+            </section>
+          ) : null}
 
           {/* Meus Palpites */}
           <section style={sectionStyle}>
@@ -475,6 +450,69 @@ export default function LigaPage() {
                 </div>
               </div>
             )}
+          </section>
+
+          {/* Membros */}
+          <section style={sectionStyle}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <h2 style={{ marginTop: 0 , fontWeight: 600}}>Membros</h2>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>{membros.length} membro(s)</span>
+            </div>
+
+            {membros.length === 0 ? <p>Nenhum membro encontrado.</p> : null}
+
+            {membros.length > 0 ? (
+              <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+                {membros.map((m) => {
+                  const isMe = user?.id === m.usuario_id;
+
+                  return (
+                    <div key={m.id} style={memberCard}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                        <div>
+                          <strong>{m.nome}</strong>{" "}
+                          {isMe ? <span style={{ opacity: 0.75 }}>(você)</span> : null}
+                          <div style={{ fontSize: 14, opacity: 0.85 }}>
+                            Papel: <code>{m.papel}</code>
+                          </div>
+                        </div>
+
+                        {/* Ações: somente se pode gerenciar */}
+                        {canManage ? (
+                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            {/* Alterar papel (backend bloqueia: não pode virar dono, não pode alterar a si mesmo, admin não mexe em admin/dono) */}
+                            {canChangeRoles && !isMe ? (
+                              <select
+                                value={m.papel}
+                                onChange={(e) =>
+                                  handleAlterarPapel(
+                                    m.usuario_id,
+                                    e.target.value as Exclude<LigaRole, "dono">
+                                  )
+                                }
+                                style={{ ...inputStyle, padding: "8px 10px" }}
+                                disabled={m.papel === "dono"}
+                                title={m.papel === "dono" ? "Não é possível alterar o dono por aqui" : ""}
+                              >
+                                <option value="membro">membro</option>
+                                <option value="admin_liga">admin_liga</option>
+                              </select>
+                            ) : null}
+
+                            {/* Remover (não remover a si mesmo) */}
+                            {!isMe ? (
+                              <button onClick={() => handleRemover(m.usuario_id)} style={dangerBtnStyle} type="button">
+                                Remover
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </section>
         </>
       ) : null}
