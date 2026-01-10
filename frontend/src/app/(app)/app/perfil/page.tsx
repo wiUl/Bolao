@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/app/api/clients";
 import { useAuth } from "@/app/auth/AuthContext";
 import type { User } from "@/app/types/user";
+import Link from "next/link";
 
 type UpdateMePayload = Partial<{
   nome: string;
@@ -148,8 +149,19 @@ export default function PerfilPage() {
 
   return (
     <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      <h1 style={{ marginTop: 0 }}>Meu Perfil</h1>
-      <p>Atualize seus dados de acesso e informações pessoais.</p>
+
+      <section style={sectionStyle}> 
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+        <h1 style={{ marginTop: 0, fontWeight: 600 }}>Meu Perfil</h1>
+        <Link href="/app" style={{ textDecoration: "none" , fontWeight: 600}}>
+          Voltar
+        </Link>
+      </div>
+
+      <p style={{ marginTop: 0 }}>
+        Atualize seus dados de acesso e informações pessoais.
+      </p>
+      </section> 
 
       {err ? (
         <div style={alertStyle("error")}>
@@ -217,14 +229,6 @@ export default function PerfilPage() {
             style={primaryBtnStyle(saving)}
           >
             {saving ? "Salvando..." : "Salvar alterações"}
-          </button>
-
-          <button
-            onClick={() => router.push("/app")}
-            style={secondaryBtnStyle}
-            type="button"
-          >
-            Voltar
           </button>
         </div>
       </section>

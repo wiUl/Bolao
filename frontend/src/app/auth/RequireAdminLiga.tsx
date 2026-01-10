@@ -29,7 +29,7 @@ export function RequireAdminLiga({ children }: { children: React.ReactNode }) {
         const meu = membros.find((m) => m.usuario_id === user.id);
         const role = (meu?.papel ?? "").toLowerCase();
 
-        setAllowed(role === "admin_liga");
+        setAllowed(role === "admin_liga" || role === "dono");
       } catch {
         setAllowed(false);
       } finally {
