@@ -1,173 +1,176 @@
 # 🏆 Projeto Bolão Brasileirão
 
-Backend de um sistema de **Bolão do Campeonato Brasileiro**, desenvolvido com foco em regras de negócio claras, organização em camadas e padrões próximos aos utilizados em aplicações de mercado. O projeto foi pensado tanto como **produto funcional** quanto como **peça de portfólio**, demonstrando modelagem de domínio, SQLAlchemy, FastAPI e boas práticas de backend. A ideia surgiu de um bolão que eu geri com meu grupo de amigos em 2025 do campeonato brasileiro, controlei todos os dados manualmente através de uma planilha no Google Spreadsheets que está disponível [aqui](https://docs.google.com/spreadsheets/d/1N4oWhcUq2zaDHTtEgslIRE229h59WKnImzfjltVu7K4/edit?usp=sharing). Ao fim do campeonato brasileiro me surgiu a ideia de juntar o útil ao agradável e tentar implementar um sistema de bolão simples que servisse de portfólio e ao mesmo tempo fosse um produto para ser utilizado com meus amigos em forma de descontração que dá forma através desse projeto. 
+Sistema **fullstack** de Bolão do Campeonato Brasileiro desenvolvido com foco em **regras de negócio reais**, **arquitetura organizada**, **consultas analíticas** e **padrões próximos aos utilizados em aplicações de mercado**.
+
+Este projeto nasceu a partir de uma experiência prática: durante o Brasileirão de 2025, gerenciei manualmente um bolão entre amigos utilizando uma planilha no Google Spreadsheets. Ao longo do campeonato, surgiram desafios como controle de palpites, cálculo de pontuação, ranking por rodada e histórico de desempenho. Ao final, a ideia foi transformar esse processo manual em um **sistema completo**, automatizado e escalável, que também servisse como **projeto de portfólio** para demonstrar domínio em backend, modelagem de dados e arquitetura de software.
 
 ---
 
 ## 🎯 Objetivo do Projeto
 
-Permitir que usuários participem de ligas privadas para palpitar resultados dos jogos do Brasileirão, com cálculo automático de pontuação, rankings detalhados e histórico de desempenho ao longo das rodadas.
+O principal objetivo do sistema é permitir que usuários participem de **ligas privadas** para palpitar resultados dos jogos do Campeonato Brasileiro, oferecendo:
 
-O sistema foi modelado para ser **flexível**, permitindo temporadas com diferentes quantidades de rodadas e regras de pontuação extensíveis.
+- Gestão completa de ligas e membros  
+- Envio controlado de palpites por rodada e por jogo  
+- Cálculo automático e confiável de pontuação  
+- Rankings detalhados (geral e por rodada)  
+- Histórico de desempenho individual e coletivo  
+
+O sistema foi modelado para ser **flexível**, suportando campeonatos com diferentes quantidades de rodadas, além de permitir evolução futura das regras de pontuação e das consultas analíticas.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
 ### Backend
-
-* **Python**
-* **FastAPI**
-* **SQLAlchemy (ORM)**
-* **Pydantic**
-* **JWT (OAuth2 Password Flow)**
-* **Passlib + bcrypt**
+- **Python**  
+- **FastAPI** – construção da API REST  
+- **SQLAlchemy (ORM)** – modelagem e persistência dos dados  
+- **Pydantic** – validação e serialização  
+- **JWT (OAuth2 Password Flow)** – autenticação  
+- **Passlib + bcrypt** – segurança de senhas  
 
 ### Banco de Dados
+- **SQLite** (ambiente de desenvolvimento)  
+  > O projeto já está preparado para migração futura para PostgreSQL.
 
-* **SQLite** (ambiente de desenvolvimento)
+### Frontend
+- **Next.js (App Router)**  
+- **React**  
+- **TypeScript**  
 
 ---
 
 ## 🧱 Arquitetura do Projeto
 
-O projeto segue uma separação clara de responsabilidades:
+O projeto segue uma **arquitetura em camadas**, separando claramente responsabilidades:
 
-* **Models**: definição das entidades e relacionamentos (SQLAlchemy)
-* **Schemas**: validação e serialização de dados (Pydantic)
-* **CRUD / Services**: regras de negócio e operações no banco
-* **Endpoints (Routes)**: exposição da API REST
+- **Models**  
+  Definem as entidades do domínio e seus relacionamentos (usuário, liga, temporada, jogo, palpite, etc.).
 
-Essa abordagem evita lógica complexa nos endpoints e facilita manutenção, testes e evolução do sistema.
+- **Schemas**  
+  Utilizados para validação de dados de entrada e saída da API, garantindo contratos claros entre backend e frontend.
+
+- **CRUD**  
+  Responsável por operações básicas no banco de dados.
+
+- **Services**  
+  Camada central de regras de negócio, onde ficam:
+  - Cálculo de pontuação
+  - Rankings
+  - Consultas analíticas
+  - Validações de domínio
+
+- **Routes (Endpoints)**  
+  Camada de exposição da API REST, mantendo os endpoints simples e delegando lógica para os services.
+
+Essa organização reduz acoplamento, melhora testabilidade e facilita a evolução do sistema.
 
 ---
-## 🗂️ Organização do Projeto
 
-A estrutura de pastas foi pensada para manter uma **separação clara de responsabilidades**, facilitando manutenção, leitura do código e evolução do sistema.
+## 🗂️ Estrutura de Pastas
 
-- **backend/**  
-  Contém toda a implementação do servidor e das regras de negócio do sistema. É onde está concentrado o desenvolvimento atual do projeto.
-
-  - **app/**  
-    Núcleo da aplicação backend. Reúne toda a lógica principal.
-
-    - **models/**  
-      Define as entidades do domínio e seus relacionamentos utilizando SQLAlchemy.
-
-    - **schemas/**  
-      Contém os modelos Pydantic responsáveis pela validação, entrada e saída de dados da API.
-
-    - **crud/**  
-      Operações básicas de persistência no banco de dados (create, read, update, delete).
-
-    - **services/**  
-      Camada de regras de negócio e consultas mais complexas, como cálculo de pontuação, rankings e estatísticas.
-
-    - **routes/**  
-      Definição dos endpoints da aplicação (FastAPI), organizados por contexto.
-
-    - **core/**  
-      Configurações centrais da aplicação, como autenticação, segurança, variáveis de ambiente e utilitários.
-
-  - **migrations/**  
-    Estrutura destinada ao versionamento do banco de dados (Alembic).
-
-  - **tests/**  
-    Testes automatizados da aplicação.
-    
-  - **scripts/**  
-  Scripts auxiliares utilizados para tarefas específicas, como carga inicial de dados, manutenção do banco, ajustes pontuais ou experimentações durante o desenvolvimento.
-
-- **frontend/**  
-  Pasta reservada para a futura implementação do frontend da aplicação.  
-  Será responsável pela interface do usuário, consumo da API e visualização de rankings, gráficos e estatísticas.
-
-Essa organização segue padrões comuns de projetos fullstack, permitindo evolução independente entre backend e frontend.
+```
+Bolao/
+├── backend/
+│   ├── app/
+│   │   ├── models/        # Entidades e relacionamentos (SQLAlchemy)
+│   │   ├── schemas/       # Schemas Pydantic
+│   │   ├── crud/          # Operações básicas de banco
+│   │   ├── services/      # Regras de negócio e consultas complexas
+│   │   ├── routes/        # Endpoints FastAPI
+│   │   └── core/          # Autenticação, permissões e utilitários
+│   ├── migrations/        # Versionamento de banco (Alembic)
+│   ├── scripts/           # Scripts auxiliares e carga de dados
+│   └── tests/             # Testes automatizados
+│
+└── frontend/
+    ├── src/app/           # App Router (Next.js)
+    ├── api/               # Clients para consumo da API
+    └── auth/              # Contexto de autenticação
+```
 
 ---
 
 ## ⚙️ Funcionalidades Implementadas
 
 ### 👤 Usuários e Autenticação
-
-* Cadastro e login de usuários
-* Autenticação via JWT
-* Hash seguro de senhas
+- Cadastro e login de usuários  
+- Autenticação baseada em JWT  
+- Armazenamento seguro de senhas com hash  
 
 ### 🏟️ Ligas
-
-* Criação de ligas por temporada
-* Sistema de convite por código
-* Associação de usuários às ligas
-* Controle de papéis:
-
-  * Dono da liga
-  * Membros
-* Endpoints para listar membros e alterar papéis
+- Criação de ligas associadas a temporadas  
+- Entrada em ligas por código de convite  
+- Controle de membros  
+- Sistema de papéis:
+  - **Dono da liga**
+  - **Administrador**
+  - **Membro**
+- Alteração de papéis e remoção de membros  
 
 ### 📅 Temporadas, Rodadas e Jogos
-
-* Cadastro de temporadas
-* Cadastro de rodadas
-* Associação de jogos às rodadas
-* Suporte a campeonatos com número variável de rodadas
+- Cadastro de competições e temporadas  
+- Suporte a campeonatos com número variável de rodadas  
+- Associação de jogos às rodadas  
+- Atualização de resultados dos jogos  
 
 ### ✍️ Palpites
+- Envio de palpites por jogo  
+- Remoção e atualização de palpites  
+- Validação de pertencimento à liga  
+- Bloqueio de palpites após início do jogo  
 
-* Envio de palpites por jogo
-* Validações para evitar palpites inválidos
-* Associação correta entre usuário, liga, rodada e jogo
+### 🧮 Regras de Pontuação
+- **5 pontos**: placar exato  
+- **4 pontos**: acerto do vencedor + diferença de gols  
+- **3 pontos**: acerto do vencedor ou empate  
+- **0 pontos**: erro  
 
-### 🧮 Pontuação e Rankings
-
-* Cálculo automático de pontuação:
-  * Pontuação segue a regra de 5 pontos para placar exato, 4 pontos se acertar o vencedor e a diferença de gols, 3 pontos para acertar o resultado vitoria/empate e 0 pontos em caso de erro
-* Diferenciação por tipo de acerto
-* **Ranking geral da liga**
-* **Ranking por rodada**
-* **Pontuação total da rodada**
-* **Quantidade de acertos por tipo**
+### 🏆 Rankings e Estatísticas
+- Ranking geral da liga  
+- Ranking por rodada  
+- Pontuação total por rodada  
+- Quantidade de acertos por tipo  
 
 ### 📈 Consultas Analíticas
+- Pontuação acumulada por rodada  
+- Evolução histórica de desempenho do usuário  
+- Pontuação acumulada de todos os usuários da liga  
+- Listagem de palpites por rodada  
 
-* Pontuação acumulada por rodada
-* Histórico de evolução do usuário
-* Pontuação acumulada de um único usuário
-* Listagem de palpites de todos os usuários em uma rodada específica
-
-Essas consultas permitem a criação de gráficos, tabelas comparativas e dashboards no frontend.
+Essas consultas viabilizam dashboards, gráficos comparativos e análises de desempenho no frontend.
 
 ---
 
 ## 🔄 Fluxo Geral do Sistema
 
-1. Usuário cria uma conta e se autentica
-2. Usuário cria ou entra em uma liga via código de convite
-3. A liga está associada a uma temporada
-4. Cada temporada possui rodadas
-5. Cada rodada possui jogos
-6. Usuários enviam palpites para os jogos
-7. Jogos são finalizados
-8. O sistema calcula a pontuação automaticamente
-9. Rankings e estatísticas ficam disponíveis
+1. Usuário cria conta e se autentica  
+2. Usuário cria ou entra em uma liga via convite  
+3. Liga é associada a uma temporada  
+4. Temporada contém rodadas  
+5. Rodadas contêm jogos  
+6. Usuários enviam palpites  
+7. Jogos são finalizados  
+8. Pontuação é calculada automaticamente  
+9. Rankings e estatísticas são disponibilizados  
 
 ---
 
 ## 📦 Estado Atual do Projeto
 
-O backend já possui:
+O projeto conta atualmente com:
 
-* Modelagem sólida do domínio
-* Regras de negócio bem definidas
-* Consultas de leitura avançadas
-* Base pronta para integração com frontend web ou mobile
+- Backend completo e funcional  
+- Modelagem de domínio consolidada  
+- Regras de negócio bem definidas  
+- Consultas analíticas prontas  
 
-Funcionalidades futuras (em stand-by):
-
-* Dashboard visual no frontend
-* Gráficos de evolução em tempo real
-* Migrações com Alembic
-* Deploy em ambiente de produção
+### Próximos Passos Planejados
+- Dashboards e gráficos no frontend  
+- Migração para PostgreSQL  
+- Deploy em ambiente de produção  
+- Testes automatizados mais abrangentes  
 
 ---
 
@@ -187,18 +190,16 @@ source venv/bin/activate
 # instalar dependências
 pip install -r requirements.txt
 
-# rodar a aplicação
+# rodar aplicação
 uvicorn app.main:app --reload
 ```
 
 A API ficará disponível em:
-
 ```
 http://127.0.0.1:8000
 ```
 
-Documentação automática (Swagger):
-
+Documentação automática:
 ```
 http://127.0.0.1:8000/docs
 ```
@@ -207,8 +208,8 @@ http://127.0.0.1:8000/docs
 
 ## 📌 Considerações Finais
 
-Este projeto vai além de um CRUD simples, explorando regras de negócio, consultas analíticas e organização arquitetural. Ele foi desenvolvido com foco em aprendizado profundo de backend, SQLAlchemy e FastAPI, servindo tanto como base para um produto real quanto como **projeto de portfólio**.
+Este projeto vai além de um CRUD simples, explorando regras de negócio reais, consultas analíticas e organização arquitetural. Ele foi desenvolvido com foco em aprendizado profundo de **FastAPI**, **SQLAlchemy** e **arquitetura backend**, servindo como base para um produto real e como **projeto de portfólio**.
 
 ---
 
-Desenvolvido por: Willian Gomes
+Desenvolvido por **Willian Gomes**
