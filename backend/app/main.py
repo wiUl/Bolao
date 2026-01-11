@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from app.routes import usuario, auth, liga, liga_membro, liga_services, time, competicao, temporada, jogo, palpite
+from app.routes import usuario, auth, liga, liga_membro, liga_services, time, competicao, temporada, jogo, palpite, pagamentos
 from app import models
 
 
 
 
-app = FastAPI(title="Bolão do Brasileirão")
+app = FastAPI(title=" API FutBolão")
 
 origins = [
     "http://localhost:3000",
@@ -33,6 +33,7 @@ app.include_router(competicao.router)
 app.include_router(temporada.router)
 app.include_router(jogo.router)
 app.include_router(palpite.router)
+app.include_router(pagamentos.router)
 
 
 @app.get("/")

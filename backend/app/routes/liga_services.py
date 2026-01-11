@@ -44,7 +44,7 @@ def pontucao_acumulada_usuario(liga_id: int, usuario_nome: str, rodada: int | No
     return pontuacao_acumulada_por_usuario(db=db, liga_id=liga_id, nome_usuario=usuario_nome, rodada=rodada)
 
 
-@router.get("{liga_id}/pontuacao_acumulada/todos", response_model=list[PontuacaoAcumuladaResponse])
+@router.get("/{liga_id}/pontuacao_acumulada/todos", response_model=list[PontuacaoAcumuladaResponse])
 
 def pontuacao_acumulada_geral(liga_id: int, rodada: int, db: Session = Depends(get_db), ususario_logado = Depends(get_current_user)):
     return pontuacao_acumulada_todos(db=db, liga_id=liga_id, rodada=rodada)
