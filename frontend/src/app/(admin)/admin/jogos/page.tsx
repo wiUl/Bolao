@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { listarCompeticoes } from "@/app/api/competicoes";
 import { listarTemporadas } from "@/app/api/temporadas";
-import { listarJogos, atualizarResultadoJogo } from "@/app/api/jogos";
+import { listarJogos, atualizarResultadoJogo, atualizarJogo } from "@/app/api/jogos";
 
 import type { Competicao } from "@/app/types/competicao";
 import type { Temporada } from "@/app/types/temporada";
@@ -15,6 +15,10 @@ type EditRow = {
   gols_casa: string;
   gols_fora: string;
   status: string;
+
+  // ✅ NOVO: campo de data/hora editável no formato BR
+  data_hora: string;
+
   loading?: boolean;
   ok?: string | null;
   err?: string | null;
@@ -155,6 +159,8 @@ export default function AdminJogosPage() {
           gols_casa: j.gols_casa === null ? "" : String(j.gols_casa),
           gols_fora: j.gols_fora === null ? "" : String(j.gols_fora),
           status: j.status ?? "",
+          // ✅ NOVO: preenche input com a data atual (formatada BR) se existir
+          data_hora: j.data_hora ? formatIsoToBR(j.data_hora) : "",
           ok: null,
           err: null,
         };
@@ -220,6 +226,59 @@ export default function AdminJogosPage() {
           gols_casa: updated.gols_casa === null ? "" : String(updated.gols_casa),
           gols_fora: updated.gols_fora === null ? "" : String(updated.gols_fora),
           status: updated.status ?? prev[jogo.id].status,
+          // mantém o que já estava no input de data/hora
+          data_hora: prev[jogo.id].data_hora,
+        },
+      }));
+    } catch (e: any) {
+      setEdits((prev) => ({
+        ...prev,
+        [jogo.id]: { ...prev[jogo.id], loading: false, err: extractApiErrorMessage(e), ok: null },
+      }));
+    }
+  }
+
+  // ✅ NOVO: salvar somente data/hora via atualizarJogo
+  async function handleSalvarDataHora(jogo: Jogo) {
+    resetAlerts();
+
+    const row = edits[jogo.id];
+    if (!row) return;
+
+    const parsed = parseBRDateTimeToISO(row.data_hora);
+    if (!parsed.ok) {
+      setEdits((prev) => ({
+        ...prev,
+        [jogo.id]: { ...prev[jogo.id], err: parsed.error, ok: null },
+      }));
+      return;
+    }
+
+    setEdits((prev) => ({
+      ...prev,
+      [jogo.id]: { ...prev[jogo.id], loading: true, err: null, ok: null },
+    }));
+
+    try {
+      // envia somente os campos relevantes (data_hora e opcionalmente status)
+      const updated = await atualizarJogo(jogo.id, {
+        data_hora: parsed.iso,
+        status: row.status?.trim() ? row.status.trim() : undefined,
+      });
+
+      // atualiza lista (para mostrar a data atualizada)
+      setJogos((prev) => prev.map((x) => (x.id === jogo.id ? updated : x)));
+
+      // marca ok na linha e atualiza o input com o retorno do backend (formatado BR)
+      setEdits((prev) => ({
+        ...prev,
+        [jogo.id]: {
+          ...prev[jogo.id],
+          loading: false,
+          ok: "Data/Hora salva!",
+          err: null,
+          data_hora: updated.data_hora ? formatIsoToBR(updated.data_hora) : prev[jogo.id].data_hora,
+          status: updated.status ?? prev[jogo.id].status,
         },
       }));
     } catch (e: any) {
@@ -262,19 +321,28 @@ export default function AdminJogosPage() {
   };
 
   function btnStyle(kind: "primary" | "ghost" | "danger"): React.CSSProperties {
-    const base: React.CSSProperties = {
-      padding: "10px 12px",
-      borderRadius: 10,
-      border: "1px solid #ddd",
-      cursor: "pointer",
-      fontWeight: 700,
-      height: 42,
-      background: "white",
-    };
-    if (kind === "danger") return { ...base, borderColor: "#f3c2c2" };
-    if (kind === "ghost") return { ...base, background: "transparent" };
-    return { ...base };
-  }
+  const base: React.CSSProperties = {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #ddd",
+    cursor: "pointer",
+    fontWeight: 700,
+    height: 42,
+    background: "white",
+
+    // ✅ correções
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
+    lineHeight: 1,
+    textAlign: "center",
+  };
+  if (kind === "danger") return { ...base, borderColor: "#f3c2c2" };
+  if (kind === "ghost") return { ...base, background: "transparent" };
+  return { ...base };
+}
+
 
   function alertStyle(kind: "success" | "error" | "warn"): React.CSSProperties {
     const base: React.CSSProperties = {
@@ -310,7 +378,7 @@ export default function AdminJogosPage() {
         </div>
 
         <p style={{ marginTop: 10, marginBottom: 0, opacity: 0.9 }}>
-          Filtre por competição/ano/rodada e atualize o placar real (gols e status).
+          Filtre por competição/ano/rodada e atualize o placar real (gols e status e data/hora).
         </p>
       </section>
 
@@ -416,218 +484,246 @@ export default function AdminJogosPage() {
 
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-            <h2 style={{ marginTop: 0, fontWeight: 600 }}>Jogos</h2>
-            {loadingJogos ? <span style={{ fontSize: 14, opacity: 0.8 }}>Carregando...</span> : null}
+          <h2 style={{ marginTop: 0, fontWeight: 600 }}>Jogos</h2>
+          {loadingJogos ? <span style={{ fontSize: 14, opacity: 0.8 }}>Carregando...</span> : null}
         </div>
 
         {!loadingJogos && jogos.length === 0 ? <p>Nenhum jogo encontrado para esse filtro.</p> : null}
 
         <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-            {jogos.map((j) => {
+          {jogos.map((j) => {
             const row = edits[j.id] ?? {
-                gols_casa: j.gols_casa == null ? "" : String(j.gols_casa),
-                gols_fora: j.gols_fora == null ? "" : String(j.gols_fora),
-                status: j.status ?? "agendado",
-                loading: false,
-                ok: null,
-                err: null,
+              gols_casa: j.gols_casa == null ? "" : String(j.gols_casa),
+              gols_fora: j.gols_fora == null ? "" : String(j.gols_fora),
+              status: j.status ?? "agendado",
+              data_hora: j.data_hora ? formatIsoToBR(j.data_hora) : "",
+              loading: false,
+              ok: null,
+              err: null,
             };
 
             const finalizado = isFinalizado(row.status);
             const disabled = finalizado || !!row.loading;
 
             return (
-                <div
+              <div
                 key={j.id}
                 style={{
-                    border: "1px solid #e5e5e5",
-                    borderRadius: 12,
-                    padding: 14,
-                    background: "white",
+                  border: "1px solid #e5e5e5",
+                  borderRadius: 12,
+                  padding: 14,
+                  background: "white",
                 }}
-                >
+              >
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                    <div>
+                  <div>
                     <strong>
-                        {j.time_casa.nome} x {j.time_fora.nome}
+                      {j.time_casa.nome} x {j.time_fora.nome}
                     </strong>
 
                     <div style={{ fontSize: 14, opacity: 0.85, marginTop: 4 }}>
-                        ID: <code>{j.id}</code> • Rodada: <code>{j.rodada}</code> •{" "}
-                        Status: <code>{row.status}</code>
+                      ID: <code>{j.id}</code> • Rodada: <code>{j.rodada}</code> •{" "}
+                      Status: <code>{row.status}</code>
                     </div>
 
                     {j.data_hora ? (
-                        <div style={{ fontSize: 14, opacity: 0.85, marginTop: 2 }}>
-                        Data/Hora: <code>{j.data_hora}</code>
-                        </div>
+                      <div style={{ fontSize: 14, opacity: 0.85, marginTop: 2 }}>
+                        Data/Hora: <code>{formatIsoToBR(j.data_hora)}</code>
+                      </div>
                     ) : null}
-                    </div>
+                  </div>
 
-                    {finalizado ? (
+                  {finalizado ? (
                     <div style={{ fontSize: 14, opacity: 0.9 }}>
-                        Resultado final:{" "}
-                        <strong>
+                      Resultado final:{" "}
+                      <strong>
                         {row.gols_casa || "—"} x {row.gols_fora || "—"}
-                        </strong>
+                      </strong>
                     </div>
-                    ) : null}
+                  ) : null}
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <strong style={{ width: 42 }}>{j.time_casa.sigla ?? ""}</strong>
                     <img
-                        src={getEscudoSrcByTime(j.time_casa)}
-                        alt={`Escudo ${j.time_casa.nome}`}
-                        style={{ width: 28, height: 28, objectFit: "contain" }}
-                        onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                      src={getEscudoSrcByTime(j.time_casa)}
+                      alt={`Escudo ${j.time_casa.nome}`}
+                      style={{ width: 28, height: 28, objectFit: "contain" }}
+                      onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
                     />
-                    </div>
+                  </div>
 
-                    <input
+                  <input
                     type="number"
                     min={0}
                     max={30}
                     value={row.gols_casa}
                     onChange={(e) =>
-                        setEdits((prev) => ({
+                      setEdits((prev) => ({
                         ...prev,
                         [j.id]: { ...prev[j.id], gols_casa: e.target.value, ok: null, err: null },
-                        }))
+                      }))
                     }
                     style={{ ...inputStyle, width: 80, textAlign: "center" }}
                     disabled={disabled}
                     placeholder="Casa"
-                    />
+                  />
 
-                    <span style={{ fontWeight: 800 }}>x</span>
+                  <span style={{ fontWeight: 800 }}>x</span>
 
-                    <input
+                  <input
                     type="number"
                     min={0}
                     max={30}
                     value={row.gols_fora}
                     onChange={(e) =>
-                        setEdits((prev) => ({
+                      setEdits((prev) => ({
                         ...prev,
                         [j.id]: { ...prev[j.id], gols_fora: e.target.value, ok: null, err: null },
-                        }))
+                      }))
                     }
                     style={{ ...inputStyle, width: 80, textAlign: "center" }}
                     disabled={disabled}
                     placeholder="Fora"
-                    />
+                  />
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <img
-                        src={getEscudoSrcByTime(j.time_fora)}
-                        alt={`Escudo ${j.time_fora.nome}`}
-                        style={{ width: 28, height: 28, objectFit: "contain" }}
-                        onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                      src={getEscudoSrcByTime(j.time_fora)}
+                      alt={`Escudo ${j.time_fora.nome}`}
+                      style={{ width: 28, height: 28, objectFit: "contain" }}
+                      onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
                     />
                     <strong style={{ width: 42, textAlign: "right" }}>{j.time_fora.sigla ?? ""}</strong>
-                    </div>
+                  </div>
 
-                    {/* Status: só 3 opções */}
-                    <select
+                  {/* Status: só 3 opções */}
+                  <select
                     value={row.status}
                     onChange={(e) =>
-                        setEdits((prev) => ({
+                      setEdits((prev) => ({
                         ...prev,
                         [j.id]: { ...prev[j.id], status: e.target.value, ok: null, err: null },
-                        }))
+                      }))
                     }
                     style={{ ...inputStyle, height: 42, minWidth: 180 }}
                     disabled={row.loading}
-                    >
+                  >
                     <option value="agendado">agendado</option>
                     <option value="em_andamento">em_andamento</option>
                     <option value="finalizado">finalizado</option>
-                    </select>
+                  </select>
 
-                    <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
+                  {/* ✅ NOVO: input para editar data/hora em formato BR */}
+                  <input
+                    type="text"
+                    value={row.data_hora}
+                    onChange={(e) =>
+                      setEdits((prev) => ({
+                        ...prev,
+                        [j.id]: { ...prev[j.id], data_hora: e.target.value, ok: null, err: null },
+                      }))
+                    }
+                    style={{ ...inputStyle, minWidth: 220 }}
+                    disabled={row.loading}
+                    placeholder="Ex: 11/01/2018 16h00"
+                    title="Formato: dd/MM/aaaa HHhmm (ex: 11/01/2018 16h00) ou dd/MM/aaaa HH:mm"
+                  />
+
+                  <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
+                    {/* ✅ NOVO: salvar apenas data/hora */}
                     <button
-                        type="button"
-                        onClick={async () => {
+                      type="button"
+                      onClick={() => handleSalvarDataHora(j)}
+                      style={primaryBtnStyle(!!row.loading)}
+                      disabled={!!row.loading}
+                      title="Salvar data/hora do jogo"
+                    >
+                      {row.loading ? "Salvando..." : "Salvar data/hora"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
                         // validação mínima
                         const gc = toIntOrNull(row.gols_casa);
                         const gf = toIntOrNull(row.gols_fora);
 
                         if (gc == null || gf == null) {
-                            setEdits((prev) => ({
+                          setEdits((prev) => ({
                             ...prev,
                             [j.id]: { ...prev[j.id], err: "Informe gols casa e gols fora.", ok: null },
-                            }));
-                            return;
+                          }));
+                          return;
                         }
 
                         // salva
                         setEdits((prev) => ({
-                            ...prev,
-                            [j.id]: { ...prev[j.id], loading: true, err: null, ok: null },
+                          ...prev,
+                          [j.id]: { ...prev[j.id], loading: true, err: null, ok: null },
                         }));
 
                         try {
-                            const updated = await atualizarResultadoJogo(j.id, {
+                          const updated = await atualizarResultadoJogo(j.id, {
                             gols_casa: gc,
                             gols_fora: gf,
                             status: row.status || "finalizado",
-                            });
+                          });
 
-                            setJogos((prev) => prev.map((x) => (x.id === j.id ? updated : x)));
-                            setEdits((prev) => ({
+                          setJogos((prev) => prev.map((x) => (x.id === j.id ? updated : x)));
+                          setEdits((prev) => ({
                             ...prev,
                             [j.id]: {
-                                ...prev[j.id],
-                                loading: false,
-                                ok: "Salvo!",
-                                err: null,
-                                gols_casa: updated.gols_casa == null ? "" : String(updated.gols_casa),
-                                gols_fora: updated.gols_fora == null ? "" : String(updated.gols_fora),
-                                status: updated.status ?? prev[j.id].status,
+                              ...prev[j.id],
+                              loading: false,
+                              ok: "Salvo!",
+                              err: null,
+                              gols_casa: updated.gols_casa == null ? "" : String(updated.gols_casa),
+                              gols_fora: updated.gols_fora == null ? "" : String(updated.gols_fora),
+                              status: updated.status ?? prev[j.id].status,
+                              data_hora: prev[j.id].data_hora,
                             },
-                            }));
+                          }));
                         } catch (e: any) {
-                            setEdits((prev) => ({
+                          setEdits((prev) => ({
                             ...prev,
                             [j.id]: { ...prev[j.id], loading: false, err: extractApiErrorMessage(e), ok: null },
-                            }));
+                          }));
                         }
-                        }}
-                        style={primaryBtnStyle(!!row.loading)}
-                        disabled={disabled}
-                        title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
+                      }}
+                      style={primaryBtnStyle(!!row.loading)}
+                      disabled={disabled}
+                      title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
                     >
-                        {row.loading ? "Salvando..." : "Salvar resultado"}
+                      {row.loading ? "Salvando..." : "Salvar resultado"}
                     </button>
 
                     {/* opcional: limpar resultado (sem deletar o jogo) */}
                     <button
-                        type="button"
-                        onClick={() =>
+                      type="button"
+                      onClick={() =>
                         setEdits((prev) => ({
-                            ...prev,
-                            [j.id]: { ...prev[j.id], gols_casa: "", gols_fora: "", ok: null, err: null },
+                          ...prev,
+                          [j.id]: { ...prev[j.id], gols_casa: "", gols_fora: "", ok: null, err: null },
                         }))
-                        }
-                        style={dangerBtnStyle}
-                        disabled={disabled}
-                        title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
+                      }
+                      style={dangerBtnStyle}
+                      disabled={disabled}
+                      title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
                     >
-                        Limpar
+                      Limpar
                     </button>
-                    </div>
+                  </div>
                 </div>
 
                 {row.ok ? <div style={{ marginTop: 10, fontSize: 14, color: "#1f7a3f" }}>{row.ok}</div> : null}
                 {row.err ? <div style={{ marginTop: 10, fontSize: 14, color: "#b42318" }}>{row.err}</div> : null}
-                </div>
+              </div>
             );
-            })}
+          })}
         </div>
-        </section>
-
+      </section>
     </main>
   );
 }
@@ -685,6 +781,7 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
   };
 }
 
+
 const dangerBtnStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
@@ -693,3 +790,78 @@ const dangerBtnStyle: React.CSSProperties = {
   cursor: "pointer",
   fontWeight: 600,
 };
+
+/**
+ * ✅ Exibe ISO no formato BR (São Paulo)
+ * Retorna: "dd/MM/aaaa HHhmm"
+ */
+function formatIsoToBR(iso: string): string {
+  const d = new Date(iso);
+
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+
+  const dd = get("day");
+  const mm = get("month");
+  const yyyy = get("year");
+  const HH = get("hour");
+  const Min = get("minute");
+
+  return `${dd}/${mm}/${yyyy} ${HH}h${Min}`;
+}
+
+/**
+ * ✅ Aceita:
+ *  - "11/01/2018 16h00"
+ *  - "11/01/2018 16:00"
+ * e converte para ISO com offset Brasil:
+ *  - "2018-01-11T16:00:00-03:00"
+ */
+function parseBRDateTimeToISO(
+  input: string
+): { ok: true; iso: string } | { ok: false; error: string } {
+  const raw = (input ?? "").trim();
+  if (!raw) return { ok: false, error: "Informe a data/hora. Ex: 11/01/2018 16h00" };
+
+  const normalized = raw.replace(/\s+/g, " ").replace("H", "h").replace(":", "h");
+
+  const m = normalized.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2})h(\d{1,2})$/);
+  if (!m) {
+    return { ok: false, error: "Formato inválido. Use: dd/MM/aaaa HHhmm (ex: 11/01/2018 16h00) ou HH:mm" };
+  }
+
+  const dd = Number(m[1]);
+  const MM = Number(m[2]);
+  const yyyy = Number(m[3]);
+  const HH = Number(m[4]);
+  const min = Number(m[5]);
+
+  if (MM < 1 || MM > 12) return { ok: false, error: "Mês inválido." };
+  if (dd < 1 || dd > 31) return { ok: false, error: "Dia inválido." };
+  if (HH < 0 || HH > 23) return { ok: false, error: "Hora inválida." };
+  if (min < 0 || min > 59) return { ok: false, error: "Minutos inválidos." };
+
+  // valida data real (ex: 31/02)
+  const test = new Date(Date.UTC(yyyy, MM - 1, dd, 12, 0, 0));
+  if (test.getUTCFullYear() !== yyyy || test.getUTCMonth() !== MM - 1 || test.getUTCDate() !== dd) {
+    return { ok: false, error: "Data inválida." };
+  }
+
+  const ddStr = String(dd).padStart(2, "0");
+  const MMStr = String(MM).padStart(2, "0");
+  const HHStr = String(HH).padStart(2, "0");
+  const minStr = String(min).padStart(2, "0");
+
+  // Offset Brasil (São Paulo): -03:00
+  const iso = `${yyyy}-${MMStr}-${ddStr}T${HHStr}:${minStr}:00-03:00`;
+  return { ok: true, iso };
+}

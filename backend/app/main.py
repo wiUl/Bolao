@@ -38,4 +38,4 @@ app.include_router(pagamentos.router)
 
 @app.get("/")
 def root():
-    return {"message": "API do Bolão do Brasileirão está rodando!"}
+    return {"message": "API do FutBolão está rodando!"}

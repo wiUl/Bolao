@@ -32,8 +32,14 @@ def buscar_jogo(db: Session, jogo_id: int) -> Jogo | None:
 
 def atualizar_jogo(db: Session, jogo: Jogo, body: JogoUpdate) -> Jogo:
     data = body.model_dump(exclude_unset=True)
-    for k, v in data.items():
-        setattr(jogo, k, v)
+
+    # Atualiza SOMENTE o que é permitido
+    if "data_hora" in data:
+        jogo.data_hora = data["data_hora"]
+
+    if "status" in data:
+        jogo.status = data["status"]
+
     db.commit()
     db.refresh(jogo)
     return jogo

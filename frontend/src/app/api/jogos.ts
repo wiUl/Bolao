@@ -20,10 +20,6 @@ export type JogoCreatePayload = {
 };
 
 export type JogoUpdatePayload = {
-  temporada_id?: number;
-  rodada?: number;
-  time_casa_id?: number;
-  time_fora_id?: number;
   data_hora?: string | null;
   status?: string;
 };
