@@ -36,6 +36,7 @@ def ver_meu_palpite(
     db: Session = Depends(get_db),
     usuario_logado: Usuario = Depends(get_current_user),
 ):
+    validar_membro_liga(db, liga_id, usuario_logado.id)
     data = meu_palpite_no_jogo(db, liga_id, usuario_logado.id, jogo_id)
     if not data:
         raise HTTPException(status_code=404, detail="Jogo não encontrado.")
@@ -59,9 +60,10 @@ def meus_palpites_na_rodada(
     liga_id: int,
     rodada: int,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
+    usuario_logado: Usuario = Depends(get_current_user),
 ):
-    return palpites_usuario_na_rodada(db, liga_id, current_user.id, rodada)
+    validar_membro_liga(db, liga_id, usuario_logado.id)
+    return palpites_usuario_na_rodada(db, liga_id, usuario_logado.id, rodada)
 
 
 @router.delete("/ligas/{liga_id}/jogos/{jogo_id}/meu", status_code=status.HTTP_204_NO_CONTENT)

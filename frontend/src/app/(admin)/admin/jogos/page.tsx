@@ -42,6 +42,15 @@ export default function AdminJogosPage() {
 
   const [edits, setEdits] = useState<Record<number, EditRow>>({});
 
+  // ✅ NOVO: detectar mobile para ajustar layout do placar
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const onResize = () => setMobile(window.innerWidth <= 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   function resetAlerts() {
     setErr(null);
     setOk(null);
@@ -321,28 +330,27 @@ export default function AdminJogosPage() {
   };
 
   function btnStyle(kind: "primary" | "ghost" | "danger"): React.CSSProperties {
-  const base: React.CSSProperties = {
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #ddd",
-    cursor: "pointer",
-    fontWeight: 700,
-    height: 42,
-    background: "white",
+    const base: React.CSSProperties = {
+      padding: "10px 12px",
+      borderRadius: 10,
+      border: "1px solid #ddd",
+      cursor: "pointer",
+      fontWeight: 700,
+      height: 42,
+      background: "white",
 
-    // ✅ correções
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    whiteSpace: "nowrap",
-    lineHeight: 1,
-    textAlign: "center",
-  };
-  if (kind === "danger") return { ...base, borderColor: "#f3c2c2" };
-  if (kind === "ghost") return { ...base, background: "transparent" };
-  return { ...base };
-}
-
+      // ✅ correções
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      whiteSpace: "nowrap",
+      lineHeight: 1,
+      textAlign: "center",
+    };
+    if (kind === "danger") return { ...base, borderColor: "#f3c2c2" };
+    if (kind === "ghost") return { ...base, background: "transparent" };
+    return { ...base };
+  }
 
   function alertStyle(kind: "success" | "error" | "warn"): React.CSSProperties {
     const base: React.CSSProperties = {
@@ -543,61 +551,136 @@ export default function AdminJogosPage() {
                   ) : null}
                 </div>
 
+                {/* ✅ ALTERAÇÃO PRINCIPAL: placar em grid no mobile */}
+                {mobile ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 12,
+                      marginTop: 12,
+                      alignItems: "start",
+                      width: "100%",
+                    }}
+                  >
+                    {/* CASA */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <img
+                          src={getEscudoSrcByTime(j.time_casa)}
+                          alt={`Escudo ${j.time_casa.nome}`}
+                          style={{ width: 28, height: 28, objectFit: "contain" }}
+                          onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                        />
+                        <strong>{j.time_casa.sigla ?? ""}</strong>
+                      </div>
+
+                      <input
+                        type="number"
+                        min={0}
+                        max={30}
+                        value={row.gols_casa}
+                        onChange={(e) =>
+                          setEdits((prev) => ({
+                            ...prev,
+                            [j.id]: { ...prev[j.id], gols_casa: e.target.value, ok: null, err: null },
+                          }))
+                        }
+                        style={{ ...inputStyle, width: "100%", textAlign: "center" }}
+                        disabled={disabled}
+                        placeholder="Casa"
+                      />
+                    </div>
+
+                    {/* FORA */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+                        <strong>{j.time_fora.sigla ?? ""}</strong>
+                        <img
+                          src={getEscudoSrcByTime(j.time_fora)}
+                          alt={`Escudo ${j.time_fora.nome}`}
+                          style={{ width: 28, height: 28, objectFit: "contain" }}
+                          onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                        />
+                      </div>
+
+                      <input
+                        type="number"
+                        min={0}
+                        max={30}
+                        value={row.gols_fora}
+                        onChange={(e) =>
+                          setEdits((prev) => ({
+                            ...prev,
+                            [j.id]: { ...prev[j.id], gols_fora: e.target.value, ok: null, err: null },
+                          }))
+                        }
+                        style={{ ...inputStyle, width: "100%", textAlign: "center" }}
+                        disabled={disabled}
+                        placeholder="Fora"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  // ✅ Desktop: mantém seu layout original
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <strong style={{ width: 42 }}>{j.time_casa.sigla ?? ""}</strong>
+                      <img
+                        src={getEscudoSrcByTime(j.time_casa)}
+                        alt={`Escudo ${j.time_casa.nome}`}
+                        style={{ width: 28, height: 28, objectFit: "contain" }}
+                        onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                      />
+                    </div>
+
+                    <input
+                      type="number"
+                      min={0}
+                      max={30}
+                      value={row.gols_casa}
+                      onChange={(e) =>
+                        setEdits((prev) => ({
+                          ...prev,
+                          [j.id]: { ...prev[j.id], gols_casa: e.target.value, ok: null, err: null },
+                        }))
+                      }
+                      style={{ ...inputStyle, width: 80, textAlign: "center" }}
+                      disabled={disabled}
+                      placeholder="Casa"
+                    />
+
+                    <span style={{ fontWeight: 800 }}>x</span>
+
+                    <input
+                      type="number"
+                      min={0}
+                      max={30}
+                      value={row.gols_fora}
+                      onChange={(e) =>
+                        setEdits((prev) => ({
+                          ...prev,
+                          [j.id]: { ...prev[j.id], gols_fora: e.target.value, ok: null, err: null },
+                        }))
+                      }
+                      style={{ ...inputStyle, width: 80, textAlign: "center" }}
+                      disabled={disabled}
+                      placeholder="Fora"
+                    />
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <img
+                        src={getEscudoSrcByTime(j.time_fora)}
+                        alt={`Escudo ${j.time_fora.nome}`}
+                        style={{ width: 28, height: 28, objectFit: "contain" }}
+                        onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                      />
+                      <strong style={{ width: 42, textAlign: "right" }}>{j.time_fora.sigla ?? ""}</strong>
+                    </div>
+                  </div>
+                )}
+
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <strong style={{ width: 42 }}>{j.time_casa.sigla ?? ""}</strong>
-                    <img
-                      src={getEscudoSrcByTime(j.time_casa)}
-                      alt={`Escudo ${j.time_casa.nome}`}
-                      style={{ width: 28, height: 28, objectFit: "contain" }}
-                      onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
-                    />
-                  </div>
-
-                  <input
-                    type="number"
-                    min={0}
-                    max={30}
-                    value={row.gols_casa}
-                    onChange={(e) =>
-                      setEdits((prev) => ({
-                        ...prev,
-                        [j.id]: { ...prev[j.id], gols_casa: e.target.value, ok: null, err: null },
-                      }))
-                    }
-                    style={{ ...inputStyle, width: 80, textAlign: "center" }}
-                    disabled={disabled}
-                    placeholder="Casa"
-                  />
-
-                  <span style={{ fontWeight: 800 }}>x</span>
-
-                  <input
-                    type="number"
-                    min={0}
-                    max={30}
-                    value={row.gols_fora}
-                    onChange={(e) =>
-                      setEdits((prev) => ({
-                        ...prev,
-                        [j.id]: { ...prev[j.id], gols_fora: e.target.value, ok: null, err: null },
-                      }))
-                    }
-                    style={{ ...inputStyle, width: 80, textAlign: "center" }}
-                    disabled={disabled}
-                    placeholder="Fora"
-                  />
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <img
-                      src={getEscudoSrcByTime(j.time_fora)}
-                      alt={`Escudo ${j.time_fora.nome}`}
-                      style={{ width: 28, height: 28, objectFit: "contain" }}
-                      onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
-                    />
-                    <strong style={{ width: 42, textAlign: "right" }}>{j.time_fora.sigla ?? ""}</strong>
-                  </div>
-
                   {/* Status: só 3 opções */}
                   <select
                     value={row.status}
@@ -615,7 +698,7 @@ export default function AdminJogosPage() {
                     <option value="finalizado">finalizado</option>
                   </select>
 
-                  {/* ✅ NOVO: input para editar data/hora em formato BR */}
+                  {/* ✅ input para editar data/hora em formato BR */}
                   <input
                     type="text"
                     value={row.data_hora}
@@ -632,7 +715,7 @@ export default function AdminJogosPage() {
                   />
 
                   <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
-                    {/* ✅ NOVO: salvar apenas data/hora */}
+                    {/* ✅ salvar apenas data/hora */}
                     <button
                       type="button"
                       onClick={() => handleSalvarDataHora(j)}
@@ -780,7 +863,6 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
     fontWeight: 600,
   };
 }
-
 
 const dangerBtnStyle: React.CSSProperties = {
   padding: "10px 12px",
