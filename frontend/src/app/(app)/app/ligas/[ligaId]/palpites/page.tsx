@@ -41,14 +41,6 @@ export default function PalpitesRodadaPage() {
   // estado dos inputs por jogo
   const [forms, setForms] = useState<Record<number, FormState>>({});
 
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const onResize = () => setMobile(window.innerWidth <= 768);
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
   // auto-hide de sucesso
   useEffect(() => {
     if (!msg) return;
@@ -344,167 +336,82 @@ export default function PalpitesRodadaPage() {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-<div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-  {mobile ? (
-    <div style={{ display: "grid", gap: 12, width: "100%" }}>
-      {/* Placar em 2 colunas */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, width: "100%" }}>
-        {/* CASA */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <img
-              src={getEscudoSrc(j.time_casa.sigla)}
-              alt={`Escudo ${j.time_casa.nome}`}
-              style={{ width: 28, height: 28, objectFit: "contain" }}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-            <strong>{j.time_casa.sigla}</strong>
-          </div>
+                 <div style={scoreRowStyle}>
+  {/* Casa: SIGLA + escudo */}
+  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <strong style={{ width: 42 }}>{j.time_casa.sigla}</strong>
 
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={f.palpite_casa}
-            onChange={(e) => setFormValue(j.id, "palpite_casa", e.target.value)}
-            style={{ ...inputStyle, width: "100%", textAlign: "center" }}
-            disabled={disabled}
-            placeholder="Casa"
-          />
-        </div>
+    <img
+      src={getEscudoSrc(j.time_casa.sigla)}
+      alt={`Escudo ${j.time_casa.nome}`}
+      style={{ width: 28, height: 28, objectFit: "contain" }}
+      onError={(e) => {
+        // esconde a imagem se não existir (evita ícone quebrado)
+        (e.currentTarget as HTMLImageElement).style.display = "none";
+      }}
+    />
+  </div>
 
-        {/* FORA */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
-            <strong>{j.time_fora.sigla}</strong>
-            <img
-              src={getEscudoSrc(j.time_fora.sigla)}
-              alt={`Escudo ${j.time_fora.nome}`}
-              style={{ width: 28, height: 28, objectFit: "contain" }}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          </div>
+  {/* Inputs placar */}
+  <input
+    type="number"
+    min={0}
+    max={20}
+    value={f.palpite_casa}
+    onChange={(e) => setFormValue(j.id, "palpite_casa", e.target.value)}
+    style={{ ...inputStyle, width: 80, textAlign: "center" }}
+    disabled={disabled}
+  />
 
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={f.palpite_fora}
-            onChange={(e) => setFormValue(j.id, "palpite_fora", e.target.value)}
-            style={{ ...inputStyle, width: "100%", textAlign: "center" }}
-            disabled={disabled}
-            placeholder="Fora"
-          />
-        </div>
-      </div>
+  <span style={{ fontWeight: 800 }}>x</span>
 
-      {/* Botões em linha abaixo, ocupando 100% */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%" }}>
-        <button
-          type="button"
-          onClick={() => handleSalvar(j.id)}
-          style={primaryBtnStyle(!!f.saving)}
-          disabled={disabled}
-          title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
-        >
-          {f.saving ? "Salvando..." : "Salvar"}
-        </button>
+  <input
+    type="number"
+    min={0}
+    max={20}
+    value={f.palpite_fora}
+    onChange={(e) => setFormValue(j.id, "palpite_fora", e.target.value)}
+    style={{ ...inputStyle, width: 80, textAlign: "center" }}
+    disabled={disabled}
+  />
 
-        <button
-          type="button"
-          onClick={() => handleDeletar(j.id)}
-          style={dangerBtnStyle}
-          disabled={disabled || (p?.palpite_casa == null && p?.palpite_fora == null)}
-          title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
-        >
-          Remover
-        </button>
-      </div>
-    </div>
-  ) : (
-    // ✅ Desktop: mantém seu layout original exatamente como estava
-    <div style={scoreRowStyle}>
-      {/* Casa: SIGLA + escudo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <strong style={{ width: 42 }}>{j.time_casa.sigla}</strong>
-
+  {/* Fora: escudo + SIGLA */}
+  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <img
-          src={getEscudoSrc(j.time_casa.sigla)}
-          alt={`Escudo ${j.time_casa.nome}`}
-          style={{ width: 28, height: 28, objectFit: "contain" }}
-          onError={(e) => {
+        src={getEscudoSrc(j.time_fora.sigla)}
+        alt={`Escudo ${j.time_fora.nome}`}
+        style={{ width: 28, height: 28, objectFit: "contain" }}
+        onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = "none";
-          }}
-        />
-      </div>
-
-      {/* Inputs placar */}
-      <input
-        type="number"
-        min={0}
-        max={20}
-        value={f.palpite_casa}
-        onChange={(e) => setFormValue(j.id, "palpite_casa", e.target.value)}
-        style={{ ...inputStyle, width: 80, textAlign: "center" }}
-        disabled={disabled}
-      />
-
-      <span style={{ fontWeight: 800 }}>x</span>
-
-      <input
-        type="number"
-        min={0}
-        max={20}
-        value={f.palpite_fora}
-        onChange={(e) => setFormValue(j.id, "palpite_fora", e.target.value)}
-        style={{ ...inputStyle, width: 80, textAlign: "center" }}
-        disabled={disabled}
-      />
-
-      {/* Fora: escudo + SIGLA */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <img
-          src={getEscudoSrc(j.time_fora.sigla)}
-          alt={`Escudo ${j.time_fora.nome}`}
-          style={{ width: 28, height: 28, objectFit: "contain" }}
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.display = "none";
-          }}
+        }}
         />
 
         <strong style={{ width: 42, textAlign: "right" }}>{j.time_fora.sigla}</strong>
-      </div>
-
-      {/* Botões */}
-      <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
-        <button
-          type="button"
-          onClick={() => handleSalvar(j.id)}
-          style={primaryBtnStyle(!!f.saving)}
-          disabled={disabled}
-          title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
-        >
-          {f.saving ? "Salvando..." : "Salvar"}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleDeletar(j.id)}
-          style={dangerBtnStyle}
-          disabled={disabled || (p?.palpite_casa == null && p?.palpite_fora == null)}
-          title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
-        >
-          Remover
-        </button>
-      </div>
     </div>
-  )}
-</div>
 
+    {/* Botões */}
+    <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
+        <button
+        type="button"
+        onClick={() => handleSalvar(j.id)}
+        style={primaryBtnStyle(!!f.saving)}
+        disabled={disabled}
+        title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
+        >
+        {f.saving ? "Salvando..." : "Salvar"}
+        </button>
+
+        <button
+        type="button"
+        onClick={() => handleDeletar(j.id)}
+        style={dangerBtnStyle}
+        disabled={disabled || (p?.palpite_casa == null && p?.palpite_fora == null)}
+        title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
+        >
+        Remover
+        </button>
+    </div>
+    </div>
                 </div>
 
                 {p && (p.placar_real_casa != null || p.placar_real_fora != null) ? (

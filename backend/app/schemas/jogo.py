@@ -10,6 +10,7 @@ class JogoCreate(BaseModel):
     data_hora: datetime  # envie em UTC (timezone-aware)
 
 class JogoUpdate(BaseModel):
+    rodada: Optional[int] = None
     data_hora: Optional[datetime] = None
     status: Optional[str] = None  # "agendado", "em_andamento", "finalizado", "cancelado"
 
