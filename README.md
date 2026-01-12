@@ -1,6 +1,6 @@
-# 🏆 Projeto Bolão Brasileirão
+# 🏆 Projeto FutBolão
 
-Sistema **fullstack** de Bolão do Campeonato Brasileiro desenvolvido com foco em **regras de negócio reais**, **arquitetura organizada**, **consultas analíticas** e **padrões próximos aos utilizados em aplicações de mercado**.
+Sistema **fullstack** de um Bolão (inicialmente do Campeonato Brasileiro) desenvolvido com foco em **regras de negócio reais**, **arquitetura organizada**, **consultas analíticas** e **padrões próximos aos utilizados em aplicações de mercado**.
 
 Este projeto nasceu a partir de uma experiência prática: durante o Brasileirão de 2025, gerenciei manualmente um bolão entre amigos utilizando uma planilha no Google Spreadsheets. Ao longo do campeonato, surgiram desafios como controle de palpites, cálculo de pontuação, ranking por rodada e histórico de desempenho. Ao final, a ideia foi transformar esse processo manual em um **sistema completo**, automatizado e escalável, que também servisse como **projeto de portfólio** para demonstrar domínio em backend, modelagem de dados e arquitetura de software.
 
