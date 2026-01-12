@@ -126,6 +126,7 @@ def calcular_pontuacao(gols_casa_palpite: int, gols_fora_palpite: int, gols_casa
     return 0
 
 def palpites_usuario_na_rodada(db: Session, liga_id: int, usuario_id: int, rodada: int):
+    validar_membro_liga(db, liga_id, usuario_id)
     temporada_id = db.query(Liga.temporada_id).filter(Liga.id == liga_id).scalar()
 
     Casa = aliased(Time)
@@ -182,6 +183,8 @@ def palpites_usuario_na_rodada(db: Session, liga_id: int, usuario_id: int, rodad
 def meu_palpite_no_jogo(db: Session, liga_id: int, usuario_id: int, jogo_id: int):
     Casa = aliased(Time)
     Fora = aliased(Time)
+
+    validar_membro_liga(db, liga_id, usuario_id)
 
     r = (
         db.query(
