@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from app.routes import usuario, auth, liga, liga_membro, liga_services, time, competicao, temporada, jogo, palpite, pagamentos
+from app.routes import usuario, auth, liga, liga_membro, liga_services, time, competicao, temporada, jogo, palpite, pagamentos, push
 from app import models
 
 
@@ -34,6 +34,8 @@ app.include_router(temporada.router)
 app.include_router(jogo.router)
 app.include_router(palpite.router)
 app.include_router(pagamentos.router)
+app.include_router(push.router)
+
 
 
 @app.get("/")

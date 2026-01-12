@@ -18,7 +18,7 @@ class Jogo(Base):
     gols_casa = Column(Integer, nullable=True)
     gols_fora = Column(Integer, nullable=True)
 
-    data_hora = Column(DateTime, nullable=True)
+    data_hora = Column(DateTime(timezone=True), nullable=True)
 
     # agendado / finalizado 
     status = Column(String, nullable=False, default="agendado", index=True)

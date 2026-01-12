@@ -15,3 +15,9 @@ target/
 
 # OS
 .DS_Store
+
+# backend
+backend/.secrets/
+*.json
+.env
+.env.*

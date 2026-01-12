@@ -8,3 +8,7 @@ from app.models.jogo import Jogo
 from app.models.palpite import Palpite
 from app.models.pagamentos import LigaPagamento
 from app.models.cobranca_mes import LigaCobrancaMes
+from app.models.push_token import PushToken
+from app.models.push_alert_log import PushAlertLog
+
+

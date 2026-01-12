@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -9,6 +10,8 @@ from app.crud.jogo import criar_jogo, listar_jogos, buscar_jogo, atualizar_jogo,
 from app.models.temporada import Temporada
 from app.models.time import Time
 from app.core.dependencies import get_current_user
+
+
 
 router = APIRouter(prefix="/jogos", tags=["Jogos"])
 
@@ -83,3 +86,5 @@ def exclui_jogo(
         raise HTTPException(404, detail="Jogo não encontrado.")
     deletar_jogo(db, jogo)
     return
+
+
