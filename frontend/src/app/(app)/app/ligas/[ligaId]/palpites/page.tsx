@@ -11,6 +11,8 @@ import { listarMeusPalpitesNaRodada, upsertMeuPalpite, deletarMeuPalpite } from 
 import type { Liga } from "@/app/types/liga";
 import type { Jogo } from "@/app/types/jogo";
 import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
+import { formatDateTimeSP } from "@/app/utils/datetime";
+
 
 type FormState = {
   palpite_casa: string; // string pra controlar input
@@ -332,7 +334,7 @@ export default function PalpitesRodadaPage() {
                       {j.time_casa.nome} x {j.time_fora.nome}
                     </strong>
                     <div style={{ fontSize: 14, opacity: 0.85 }}>
-                      {formatDateTime(j.data_hora)} • Status: <code>{j.status}</code>
+                      {formatDateTimeSP(j.data_hora)} • Status: <code>{j.status}</code>
                     </div>
                   </div>
 
@@ -546,14 +548,6 @@ function extractApiErrorMessage(e: any): string {
   return e?.message || "Erro inesperado.";
 }
 
-function formatDateTime(iso: string | null) {
-  if (!iso) return "Data ainda não definida";
-
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "Data inválida";
-
-  return d.toLocaleString();
-}
 
 
 function alertStyle(kind: "success" | "error"): React.CSSProperties {

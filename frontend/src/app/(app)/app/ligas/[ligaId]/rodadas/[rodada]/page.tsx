@@ -17,6 +17,9 @@ import type { Jogo } from "@/app/types/jogo";
 import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
 import type { PalpiteLigaJogoItem } from "@/app/types/palpiteLigaJogo";
 
+import { formatDateTimeSP } from "@/app/utils/datetime";
+
+
 export default function RodadaLigaPage() {
   const params = useParams();
   const ligaId = Number(params?.ligaId);
@@ -264,7 +267,7 @@ export default function RodadaLigaPage() {
                       {j.time_casa.nome} <span style={{ opacity: 0.7 }}>vs</span> {j.time_fora.nome}
                     </div>
                     <div style={{ fontSize: 14, opacity: 0.85 }}>
-                      {formatDateTime(j.data_hora)} • Status: <code>{j.status}</code>
+                      {formatDateTimeSP(j.data_hora)} • Status: <code>{j.status}</code>
                     </div>
                   </div>
 
@@ -376,12 +379,6 @@ function extractApiErrorMessage(e: any): string {
   return e?.message || "Erro inesperado.";
 }
 
-function formatDateTime(iso: string | null) {
-  if (!iso) return "Data ainda não definida";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "Data inválida";
-  return d.toLocaleString();
-}
 
 function alertStyle(kind: "error" | "success"): React.CSSProperties {
   const base: React.CSSProperties = {
