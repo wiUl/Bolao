@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -41,3 +42,16 @@ def test_push(db: Session = Depends(get_db), user=Depends(get_current_user)):
     for t in tokens:
         send_to_token(t.token, "Teste Bolão", "Se você recebeu isso, funcionou ✅", {"kind": "test"})
     return {"ok": True}
+
+@router.post("/logs/cleanup")
+def cleanup_push_logs(days: int = 30, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    # se você tiver role/admin, valide aqui
+    # ex: if user.role not in ("admin", "owner"): raise HTTPException(403, ...)
+
+    stmt = text("""
+        DELETE FROM push_alerts_log
+        WHERE created_at < NOW() - (CAST(:days AS TEXT) || ' days')::interval
+    """)
+    result = db.execute(stmt, {"days": days})
+    db.commit()
+    return {"ok": True, "deleted": result.rowcount, "days": days}

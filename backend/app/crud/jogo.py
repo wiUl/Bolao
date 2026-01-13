@@ -10,11 +10,28 @@ from app.services.palpites import calcular_pontuacao
 TZ_SP = ZoneInfo("America/Sao_Paulo")
 TZ_UTC = ZoneInfo("UTC")
 
-def parse_data_hora(data_hora_str: str) -> datetime:
-    # ex: "2026-01-15T19:00"
-    naive = datetime.fromisoformat(data_hora_str)
-    local = naive.replace(tzinfo=TZ_SP)
-    return local.astimezone(TZ_UTC)
+def parse_data_hora(data_hora) -> datetime | None:
+    if data_hora is None:
+        return None
+
+    # 1️⃣ Se já vier como datetime (Postgres / ORM)
+    if isinstance(data_hora, datetime):
+        # se já tem tzinfo, só normaliza pra UTC
+        if data_hora.tzinfo is not None:
+            return data_hora.astimezone(TZ_UTC)
+
+        # se for naive, assume America/Sao_Paulo
+        local = data_hora.replace(tzinfo=TZ_SP)
+        return local.astimezone(TZ_UTC)
+
+    # 2️⃣ Se vier como string (payload JSON)
+    if isinstance(data_hora, str):
+        naive = datetime.fromisoformat(data_hora)
+        local = naive.replace(tzinfo=TZ_SP)
+        return local.astimezone(TZ_UTC)
+
+    # 3️⃣ Qualquer outro tipo é erro
+    raise TypeError(f"Tipo inválido para data_hora: {type(data_hora)}")
 
 
 

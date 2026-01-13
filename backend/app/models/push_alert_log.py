@@ -9,7 +9,7 @@ class PushAlertLog(Base):
     jogo_id = Column(Integer, nullable=False, index=True)
     liga_id = Column(Integer, nullable=False, index=True)
     alert_type = Column(String, nullable=False)  # ex: "PRE_30"
-    sent_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     __table_args__ = (
         UniqueConstraint("jogo_id", "liga_id", "alert_type", name="uq_push_alert_jogo_liga_tipo"),

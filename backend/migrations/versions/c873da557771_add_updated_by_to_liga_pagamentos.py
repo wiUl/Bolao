@@ -1,22 +1,23 @@
-from alembic import op
-import sqlalchemy as sa
+"""add updated_by to liga_pagamentos
 
+Revision ID: c873da557771
+Revises: 408609a16fc8
+Create Date: xxxx-xx-xx
+"""
+from alembic import op
+
+# revision identifiers, used by Alembic.
 revision = "c873da557771"
 down_revision = "408609a16fc8"
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
-    with op.batch_alter_table("liga_pagamentos") as batch:
-        batch.add_column(sa.Column("updated_by", sa.Integer(), nullable=True))
-        # opcional: se você quiser FK (SQLite pode ser chatinho em batch)
-        # batch.create_foreign_key(
-        #     "fk_liga_pagamentos_updated_by_usuario",
-        #     "usuarios",
-        #     ["updated_by"],
-        #     ["id"],
-        # )
+    # NO-OP: coluna updated_by já existe na criação da tabela em migrations anteriores
+    pass
+
 
 def downgrade():
-    with op.batch_alter_table("liga_pagamentos") as batch:
-        batch.drop_column("updated_by")
+    # NO-OP
+    pass
