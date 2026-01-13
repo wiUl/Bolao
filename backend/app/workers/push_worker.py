@@ -1,10 +1,10 @@
 import time
-from app.database import SessionLocal
+from app.database import Sessionlocal
 from app.services.push_scheduler import run_missing_bet_alerts
 
 def main():
     while True:
-        db = SessionLocal()
+        db = Sessionlocal()
         try:
             run_missing_bet_alerts(db)
         finally:
