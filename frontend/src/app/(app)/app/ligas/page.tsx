@@ -31,7 +31,6 @@ export default function LigasPage() {
 
   // form criar liga
   const [nomeLiga, setNomeLiga] = useState("");
-  const [temporadaCriar, setTemporadaCriar] = useState<number | "">("");
 
   const [creating, setCreating] = useState(false);
 
@@ -149,14 +148,14 @@ export default function LigasPage() {
       setErr("O nome da liga precisa ter pelo menos 3 caracteres.");
       return;
     }
-    if (temporadaCriar === "") {
+    if (temporadaId === "") {
       setErr("Selecione uma temporada para criar a liga.");
       return;
     }
 
     setCreating(true);
     try {
-      const liga = await criarLiga({ nome, temporada_id: temporadaCriar });
+      const liga = await criarLiga({ nome, temporada_id: temporadaId });
 
       setMsg(`Liga "${liga.nome}" criada com sucesso.`);
       setNomeLiga("");

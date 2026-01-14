@@ -13,7 +13,10 @@ router = APIRouter(prefix="/times", tags=["Times"])
 
 @router.post("", response_model=TimeResponse, status_code=status.HTTP_201_CREATED)
 def criar(body: TimeCreate, db: Session = Depends(get_db), admin=Depends(require_admin)):
-    return criar_time(db, body)
+    try:
+        return criar_time(db, body)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("", response_model=list[TimeResponse])

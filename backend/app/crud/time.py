@@ -4,6 +4,10 @@ from app.schemas.time import TimeCreate, TimeUpdate
 
 
 def criar_time(db: Session, body: TimeCreate) -> Time:
+    existente = db.query(Time).filter(Time.nome == body.nome).first()
+    if existente:
+        raise ValueError(f"Já existe um time com nome '{body.nome}'.")
+
     time = Time(
         nome=body.nome.strip(),
         sigla=body.sigla.strip() if body.sigla else None,
