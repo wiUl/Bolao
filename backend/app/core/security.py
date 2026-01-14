@@ -1,13 +1,23 @@
 from datetime import datetime, timedelta, timezone
+import os
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 
-SECRET_KEY = "trocar_chave_em_producao"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY não definido")
+
+if not ALGORITHM:
+    raise RuntimeError("ALGORITHM não definido")
+
+if not ACCESS_TOKEN_EXPIRE_MINUTES:
+    raise RuntimeError("ACCESS_TOKEN_EXPIRE_MINUTES não definido")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
