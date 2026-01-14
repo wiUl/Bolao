@@ -5,15 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { listarMinhasLigas } from "@/app/api/ligas";
-import { getPontuacaoAcumuladaUsuario, getPontuacaoAcumuladaTodos } from "@/app/api/pontuacao";
+import {getPontuacaoAcumuladaUsuario,getPontuacaoAcumuladaTodos} from "@/app/api/pontuacao";
+import type { SerieLigaResponse } from "@/app/api/pontuacao";
 import { listarJogos } from "@/app/api/jogos";
 import { useAuth } from "@/app/auth/AuthContext";
 
 import { getRankingGeral } from "@/app/api/ranking";
-import type { RankingGeralItem } from "@/app/types/ranking";
-
-
-
 import type { Liga } from "@/app/types/liga";
 import type { PontuacaoAcumuladaItem } from "@/app/types/pontuacao";
 
@@ -31,9 +28,22 @@ import {
   Cell,
 } from "recharts";
 
+/**
+ * Resposta "series" do backend (1 request, pronto pro gráfico).
+ * Ex:
+ * {
+ *   max_rodada: 38,
+ *   series: [
+ *     { nome: "Willian", data: [0,3,6,...] },
+ *     { nome: "Gabriel", data: [0,1,4,...] }
+ *   ]
+ * }
+ */
+
+
 export default function GraficosPage() {
   const params = useParams();
-  const ligaId = Number(params?.ligaId);
+  const ligaId = Number((params)?.ligaId);
 
   const { user } = useAuth();
 
@@ -46,16 +56,18 @@ export default function GraficosPage() {
   const [rodadaAteUser, setRodadaAteUser] = useState<number | null>(null);
   const [rodadaAteLiga, setRodadaAteLiga] = useState<number | null>(null);
 
-
+  // Minha série (flat)
   const [serie, setSerie] = useState<PontuacaoAcumuladaItem[]>([]);
-  const [serieLigaRaw, setSerieLigaRaw] = useState<PontuacaoAcumuladaItem[]>([]);
 
-  const [pizzaData, setPizzaData] = useState<{ name: string; value: number; percent: number }[]>([]);
+  // Série da liga (pronto pro gráfico)
+  const [serieLiga, setSerieLiga] = useState<SerieLigaResponse | null>(null);
+
+  const [pizzaData, setPizzaData] = useState<
+    { name: string; value: number; percent: number }[]
+  >([]);
   const [loadingPizza, setLoadingPizza] = useState(false);
 
-
-
-  // 1) Carrega liga (pra mostrar nome no header, igual ao ranking)
+  // 1) Carrega liga (pra mostrar nome no header)
   useEffect(() => {
     let mounted = true;
 
@@ -64,7 +76,7 @@ export default function GraficosPage() {
       setLoading(true);
 
       try {
-        if (!Number.isInteger(ligaId)) {
+        if (!Number.isFinite(ligaId)) {
           setErr("ligaId inválido.");
           return;
         }
@@ -95,10 +107,16 @@ export default function GraficosPage() {
     };
   }, [ligaId]);
 
-  // 2) Descobre última rodada existente e última rodada finalizada (rodada é required no endpoint /jogos)
+  /**
+   * 2) Descobre rodadas (existente/finalizada/default)
+   *
+   * Ideal: trocar o cálculo abaixo por 1 endpoint no backend (ex.: /temporadas/{id}/rodadas/info).
+   * Como você pediu só o arquivo, mantive a função mas deixei mais eficiente:
+   * - Em vez de "rodada por rodada" sequencial até 60, fazemos em batches paralelos com limite.
+   * - Ainda depende do endpoint /jogos por rodada, mas reduz bastante o tempo.
+   */
   useEffect(() => {
     if (!liga) return;
-
     const temporadaId = liga.temporada_id;
 
     let mounted = true;
@@ -108,14 +126,13 @@ export default function GraficosPage() {
       setLoading(true);
 
       try {
-        const info = await calcularInfoRodadas(temporadaId);
+        const info = await calcularInfoRodadasRapido(temporadaId);
         if (!mounted) return;
 
         setRodadaMaxExistente(info.ultimaRodadaExistente);
         setRodadaMaxFinalizada(info.ultimaRodadaFinalizada);
         setRodadaAteUser(info.defaultRodada);
         setRodadaAteLiga(info.defaultRodada);
-
       } catch (e: any) {
         if (!mounted) return;
         setErr(extractApiErrorMessage(e));
@@ -131,15 +148,15 @@ export default function GraficosPage() {
     };
   }, [liga]);
 
-  // 3) Carrega pontuação acumulada do usuário logado (rodada required no backend)
+  // 3) Carrega pontuação acumulada do usuário logado (1 request)
   useEffect(() => {
     if (!liga) return;
     if (!user?.nome) return;
-    if (!rodadaAteUser) return;
 
+    // se for null, deixa o backend decidir (última rodada finalizada)
     const _ligaId = liga.id;
     const _usuarioNome = user.nome;
-    const _rodada = rodadaAteUser;
+    const _rodada = rodadaAteUser ?? undefined;
 
     let mounted = true;
 
@@ -148,7 +165,7 @@ export default function GraficosPage() {
       setLoading(true);
 
       try {
-        const data = await getPontuacaoAcumuladaUsuario(_ligaId, _usuarioNome, _rodada);
+        const data = await getPontuacaoAcumuladaUsuario(_ligaId, _usuarioNome, _rodada as any);
         if (!mounted) return;
 
         const sorted = [...data].sort((a, b) => a.rodada - b.rodada);
@@ -168,36 +185,35 @@ export default function GraficosPage() {
     };
   }, [liga, user, rodadaAteUser]);
 
+  // 4) Carrega série comparativa da liga (1 request, format=series)
   useEffect(() => {
-  if (!liga) return;
-  if (!rodadaAteLiga) return;
+    if (!liga) return;
 
-  const _ligaId = liga.id;
-  const _rodada = rodadaAteLiga;
+    const _ligaId = liga.id;
+    const _rodada = rodadaAteLiga ?? undefined;
 
-  let mounted = true;
+    let mounted = true;
 
-  async function loadSerieLiga() {
-    try {
-      const data = await getPontuacaoAcumuladaTodos(_ligaId, _rodada);
-      if (!mounted) return;
+    async function loadSerieLiga() {
+      try {
+        if (!_rodada) return;
+        const data = await getPontuacaoAcumuladaTodos(_ligaId, _rodada, "series");
 
-      // ordena por rodada (e por nome só para estabilidade)
-      const sorted = [...data].sort((a, b) => (a.rodada - b.rodada) || a.nome.localeCompare(b.nome));
-      setSerieLigaRaw(sorted);
-    } catch (e: any) {
-      if (!mounted) return;
-      // se quiser, você pode ter um err separado; por enquanto usa o mesmo
-      setErr(extractApiErrorMessage(e));
+        if (!mounted) return;
+        setSerieLiga(data);
+      } catch (e: any) {
+        if (!mounted) return;
+        setErr(extractApiErrorMessage(e));
+      }
     }
-  }
 
-  loadSerieLiga();
-  return () => {
-    mounted = false;
-  };
+    loadSerieLiga();
+    return () => {
+      mounted = false;
+    };
   }, [liga, rodadaAteLiga]);
 
+  // 5) Pizza via ranking (1 request)
   useEffect(() => {
     if (!liga) return;
     if (!user?.nome) return;
@@ -208,19 +224,20 @@ export default function GraficosPage() {
     let mounted = true;
 
     async function loadPizzaFromRanking() {
-        setLoadingPizza(true);
-        try {
+      setLoadingPizza(true);
+      try {
         const ranking = await getRankingGeral(_ligaId);
 
-        // 🔸 se o nome pode variar, você pode trocar por includes/like depois
         const eu =
-            ranking.find((x) => x.nome === _nome) ??
-            ranking.find((x) => x.nome.toLowerCase().includes(_nome.toLowerCase()));
+          ranking.find((x: any) => x.nome === _nome) ??
+          ranking.find((x: any) =>
+            String(x.nome || "").toLowerCase().includes(_nome.toLowerCase())
+          );
 
         if (!eu) {
-            if (!mounted) return;
-            setPizzaData([]);
-            return;
+          if (!mounted) return;
+          setPizzaData([]);
+          return;
         }
 
         const placar = eu.acertos_placar ?? 0;
@@ -231,61 +248,84 @@ export default function GraficosPage() {
         const total = placar + saldo + resultado + erros;
 
         const make = (name: string, value: number) => ({
-            name,
-            value,
-            percent: total > 0 ? Math.round((value / total) * 100) : 0,
+          name,
+          value,
+          percent: total > 0 ? Math.round((value / total) * 100) : 0,
         });
 
         const data = [
-            make("Placar", placar),
-            make("Saldo", saldo),
-            make("Resultado", resultado),
-            make("Erros", erros),
+          make("Placar", placar),
+          make("Saldo", saldo),
+          make("Resultado", resultado),
+          make("Erros", erros),
         ];
 
         if (!mounted) return;
         setPizzaData(data);
-        } catch (e: any) {
+      } catch (e: any) {
         if (!mounted) return;
         setErr(extractApiErrorMessage(e));
-        } finally {
+      } finally {
         if (!mounted) return;
         setLoadingPizza(false);
-        }
+      }
     }
 
     loadPizzaFromRanking();
     return () => {
-        mounted = false;
+      mounted = false;
     };
-    }, [liga, user]);
+  }, [liga, user]);
 
-
+  // ====== Memos ======
 
   const maxPontos = useMemo(() => {
     if (serie.length === 0) return 0;
     return Math.max(...serie.map((x) => x.pontuacao_acumulada));
   }, [serie]);
 
-  const ligaPivot = useMemo(() => {
-  return pivotPontuacaoPorRodada(serieLigaRaw);
-  }, [serieLigaRaw]);
+  // Converte series -> chartData + usuarios
+  const ligaChart = useMemo(() => {
+    if (!serieLiga || !serieLiga.series || serieLiga.series.length === 0) {
+      return { chartData: [] , usuarios: [] as string[] };
+    }
+
+    const usuarios = [...serieLiga.series]
+      .map((s) => s.nome)
+      .sort((a, b) => a.localeCompare(b));
+
+    // para manter a mesma ordem do Legend/Lines, reordenamos series na mesma ordem
+    const seriesSorted = [...serieLiga.series].sort((a, b) =>
+      a.nome.localeCompare(b.nome)
+    );
+
+    const maxRodada = Number(serieLiga.max_rodada || 0);
+
+    const chartData = Array.from({ length: maxRodada }, (_, i) => {
+      const rodada = i + 1;
+      const row: any = { rodada };
+      for (const s of seriesSorted) {
+        row[s.nome] = Number(s.data?.[i] ?? 0);
+      }
+      return row;
+    });
+
+    return { chartData, usuarios };
+  }, [serieLiga]);
 
   const maxPontosLiga = useMemo(() => {
-    const d = ligaPivot.chartData;
-    if (!d.length) return 0;
-
-    // pega o maior valor entre todos os usuários em todas as rodadas
+    if (!serieLiga || !serieLiga.series || serieLiga.series.length === 0) return 0;
     let mx = 0;
-    for (const row of d) {
-      for (const nome of ligaPivot.usuarios) {
-        const v = Number(row[nome] ?? 0);
-        if (v > mx) mx = v;
+    for (const s of serieLiga.series) {
+      for (const v of s.data || []) {
+        const n = Number(v || 0);
+        if (n > mx) mx = n;
       }
     }
     return mx;
-  }, [ligaPivot]);
+  }, [serieLiga]);
 
+  // ====== UI ======
 
   return (
     <main style={{ padding: 24, maxWidth: 980, margin: "0 auto" }}>
@@ -330,7 +370,14 @@ export default function GraficosPage() {
 
       {/* Card: Minha evolução */}
       <section style={sectionStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
           <div>
             <h2 style={{ marginTop: 0, marginBottom: 4, fontWeight: 600 }}>
               Minha pontuação acumulada
@@ -345,20 +392,30 @@ export default function GraficosPage() {
 
             <select
               value={rodadaAteUser ?? ""}
-              onChange={(e) => setRodadaAteUser(Number(e.target.value))}
-              style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #ddd" }}
+              onChange={(e) =>
+                setRodadaAteUser(e.target.value ? Number(e.target.value) : null)
+              }
+              style={{
+                padding: "8px 10px",
+                borderRadius: 10,
+                border: "1px solid #ddd",
+              }}
               disabled={!rodadaMaxExistente}
             >
-              {Array.from({ length: rodadaMaxExistente }, (_, i) => i + 1).map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                  {r === rodadaMaxFinalizada ? " (última finalizada)" : ""}
-                </option>
-              ))}
+              {Array.from({ length: rodadaMaxExistente }, (_, i) => i + 1).map(
+                (r) => (
+                  <option key={r} value={r}>
+                    {r}
+                    {r === rodadaMaxFinalizada ? " (última finalizada)" : ""}
+                  </option>
+                )
+              )}
             </select>
           </label>
 
-          {loading ? <span style={{ fontSize: 14, opacity: 0.75 }}>Carregando...</span> : null}
+          {loading ? (
+            <span style={{ fontSize: 14, opacity: 0.75 }}>Carregando...</span>
+          ) : null}
         </div>
 
         {!loading && serie.length === 0 ? (
@@ -368,7 +425,10 @@ export default function GraficosPage() {
         {!loading && serie.length > 0 ? (
           <div style={{ width: "100%", height: 320, marginTop: 12 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={serie} margin={{ top: 10, right: 16, left: 0, bottom: 10 }}>
+              <LineChart
+                data={serie}
+                margin={{ top: 10, right: 16, left: 0, bottom: 10 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="rodada"
@@ -396,68 +456,84 @@ export default function GraficosPage() {
       </section>
 
       {/* Card: Evolução da liga (todos) */}
-        <section style={sectionStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div>
+      <section style={sectionStyle}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
             <h2 style={{ marginTop: 0, marginBottom: 4, fontWeight: 600 }}>
-                Evolução da liga
+              Evolução da liga
             </h2>
             <p style={{ margin: 0, opacity: 0.85 }}>
-                Pontuação acumulada de todos os membros (até a rodada selecionada)
+              Pontuação acumulada de todos os membros (até a rodada selecionada)
             </p>
-            </div>
+          </div>
 
-            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <span style={{ fontWeight: 600 }}>Até a rodada:</span>
 
             <select
               value={rodadaAteLiga ?? ""}
-              onChange={(e) => setRodadaAteLiga(Number(e.target.value))}
-              style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #ddd" }}
+              onChange={(e) =>
+                setRodadaAteLiga(e.target.value ? Number(e.target.value) : null)
+              }
+              style={{
+                padding: "8px 10px",
+                borderRadius: 10,
+                border: "1px solid #ddd",
+              }}
               disabled={!rodadaMaxExistente}
             >
-              {Array.from({ length: rodadaMaxExistente }, (_, i) => i + 1).map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                  {r === rodadaMaxFinalizada ? " (última finalizada)" : ""}
-                </option>
-              ))}
+              {Array.from({ length: rodadaMaxExistente }, (_, i) => i + 1).map(
+                (r) => (
+                  <option key={r} value={r}>
+                    {r}
+                    {r === rodadaMaxFinalizada ? " (última finalizada)" : ""}
+                  </option>
+                )
+              )}
             </select>
           </label>
         </div>
 
-        {!loading && ligaPivot.chartData.length === 0 ? (
-            <p style={{ marginTop: 12 }}>Sem dados para exibir.</p>
+        {!loading && ligaChart.chartData.length === 0 ? (
+          <p style={{ marginTop: 12 }}>Sem dados para exibir.</p>
         ) : null}
 
-        {!loading && ligaPivot.chartData.length > 0 ? (
-            <div style={{ width: "100%", height: 380, marginTop: 12 }}>
+        {!loading && ligaChart.chartData.length > 0 ? (
+          <div style={{ width: "100%", height: 380, marginTop: 12 }}>
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={ligaPivot.chartData} margin={{ top: 10, right: 16, left: 0, bottom: 10 }}>
+              <LineChart
+                data={ligaChart.chartData}
+                margin={{ top: 10, right: 16, left: 0, bottom: 10 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
 
                 <XAxis
-                    dataKey="rodada"
-                    tickLine={false}
-                    axisLine={false}
-                    allowDecimals={false}
+                  dataKey="rodada"
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
                 />
 
                 <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[0, Math.max(5, maxPontosLiga)]}
-                    allowDecimals={false}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={[0, Math.max(5, maxPontosLiga)]}
+                  allowDecimals={false}
                 />
 
-                <Tooltip content={<LigaTooltip />}/>
+                <Tooltip content={<LigaTooltip />} />
 
-                <Legend
-                    formatter={(value) => firstName(String(value))}
-                />
+                <Legend formatter={(value) => firstName(String(value))} />
 
-                {ligaPivot.usuarios.map((nomeCompleto, idx) => (
-                    <Line
+                {ligaChart.usuarios.map((nomeCompleto, idx) => (
+                  <Line
                     key={nomeCompleto}
                     type="monotone"
                     dataKey={nomeCompleto}
@@ -465,70 +541,78 @@ export default function GraficosPage() {
                     strokeWidth={2}
                     dot={false}
                     connectNulls
-                    />
+                  />
                 ))}
-                </LineChart>
+              </LineChart>
             </ResponsiveContainer>
-            </div>
+          </div>
         ) : null}
-        </section>
+      </section>
 
-        <section style={sectionStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div>
+      {/* Card: Pizza */}
+      <section style={sectionStyle}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
             <h2 style={{ marginTop: 0, marginBottom: 4, fontWeight: 600 }}>
-                Distribuição de acertos
+              Distribuição de acertos
             </h2>
             <p style={{ margin: 0, opacity: 0.85 }}>
-                Placar / Saldo / Resultado / Erros
+              Placar / Saldo / Resultado / Erros
             </p>
-            </div>
+          </div>
 
-            {loadingPizza ? (
+          {loadingPizza ? (
             <span style={{ fontSize: 14, opacity: 0.75 }}>Carregando...</span>
-            ) : null}
+          ) : null}
         </div>
 
         {!loadingPizza && pizzaData.length === 0 ? (
-            <p style={{ marginTop: 12 }}>Sem dados para exibir.</p>
+          <p style={{ marginTop: 12 }}>Sem dados para exibir.</p>
         ) : null}
 
         {!loadingPizza && pizzaData.length > 0 ? (
-            <div style={{ width: "100%", height: 320, marginTop: 12 }}>
+          <div style={{ width: "100%", height: 320, marginTop: 12 }}>
             <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+              <PieChart>
                 <Pie
-                    data={pizzaData}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={110}
-                    label={(d: any) => `${d.name} ${d.percent}%`}
+                  data={pizzaData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={110}
+                  label={(d: any) => `${d.name} ${d.percent}%`}
                 >
-                    {pizzaData.map((_, idx) => (
+                  {pizzaData.map((_, idx) => (
                     <Cell
-                        key={idx}
-                        fill={["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"][idx % 4]}
+                      key={idx}
+                      fill={["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"][idx % 4]}
                     />
-                    ))}
+                  ))}
                 </Pie>
 
                 <Legend
-                formatter={(value: any, entry: any) => {
+                  formatter={(value: any, entry: any) => {
                     const v = entry?.payload?.value ?? 0;
                     const p = entry?.payload?.percent ?? 0;
                     return `${value} — ${v} (${p}%)`;
-                }}
+                  }}
                 />
-                </PieChart>
+              </PieChart>
             </ResponsiveContainer>
-            </div>
+          </div>
         ) : null}
-        </section>
+      </section>
     </main>
   );
 }
 
-/** Evita "[object Object]" com FastAPI (mesma lógica que você usa nas páginas) */
+/** Evita "[object Object]" com FastAPI */
 function extractApiErrorMessage(e: any): string {
   const data = e?.response?.data;
   const detail = data?.detail;
@@ -570,36 +654,68 @@ const sectionStyle: React.CSSProperties = {
   marginTop: 18,
 };
 
-
-
 /**
- * Como /jogos exige rodada, descobrimos a última rodada existente e a última finalizada
- * consultando rodada por rodada até não existir mais (ou até achar a primeira não finalizada).
+ * Versão mais rápida do cálculo de rodadas:
+ * - Faz requisições em paralelo com limite (batch)
+ * - Continua parando quando uma rodada não existe
+ *
+ * OBS: O ideal é trocar isso por 1 endpoint no backend.
  */
-async function calcularInfoRodadas(temporadaId: number) {
-  let rodada = 1;
+async function calcularInfoRodadasRapido(temporadaId: number) {
+  const LIMITE_MAX = 60; // segurança
+  const CONCURRENCY = 6;
+
+  // helper: busca uma rodada e diz se existe e se está finalizada
+  async function fetchRodada(rodada: number) {
+    const jogos = await listarJogos({ temporada_id: temporadaId, rodada });
+    const existe = Array.isArray(jogos) && jogos.length > 0;
+    const todosFinalizados =
+      existe && jogos.every((j: any) => j.status === "finalizado");
+    return { rodada, existe, todosFinalizados };
+  }
+
+  // roda em batches: [1..6], [7..12], ...
   let ultimaRodadaExistente = 0;
   let ultimaRodadaFinalizada = 0;
 
-  const LIMITE_MAX = 60; // segurança (competição pode ter menos)
+  for (let start = 1; start <= LIMITE_MAX; start += CONCURRENCY) {
+    const batch = Array.from({ length: CONCURRENCY }, (_, i) => start + i).filter(
+      (r) => r <= LIMITE_MAX
+    );
 
-  while (rodada <= LIMITE_MAX) {
-    const jogos = await listarJogos({ temporada_id: temporadaId, rodada });
+    const results = await Promise.all(batch.map(fetchRodada));
 
-    // Se backend retorna [] quando não existe rodada, paramos
-    if (!jogos || jogos.length === 0) break;
+    // processa em ordem
+    for (const r of results.sort((a, b) => a.rodada - b.rodada)) {
+      if (!r.existe) {
+        // parou: achou a primeira que não existe
+        const defaultRodada =
+          (ultimaRodadaFinalizada > 0 ? ultimaRodadaFinalizada : ultimaRodadaExistente) ||
+          1;
 
-    ultimaRodadaExistente = rodada;
+        return {
+          ultimaRodadaExistente,
+          ultimaRodadaFinalizada,
+          defaultRodada,
+        };
+      }
 
-    const todosFinalizados = jogos.every((j: any) => j.status === "finalizado");
-    if (todosFinalizados) {
-      ultimaRodadaFinalizada = rodada;
-      rodada += 1;
-      continue;
+      ultimaRodadaExistente = r.rodada;
+      if (r.todosFinalizados) {
+        ultimaRodadaFinalizada = r.rodada;
+      } else {
+        // achou a primeira rodada existente que não está finalizada
+        const defaultRodada =
+          (ultimaRodadaFinalizada > 0 ? ultimaRodadaFinalizada : ultimaRodadaExistente) ||
+          1;
+
+        return {
+          ultimaRodadaExistente,
+          ultimaRodadaFinalizada,
+          defaultRodada,
+        };
+      }
     }
-
-    // achou a primeira rodada ainda não 100% finalizada => para aqui
-    break;
   }
 
   const defaultRodada =
@@ -644,9 +760,7 @@ function UsuarioTooltip({
         fontSize: 14,
       }}
     >
-      <div style={{ fontWeight: 700, marginBottom: 6 }}>
-        Rodada {label}
-      </div>
+      <div style={{ fontWeight: 700, marginBottom: 6 }}>Rodada {label}</div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
         <span>{firstName(nome)}</span>
@@ -656,14 +770,11 @@ function UsuarioTooltip({
   );
 }
 
-
-
 function LigaTooltip(props: any) {
   const { active, label, payload } = props;
 
   if (!active || !payload || payload.length === 0) return null;
 
-  // payload: [{ name: "Fulano", value: 12, color: "#...", dataKey: "Fulano", ...}, ...]
   const items = payload
     .filter((p: any) => p && p.dataKey && typeof p.value === "number")
     .map((p: any) => ({
@@ -684,9 +795,7 @@ function LigaTooltip(props: any) {
         minWidth: 220,
       }}
     >
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>
-        Rodada {label}
-      </div>
+      <div style={{ fontWeight: 700, marginBottom: 8 }}>Rodada {label}</div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {items.map((it: any, idx: number) => (
@@ -701,9 +810,7 @@ function LigaTooltip(props: any) {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 28, opacity: 0.75 }}>
-                #{idx + 1}
-              </span>
+              <span style={{ width: 28, opacity: 0.75 }}>#{idx + 1}</span>
 
               <span
                 style={{
@@ -720,9 +827,7 @@ function LigaTooltip(props: any) {
               </span>
             </div>
 
-            <span style={{ fontWeight: 700 }}>
-              {it.value}
-            </span>
+            <span style={{ fontWeight: 700 }}>{it.value}</span>
           </div>
         ))}
       </div>
@@ -730,33 +835,20 @@ function LigaTooltip(props: any) {
   );
 }
 
-
-function pivotPontuacaoPorRodada(items: PontuacaoAcumuladaItem[]) {
-  // Retorna:
-  // - chartData: [{ rodada: 1, "Paulo": 12, "Maria": 9, ... }, ...]
-  // - usuarios: ["Paulo Silva", "Maria Souza", ...] (nomes completos)
-  const usuarios = Array.from(new Set(items.map((x) => x.nome))).sort((a, b) => a.localeCompare(b));
-
-  const map = new Map<number, any>();
-  for (const it of items) {
-    const row = map.get(it.rodada) ?? { rodada: it.rodada };
-    row[it.nome] = it.pontuacao_acumulada;
-    map.set(it.rodada, row);
-  }
-
-  const chartData = Array.from(map.values()).sort((a, b) => a.rodada - b.rodada);
-  return { chartData, usuarios };
-}
-
 // Paleta simples e estável (cores fixas por índice)
 const PALETTE = [
-  "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-  "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+  "#1f77b4",
+  "#ff7f0e",
+  "#2ca02c",
+  "#d62728",
+  "#9467bd",
+  "#8c564b",
+  "#e377c2",
+  "#7f7f7f",
+  "#bcbd22",
+  "#17becf",
 ];
 
 function colorForIndex(i: number) {
   return PALETTE[i % PALETTE.length];
 }
-
-
-

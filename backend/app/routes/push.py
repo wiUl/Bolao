@@ -10,7 +10,7 @@ from app.models.push_token import PushToken
 from app.services.push_sender import send_to_token
 from app.services.push_scheduler import run_missing_bet_alerts
 
-router = APIRouter(prefix="/push", tags=["push"])
+router = APIRouter(prefix="/push", tags=["Push"])
 
 @router.post("/register-token", response_model=PushOk)
 def register_token(payload: PushTokenIn, db: Session = Depends(get_db), user=Depends(get_current_user)):
