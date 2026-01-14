@@ -49,12 +49,20 @@ def criar_jogo(db: Session, body: JogoCreate) -> Jogo:
 
 
 def listar_jogos(db: Session, temporada_id: int | None = None, rodada: int | None = None):
-    q = db.query(Jogo)
+    q = (
+        db.query(Jogo)
+        .options(
+            selectinload(Jogo.time_casa),
+            selectinload(Jogo.time_fora),
+        )
+    )
     if temporada_id is not None:
         q = q.filter(Jogo.temporada_id == temporada_id)
     if rodada is not None:
         q = q.filter(Jogo.rodada == rodada)
+
     return q.order_by(Jogo.data_hora.asc()).all()
+
 
 def buscar_jogo(db: Session, jogo_id: int) -> Jogo | None:
     return (
