@@ -1,15 +1,18 @@
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import aliased
 from sqlalchemy import exists, and_
 
 from app.models.jogo import Jogo
 from app.models.liga import Liga
+from app.models.time import Time
 from app.models.liga_membro import LigaMembro
 from app.models.palpite import Palpite
 from app.models.push_token import PushToken
 from app.models.push_alert_log import PushAlertLog
 from app.services.push_sender import send_to_token
+
 
 TZ = ZoneInfo("America/Sao_Paulo")
 
@@ -27,7 +30,7 @@ def _format_offset(minutes: int) -> str:
     if minutes >= 60:
         h = minutes // 60
         return f"{h}h"
-    return f"{minutes}min"
+    return f"{minutes} min"
 
 
 def run_missing_bet_alerts(db: Session):
@@ -120,8 +123,21 @@ def run_missing_bet_alerts(db: Session):
                         jogo_dt_sp = jogo_dt.replace(tzinfo=TZ)
                     else:
                         jogo_dt_sp = to_utc(jogo_dt).astimezone(TZ)
-                    hora_str = jogo_dt_sp.strftime("%d/%m %H:%M")
-                    body = f"Faltam {offset_txt} pro jogo ({hora_str}). Envie seu palpite!"
+                    
+                    mandante = aliased(Time)
+                    visitante = aliased(Time)
+
+                    row = (
+                        db.query(Jogo, mandante.nome.label("mandante_nome"), visitante.nome.label("visitante_nome"))
+                        .join(mandante, mandante.id == Jogo.time_casa_id)
+                        .join(visitante, visitante.id == Jogo.time_fora_id)
+                        .filter(Jogo.id == jogo.id)
+                        .first()
+                    )
+
+                    jogo_obj, mandante_nome, visitante_nome = row
+
+                    body = f"Faltam {offset_txt} pro jogo {mandante_nome} x {visitante_nome} . Envie seu palpite!"
                 else:
                     body = f"Faltam {offset_txt} pro jogo. Envie seu palpite!"
 

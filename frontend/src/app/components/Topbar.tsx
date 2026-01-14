@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/app/auth/AuthContext";
+import { EnablePushButton } from "@/app/components/EnablePushBottom";
 
 export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
   const { user, logout } = useAuth();
@@ -20,8 +21,11 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
         <strong>FutBolão</strong>
       </Link>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>        
+        
         {user?.nome ? <span>{user.nome}</span> : null}
+
+         <EnablePushButton  />
 
         <button
           onClick={logout}

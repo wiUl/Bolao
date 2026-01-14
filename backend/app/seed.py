@@ -1,6 +1,6 @@
 import os
 from sqlalchemy.orm import Session
-from dotenv import load_dotenv
+
 
 from app.database import Sessionlocal 
 from app import models 
@@ -10,7 +10,6 @@ from app.models.temporada import Temporada
 from app.models.time import Time
 from app.core.security import get_password_hash
 
-load_dotenv()
 
 TIMES_BRASILEIRAO_2025 = [
     ("Atlético Mineiro", "CAM"),

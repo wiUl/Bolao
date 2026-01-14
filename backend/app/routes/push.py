@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+import os
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -7,6 +8,7 @@ from app.core.dependencies import get_current_user
 from app.schemas.push import PushTokenIn, PushOk
 from app.models.push_token import PushToken
 from app.services.push_sender import send_to_token
+from app.services.push_scheduler import run_missing_bet_alerts
 
 router = APIRouter(prefix="/push", tags=["push"])
 
@@ -31,6 +33,19 @@ def unregister_token(payload: PushTokenIn, db: Session = Depends(get_db), user=D
         token.is_active = False
         db.commit()
     return {"ok": True}
+
+@router.post("/envia_alertas")
+def envia_alertas(db: Session = Depends(get_db), x_cron_secret: str | None = Header(default=None)):
+    expected = os.getenv("PUSH_CRON_SECRET")
+
+    if not expected:
+        raise HTTPException(status_code=500, detail="PUSH_CRON_SECRET não configurado no servidor.")
+    
+    if x_cron_secret != expected:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    result = run_missing_bet_alerts(db)
+    return {"ok": True, "result": result}
 
 @router.post("/test", response_model=PushOk)
 def test_push(db: Session = Depends(get_db), user=Depends(get_current_user)):

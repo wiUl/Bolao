@@ -1,3 +1,10 @@
+from dotenv import load_dotenv
+from pathlib import Path
+
+ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
+load_dotenv(ROOT_ENV)
+
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base

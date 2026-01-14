@@ -3,9 +3,6 @@ from sqlalchemy.orm import Session
 from app.database import Sessionlocal
 from app.models.usuario import Usuario
 from app.core.security import get_password_hash
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 def criar_admin():
