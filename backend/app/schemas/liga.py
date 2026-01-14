@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import List, Optional
 from datetime import datetime
 
 
@@ -52,3 +52,11 @@ class PontuacaoAcumuladaResponse(BaseModel):
     nome: str
     rodada: int
     pontuacao_acumulada: int
+
+class PontuacaoAcumuladaSerie(BaseModel):
+    nome: str
+    data: List[int]
+
+class PontuacaoAcumuladaSeriesResponse(BaseModel):
+    max_rodada: int
+    series: List[PontuacaoAcumuladaSerie]

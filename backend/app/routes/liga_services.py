@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from typing import List, Optional
+from typing import List, Optional, Union
 
-from app.schemas.liga import LigaResponse, TransferirPosse, RankingLigaResponse, RankingLigaRodadaResponse, PontuacaoAcumuladaResponse
+from app.schemas.liga import LigaResponse, TransferirPosse, RankingLigaResponse, RankingLigaRodadaResponse, PontuacaoAcumuladaResponse, PontuacaoAcumuladaSerie, PontuacaoAcumuladaSeriesResponse
 from app.database import get_db
 from app.core.liga_roles import LigaRole
 from app.core.permissions import require_liga_roles
@@ -52,7 +52,7 @@ def ranking_da_liga(liga_id: int, db: Session = Depends(get_db), usuario_logado 
 def ranking_da_liga_por_rodada(liga_id: int, rodada: int, db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     return ranking_liga_rodada(db=db, liga_id=liga_id, rodada=rodada)
 
-@router.get("/{liga_id}/pontuacao_acumulada", response_model=list[PontuacaoAcumuladaResponse])
+@router.get("/{liga_id}/pontuacao_acumulada", response_model=Union[list[PontuacaoAcumuladaResponse], PontuacaoAcumuladaSeriesResponse])
 
 def pontucao_acumulada_usuario(liga_id: int, usuario_nome: str,rodada: Optional[int] = Query(None), format: str = Query(default="flat", pattern="^(flat|series)$"), db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     flat = pontuacao_acumulada_por_usuario(db, liga_id=liga_id, nome_usuario=usuario_nome, rodada=rodada)
@@ -64,7 +64,7 @@ def pontucao_acumulada_usuario(liga_id: int, usuario_nome: str,rodada: Optional[
     return to_series(flat, max_rodada_eff) if format == "series" else flat
 
 
-@router.get("/{liga_id}/pontuacao_acumulada/todos", response_model=list[PontuacaoAcumuladaResponse])
+@router.get("/{liga_id}/pontuacao_acumulada/todos", response_model=Union[list[PontuacaoAcumuladaResponse], PontuacaoAcumuladaSeriesResponse])
 
 def pontuacao_acumulada_geral(liga_id: int, rodada: Optional[int] = Query(None), format: str = Query(default="flat", pattern="^(flat|series)$"), db: Session = Depends(get_db), ususario_logado = Depends(get_current_user)):
     flat = pontuacao_acumulada_todos(db=db, liga_id=liga_id, rodada=rodada)
