@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from typing import List
+from typing import List, Optional
 
 from app.schemas.liga import LigaResponse, TransferirPosse, RankingLigaResponse, RankingLigaRodadaResponse, PontuacaoAcumuladaResponse
 from app.database import get_db
@@ -54,7 +54,7 @@ def ranking_da_liga_por_rodada(liga_id: int, rodada: int, db: Session = Depends(
 
 @router.get("/{liga_id}/pontuacao_acumulada", response_model=list[PontuacaoAcumuladaResponse])
 
-def pontucao_acumulada_usuario(liga_id: int, usuario_nome: str, rodada: int | None, format: str = Query(default="flat", pattern="^(flat|series)$"), db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
+def pontucao_acumulada_usuario(liga_id: int, usuario_nome: str,rodada: Optional[int] = Query(None), format: str = Query(default="flat", pattern="^(flat|series)$"), db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     flat = pontuacao_acumulada_por_usuario(db, liga_id=liga_id, nome_usuario=usuario_nome, rodada=rodada)
 
     if not flat:
@@ -66,7 +66,7 @@ def pontucao_acumulada_usuario(liga_id: int, usuario_nome: str, rodada: int | No
 
 @router.get("/{liga_id}/pontuacao_acumulada/todos", response_model=list[PontuacaoAcumuladaResponse])
 
-def pontuacao_acumulada_geral(liga_id: int, rodada: int, format: str = Query(default="flat", pattern="^(flat|series)$"), db: Session = Depends(get_db), ususario_logado = Depends(get_current_user)):
+def pontuacao_acumulada_geral(liga_id: int, rodada: Optional[int] = Query(None), format: str = Query(default="flat", pattern="^(flat|series)$"), db: Session = Depends(get_db), ususario_logado = Depends(get_current_user)):
     flat = pontuacao_acumulada_todos(db=db, liga_id=liga_id, rodada=rodada)
 
     if not flat:
