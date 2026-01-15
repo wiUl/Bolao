@@ -80,6 +80,17 @@ export default function AppHomePage() {
               <p style={{ margin: 0, opacity: 0.85 }}>Gerenciar jogos e resultados</p>
             </div>
           </Link>
+
+          <Link href="/admin/usuarios" style={{ textDecoration: "none", color: "inherit" }}>
+            <div style={cardStyle}>
+              <h3 style={{ marginTop: 0, marginBottom: 6, fontWeight: 600 }}>Usuários</h3>
+              <p style={{ margin: 0, opacity: 0.85 }}>Gerenciar usuários</p>
+            </div>
+          </Link>
+
+          
+
+          
         </div>
       </section>
     ) : null}
