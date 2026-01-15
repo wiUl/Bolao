@@ -841,7 +841,7 @@ function isFinalizado(status?: string | null) {
 function getEscudoSrcByTime(time: { escudo_url?: string | null; sigla?: string | null }) {
   // preferir o escudo_url do banco; fallback para pasta local (se você quiser manter)
   if (time.escudo_url) return time.escudo_url;
-  if (time.sigla) return `/escudos/${time.sigla.toLowerCase()}.png`; // ajuste conforme seu padrão
+  if (time.sigla) return `/escudos/${time.sigla.toUpperCase()}.png`; // ajuste conforme seu padrão
   return "/escudos/default.png";
 }
 
