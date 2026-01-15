@@ -29,3 +29,12 @@ export async function atualizarLiga(
   return api.put(`/ligas/${ligaId}`, data);
 }
 
+export async function excluirLiga(ligaId: number): Promise<{ message: string }> {
+  if (!Number.isInteger(ligaId)) {
+    throw new Error("ligaId inválido ao excluir liga.");
+  }
+
+  const res = await api.delete<{ message: string }>(`/ligas/${ligaId}`);
+  return res.data;
+}
+

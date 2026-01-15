@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { listarMinhasLigas } from "@/app/api/ligas";
+import { listarMinhasLigas, excluirLiga } from "@/app/api/ligas";
 import { listarMembrosLiga, alterarPapelMembro, removerMembroLiga, sairDaLiga } from "@/app/api/membroLigas";
 
 import { useAuth } from "@/app/auth/AuthContext";
@@ -55,6 +55,8 @@ export default function LigaPage() {
 
   // dono pode alterar membro/admin; admin só altera membro (backend bloqueia mexer em admin/dono)
   const canChangeRoles = meuPapel === "dono" || meuPapel === "admin_liga";
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   async function carregar() {
     setErr(null);
@@ -141,6 +143,16 @@ export default function LigaPage() {
 
       await sairDaLiga(ligaId, { novo_dono_usuario_id: novoDonoId });
       router.replace("/app/ligas");
+    } catch (e: any) {
+      setErr(extractApiErrorMessage(e));
+    }
+  }
+
+  async function handleExcluirLiga() {
+    setErr(null);
+    try {
+      await excluirLiga(ligaId); // DELETE /ligas/:id
+      router.push("/app/ligas"); // volta para lista
     } catch (e: any) {
       setErr(extractApiErrorMessage(e));
     }
@@ -451,6 +463,59 @@ export default function LigaPage() {
               </div>
             )}
           </section>
+
+          {/* Excluir liga (apenas dono) */}
+          {meuPapel === "dono" && (
+            <section style={{ ...sectionStyle, borderColor: "#f2b0b0" }}>
+              <h2 style={{ marginTop: 0, fontWeight: 600 }}>
+                Excluir liga
+              </h2>
+
+              {!deleteOpen ? (
+                <button
+                  onClick={() => setDeleteOpen(true)}
+                  style={{
+                    ...secondaryBtnStyle,
+                    borderColor: "#e57373",
+                  }}
+                  type="button"
+                >
+                  Deletar liga
+                </button>
+              ) : (
+                <div style={{ marginTop: 10 }}>
+                  <div style={alertStyle("error")}>
+                    <strong>Atenção:</strong>{" "}
+                    Esta ação é <strong>irreversível</strong>.  
+                    Todos os dados da liga serão apagados permanentemente.
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                    <button
+                      onClick={handleExcluirLiga}
+                      style={{
+                        ...primaryBtnStyle(false),
+                        borderColor: "#d32f2f",
+                        color: "#fff",
+                        background: "#d32f2f",
+                      }}
+                      type="button"
+                    >
+                      Confirmar exclusão
+                    </button>
+
+                    <button
+                      onClick={() => setDeleteOpen(false)}
+                      style={secondaryBtnStyle}
+                      type="button"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Membros */}
           <section style={sectionStyle}>

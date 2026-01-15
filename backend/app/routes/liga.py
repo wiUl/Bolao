@@ -54,10 +54,12 @@ def atualizar(liga_id: int, dados: LigaUpdate, db: Session = Depends(get_db), us
 @router.delete("/{liga_id}")
 def deletar(liga_id: int, db: Session = Depends(get_db), usuario_logado: Usuario = Depends(get_current_user)):
     liga = buscar_liga_por_id(db, liga_id)
+    nome = liga.nome
+    temporada = liga.temporada
     if not liga:
         raise HTTPException(status_code=404, detail="Liga não encontrada")
     require_liga_papel(db, liga_id, usuario_logado.id, roles=["dono"])
 
     deletar_liga(db, liga)
 
-    return {"message": f"Liga {liga.nome} {liga.temporada} deletada com sucesso."}
+    return {"message": f"Liga {nome} {temporada} deletada com sucesso."}
