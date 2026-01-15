@@ -6,26 +6,43 @@ import { useParams } from "next/navigation";
 
 import { listarMinhasLigas } from "@/app/api/ligas";
 import { listarJogos } from "@/app/api/jogos";
-import { listarMeusPalpitesNaRodada, upsertMeuPalpite, deletarMeuPalpite } from "@/app/api/palpites";
+import {
+  listarMeusPalpitesNaRodada,
+  upsertMeuPalpite,
+  deletarMeuPalpite,
+} from "@/app/api/palpites";
 
 import type { Liga } from "@/app/types/liga";
 import type { Jogo } from "@/app/types/jogo";
 import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
 import { formatDateTimeSP } from "@/app/utils/datetime";
 
-
 type FormState = {
-  palpite_casa: string; // string pra controlar input
+  palpite_casa: string; // controla input
   palpite_fora: string;
   saving?: boolean;
 };
 
 export default function PalpitesRodadaPage() {
   const params = useParams();
-  const ligaId = Number(params?.ligaId);
+
+  // suporte a ambos formatos (ligaId / liga_id), caso seu segmento varie
+  const rawLigaId: any = (params as any)?.ligaId ?? (params as any)?.liga_id ?? (params as any)?.id;
+  const ligaId = Number(rawLigaId);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    if (!mounted) return;
+    const onResize = () => setMobile(window.innerWidth <= 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [mounted]);
 
   const [liga, setLiga] = useState<Liga | null>(null);
-
   const [rodada, setRodada] = useState<number>(1);
 
   const [loading, setLoading] = useState(true);
@@ -34,22 +51,14 @@ export default function PalpitesRodadaPage() {
 
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [meusPalpites, setMeusPalpites] = useState<MeuPalpiteRodadaItem[]>([]);
+
   const meusPalpitesMap = useMemo(() => {
     const m = new Map<number, MeuPalpiteRodadaItem>();
     for (const p of meusPalpites) m.set(p.jogo_id, p);
     return m;
   }, [meusPalpites]);
 
-  // estado dos inputs por jogo
   const [forms, setForms] = useState<Record<number, FormState>>({});
-
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const onResize = () => setMobile(window.innerWidth <= 768);
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
 
   // auto-hide de sucesso
   useEffect(() => {
@@ -60,20 +69,23 @@ export default function PalpitesRodadaPage() {
 
   // 1) Carrega a liga (pra pegar temporada_id)
   useEffect(() => {
-    let mounted = true;
+    let alive = true;
 
     async function loadLiga() {
       setErr(null);
       setLoading(true);
 
       try {
-        if (!Number.isInteger(ligaId)) {
+        if (!Number.isFinite(ligaId) || ligaId <= 0) {
           setErr("ligaId inválido.");
+          setLiga(null);
           return;
         }
 
         const minhas = await listarMinhasLigas();
         const found = minhas.find((l) => l.id === ligaId) ?? null;
+
+        if (!alive) return;
 
         if (!found) {
           setErr("Liga não encontrada ou você não participa dela.");
@@ -81,20 +93,19 @@ export default function PalpitesRodadaPage() {
           return;
         }
 
-        if (!mounted) return;
         setLiga(found);
       } catch (e: any) {
-        if (!mounted) return;
+        if (!alive) return;
         setErr(extractApiErrorMessage(e));
       } finally {
-        if (!mounted) return;
+        if (!alive) return;
         setLoading(false);
       }
     }
 
     loadLiga();
     return () => {
-      mounted = false;
+      alive = false;
     };
   }, [ligaId]);
 
@@ -103,8 +114,7 @@ export default function PalpitesRodadaPage() {
     if (!liga) return;
 
     const ligaAtual = liga; 
-
-    let mounted = true;
+    let alive = true;
 
     async function loadRodada() {
       setErr(null);
@@ -117,7 +127,7 @@ export default function PalpitesRodadaPage() {
           listarMeusPalpitesNaRodada(ligaAtual.id, rodada),
         ]);
 
-        if (!mounted) return;
+        if (!alive) return;
 
         setJogos(listaJogos);
         setMeusPalpites(listaPalpites);
@@ -133,24 +143,27 @@ export default function PalpitesRodadaPage() {
         }
         setForms(nextForms);
       } catch (e: any) {
-        if (!mounted) return;
+        if (!alive) return;
         setErr(extractApiErrorMessage(e));
       } finally {
-        if (!mounted) return;
+        if (!alive) return;
         setLoading(false);
       }
     }
 
     loadRodada();
     return () => {
-      mounted = false;
+      alive = false;
     };
   }, [liga, rodada]);
 
   function setFormValue(jogoId: number, key: "palpite_casa" | "palpite_fora", value: string) {
     setForms((prev) => ({
       ...prev,
-      [jogoId]: { ...(prev[jogoId] ?? { palpite_casa: "", palpite_fora: "" }), [key]: value },
+      [jogoId]: {
+        ...(prev[jogoId] ?? { palpite_casa: "", palpite_fora: "" }),
+        [key]: value,
+      },
     }));
   }
 
@@ -186,14 +199,12 @@ export default function PalpitesRodadaPage() {
       return;
     }
 
-    // marca saving só daquele jogo
     setForms((prev) => ({ ...prev, [jogoId]: { ...prev[jogoId], saving: true } }));
 
     try {
       await upsertMeuPalpite(ligaId, jogoId, { placar_casa: casa, placar_fora: fora });
       setMsg("Palpite salvo.");
 
-      // Recarrega apenas os palpites da rodada (mais leve que recarregar jogos também)
       const lista = await listarMeusPalpitesNaRodada(ligaId, rodada);
       setMeusPalpites(lista);
     } catch (e: any) {
@@ -207,7 +218,6 @@ export default function PalpitesRodadaPage() {
     setErr(null);
     setMsg(null);
 
-    // confirmação simples (padrão)
     const ok = window.confirm("Deseja remover seu palpite deste jogo?");
     if (!ok) return;
 
@@ -217,10 +227,14 @@ export default function PalpitesRodadaPage() {
       await deletarMeuPalpite(ligaId, jogoId);
       setMsg("Palpite removido.");
 
-      // limpa inputs e recarrega palpites
       setForms((prev) => ({
         ...prev,
-        [jogoId]: { ...(prev[jogoId] ?? { palpite_casa: "", palpite_fora: "" }), palpite_casa: "", palpite_fora: "", saving: false },
+        [jogoId]: {
+          ...(prev[jogoId] ?? { palpite_casa: "", palpite_fora: "" }),
+          palpite_casa: "",
+          palpite_fora: "",
+          saving: false,
+        },
       }));
 
       const lista = await listarMeusPalpitesNaRodada(ligaId, rodada);
@@ -233,10 +247,10 @@ export default function PalpitesRodadaPage() {
 
   return (
     <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      {/* Header em card */}
+      {/* Header */}
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <h1 style={{ marginTop: 0, marginBottom: 0 , fontWeight: 600}}>
+          <h1 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>
             Palpites — Rodada {rodada}
           </h1>
 
@@ -296,12 +310,7 @@ export default function PalpitesRodadaPage() {
             />
           </label>
 
-          <button
-            type="button"
-            style={secondaryBtnStyle}
-            onClick={() => setRodada((r) => r + 1)}
-            disabled={loading}
-          >
+          <button type="button" style={secondaryBtnStyle} onClick={() => setRodada((r) => r + 1)} disabled={loading}>
             Próxima →
           </button>
         </div>
@@ -310,13 +319,11 @@ export default function PalpitesRodadaPage() {
       {/* Lista de jogos */}
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <h2 style={{ marginTop: 0 , fontWeight: 600}}>Jogos</h2>
+          <h2 style={{ marginTop: 0, fontWeight: 600 }}>Jogos</h2>
           {loading ? <span style={{ fontSize: 14, opacity: 0.8 }}>Carregando...</span> : null}
         </div>
 
-        {!loading && jogos.length === 0 ? (
-          <p>Nenhum jogo encontrado para essa rodada.</p>
-        ) : null}
+        {!loading && jogos.length === 0 ? <p>Nenhum jogo encontrado para essa rodada.</p> : null}
 
         <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
           {jogos.map((j) => {
@@ -345,9 +352,69 @@ export default function PalpitesRodadaPage() {
                   ) : null}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-<div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-  {mobile ? (
+                {/* Aqui está o layout de inputs + botões */}
+                <div style={{ marginTop: 12, width: "100%" }}>
+                  {/* Para evitar React #418, só decide mobile/desktop depois de mounted */}
+                  {mounted && mobile ? (
+                    <MobilePlacar
+                      j={j}
+                      f={f}
+                      p={p}
+                      disabled={disabled}
+                      finalizado={finalizado}
+                      onChangeCasa={(v) => setFormValue(j.id, "palpite_casa", v)}
+                      onChangeFora={(v) => setFormValue(j.id, "palpite_fora", v)}
+                      onSalvar={() => handleSalvar(j.id)}
+                      onRemover={() => handleDeletar(j.id)}
+                    />
+                  ) : (
+                    <DesktopPlacar
+                      j={j}
+                      f={f}
+                      p={p}
+                      disabled={disabled}
+                      finalizado={finalizado}
+                      onChangeCasa={(v) => setFormValue(j.id, "palpite_casa", v)}
+                      onChangeFora={(v) => setFormValue(j.id, "palpite_fora", v)}
+                      onSalvar={() => handleSalvar(j.id)}
+                      onRemover={() => handleDeletar(j.id)}
+                    />
+                  )}
+                </div>
+
+                {p && (p.placar_real_casa != null || p.placar_real_fora != null) ? (
+                  <div style={{ marginTop: 10, fontSize: 14, opacity: 0.9 }}>
+                    Placar real:{" "}
+                    <strong>
+                      {p.placar_real_casa ?? "—"} x {p.placar_real_fora ?? "—"}
+                    </strong>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+/* ----------------------------- Subcomponentes ----------------------------- */
+
+function MobilePlacar(props: {
+  j: Jogo;
+  f: FormState;
+  p: MeuPalpiteRodadaItem | null;
+  disabled: boolean;
+  finalizado: boolean;
+  onChangeCasa: (v: string) => void;
+  onChangeFora: (v: string) => void;
+  onSalvar: () => void;
+  onRemover: () => void;
+}) {
+  const { j, f, p, disabled, finalizado, onChangeCasa, onChangeFora, onSalvar, onRemover } = props;
+
+  return (
     <div style={{ display: "grid", gap: 12, width: "100%" }}>
       {/* Placar em 2 colunas */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, width: "100%" }}>
@@ -370,7 +437,7 @@ export default function PalpitesRodadaPage() {
             min={0}
             max={20}
             value={f.palpite_casa}
-            onChange={(e) => setFormValue(j.id, "palpite_casa", e.target.value)}
+            onChange={(e) => onChangeCasa(e.target.value)}
             style={{ ...inputStyle, width: "100%", textAlign: "center" }}
             disabled={disabled}
             placeholder="Casa"
@@ -396,7 +463,7 @@ export default function PalpitesRodadaPage() {
             min={0}
             max={20}
             value={f.palpite_fora}
-            onChange={(e) => setFormValue(j.id, "palpite_fora", e.target.value)}
+            onChange={(e) => onChangeFora(e.target.value)}
             style={{ ...inputStyle, width: "100%", textAlign: "center" }}
             disabled={disabled}
             placeholder="Fora"
@@ -404,11 +471,11 @@ export default function PalpitesRodadaPage() {
         </div>
       </div>
 
-      {/* Botões em linha abaixo, ocupando 100% */}
+      {/* Botões */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%" }}>
         <button
           type="button"
-          onClick={() => handleSalvar(j.id)}
+          onClick={onSalvar}
           style={primaryBtnStyle(!!f.saving)}
           disabled={disabled}
           title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
@@ -418,7 +485,7 @@ export default function PalpitesRodadaPage() {
 
         <button
           type="button"
-          onClick={() => handleDeletar(j.id)}
+          onClick={onRemover}
           style={dangerBtnStyle}
           disabled={disabled || (p?.palpite_casa == null && p?.palpite_fora == null)}
           title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
@@ -427,10 +494,25 @@ export default function PalpitesRodadaPage() {
         </button>
       </div>
     </div>
-  ) : (
-    // ✅ Desktop: mantém seu layout original exatamente como estava
+  );
+}
+
+function DesktopPlacar(props: {
+  j: Jogo;
+  f: FormState;
+  p: MeuPalpiteRodadaItem | null;
+  disabled: boolean;
+  finalizado: boolean;
+  onChangeCasa: (v: string) => void;
+  onChangeFora: (v: string) => void;
+  onSalvar: () => void;
+  onRemover: () => void;
+}) {
+  const { j, f, p, disabled, finalizado, onChangeCasa, onChangeFora, onSalvar, onRemover } = props;
+
+  return (
     <div style={scoreRowStyle}>
-      {/* Casa: SIGLA + escudo */}
+      {/* Casa */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <strong style={{ width: 42 }}>{j.time_casa.sigla}</strong>
 
@@ -444,15 +526,16 @@ export default function PalpitesRodadaPage() {
         />
       </div>
 
-      {/* Inputs placar */}
+      {/* Inputs */}
       <input
         type="number"
         min={0}
         max={20}
         value={f.palpite_casa}
-        onChange={(e) => setFormValue(j.id, "palpite_casa", e.target.value)}
+        onChange={(e) => onChangeCasa(e.target.value)}
         style={{ ...inputStyle, width: 80, textAlign: "center" }}
         disabled={disabled}
+        placeholder="Casa"
       />
 
       <span style={{ fontWeight: 800 }}>x</span>
@@ -462,12 +545,13 @@ export default function PalpitesRodadaPage() {
         min={0}
         max={20}
         value={f.palpite_fora}
-        onChange={(e) => setFormValue(j.id, "palpite_fora", e.target.value)}
+        onChange={(e) => onChangeFora(e.target.value)}
         style={{ ...inputStyle, width: 80, textAlign: "center" }}
         disabled={disabled}
+        placeholder="Fora"
       />
 
-      {/* Fora: escudo + SIGLA */}
+      {/* Fora */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <img
           src={getEscudoSrc(j.time_fora.sigla)}
@@ -477,7 +561,6 @@ export default function PalpitesRodadaPage() {
             (e.currentTarget as HTMLImageElement).style.display = "none";
           }}
         />
-
         <strong style={{ width: 42, textAlign: "right" }}>{j.time_fora.sigla}</strong>
       </div>
 
@@ -485,7 +568,7 @@ export default function PalpitesRodadaPage() {
       <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
         <button
           type="button"
-          onClick={() => handleSalvar(j.id)}
+          onClick={onSalvar}
           style={primaryBtnStyle(!!f.saving)}
           disabled={disabled}
           title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
@@ -495,7 +578,7 @@ export default function PalpitesRodadaPage() {
 
         <button
           type="button"
-          onClick={() => handleDeletar(j.id)}
+          onClick={onRemover}
           style={dangerBtnStyle}
           disabled={disabled || (p?.palpite_casa == null && p?.palpite_fora == null)}
           title={finalizado ? "Jogo finalizado (edição bloqueada)" : ""}
@@ -504,26 +587,14 @@ export default function PalpitesRodadaPage() {
         </button>
       </div>
     </div>
-  )}
-</div>
-
-                </div>
-
-                {p && (p.placar_real_casa != null || p.placar_real_fora != null) ? (
-                  <div style={{ marginTop: 10, fontSize: 14, opacity: 0.9 }}>
-                    Placar real:{" "}
-                    <strong>
-                      {p.placar_real_casa ?? "—"} x {p.placar_real_fora ?? "—"}
-                    </strong>
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-    </main>
   );
+}
+
+/* ----------------------------- Utils + styles ----------------------------- */
+
+function getEscudoSrc(sigla: string | null | undefined): string {
+  if (!sigla) return "/escudos/default.png";
+  return `/escudos/${sigla.toUpperCase()}.png`; // bate com FLU.png etc na Vercel
 }
 
 /** Evita "[object Object]" com FastAPI */
@@ -547,8 +618,6 @@ function extractApiErrorMessage(e: any): string {
 
   return e?.message || "Erro inesperado.";
 }
-
-
 
 function alertStyle(kind: "success" | "error"): React.CSSProperties {
   const base: React.CSSProperties = {
@@ -576,12 +645,6 @@ const gameCard: React.CSSProperties = {
   padding: 16,
   display: "flex",
   flexDirection: "column",
-};
-
-const miniLabel: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 6,
 };
 
 const inputStyle: React.CSSProperties = {
@@ -618,26 +681,9 @@ const dangerBtnStyle: React.CSSProperties = {
   fontWeight: 600,
 };
 
-
-function getEscudoSrc(sigla: string | null | undefined): string {
-  if (!sigla) return "/escudos/default.png";
-  return `/escudos/${sigla.toUpperCase()}.png`;
-}
-
-
-
-const logoStyle: React.CSSProperties = {
-  width: 22,
-  height: 22,
-  borderRadius: 999,
-  objectFit: "contain",
-  border: "1px solid #eee",
-};
-
 const scoreRowStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 10,
   flexWrap: "wrap",
-  marginTop: 12,
 };
