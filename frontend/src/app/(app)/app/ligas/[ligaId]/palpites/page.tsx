@@ -621,7 +621,7 @@ const dangerBtnStyle: React.CSSProperties = {
 
 function getEscudoSrc(sigla: string | null | undefined): string {
   if (!sigla) return "/escudos/default.png";
-  return `/escudos/${sigla.toLowerCase()}.png`;
+  return `/escudos/${sigla.toUpperCase()}.png`;
 }
 
 
