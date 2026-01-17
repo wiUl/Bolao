@@ -12,7 +12,7 @@ class Liga(Base):
     nome = Column(String, nullable=False)
     temporada_id = Column(Integer, ForeignKey("temporadas.id"), nullable=True, index=True)
 
-    codigo_convite = Column(String, nullable=False, unique=True, index=True)
+    codigo_convite = Column(String, nullable=False)
 
     id_dono = Column(Integer, ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True)
 
