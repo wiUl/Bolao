@@ -580,7 +580,7 @@ function btnStyle(kind: "primary" | "ghost" | "danger"): React.CSSProperties {
     cursor: "pointer",
     fontWeight: 700,
     height: 42,
-    background: "white",
+    background: "var(--surface)",
   };
 
   if (kind === "primary") return { ...base };

@@ -353,7 +353,7 @@ export default function AdminUsuariosPage() {
                   ...cardStyle,
                   cursor: "pointer",
                   textAlign: "left",
-                  background: "white",
+                  background: "var(--surface)",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
@@ -443,7 +443,7 @@ const secondaryBtnStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
   border: "1px solid #ddd",
-  background: "white",
+  background: "var(--surface)",
   cursor: "pointer",
   fontWeight: 600,
 };
@@ -453,7 +453,7 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
     padding: "10px 12px",
     borderRadius: 10,
     border: "1px solid #ddd",
-    background: disabled ? "#f5f5f5" : "white",
+    background: disabled ? "var(--muted)" : "var(--surface)",
     cursor: disabled ? "not-allowed" : "pointer",
     fontWeight: 600,
   };
@@ -465,7 +465,7 @@ function dangerBtnStyle(disabled: boolean): React.CSSProperties {
     borderRadius: 10,
     border: "1px solid #d32f2f",
     background: disabled ? "#f5f5f5" : "#d32f2f",
-    color: disabled ? "#888" : "#fff",
+    color: disabled ? "var(--disabled-text)" : "#fff",
     cursor: disabled ? "not-allowed" : "pointer",
     fontWeight: 700,
   };

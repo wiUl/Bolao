@@ -752,7 +752,7 @@ function UsuarioTooltip({
   return (
     <div
       style={{
-        background: "white",
+        background: "var(--surface)",
         border: "1px solid #ddd",
         borderRadius: 10,
         padding: 10,
@@ -787,7 +787,7 @@ function LigaTooltip(props: any) {
   return (
     <div
       style={{
-        background: "white",
+        background: "var(--surface)",
         border: "1px solid #ddd",
         borderRadius: 10,
         padding: 12,

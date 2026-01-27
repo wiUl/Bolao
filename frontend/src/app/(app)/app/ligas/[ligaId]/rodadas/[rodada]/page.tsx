@@ -410,7 +410,7 @@ const secondaryBtnStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
   border: "1px solid #ddd",
-  background: "white",
+  background: "var(--surface)",
   cursor: "pointer",
   fontWeight: 600,
 };

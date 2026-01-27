@@ -213,7 +213,7 @@ export default function AdminTimesPage() {
     borderRadius: 8,
     border: "1px solid #ddd",
     cursor: "pointer",
-    background: "#fff",
+    background: "var(--surface)",
   };
 
   const pillOk: React.CSSProperties = {

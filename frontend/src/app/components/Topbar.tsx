@@ -33,7 +33,7 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
             padding: "6px 12px",
             borderRadius: 8,
             border: "1px solid #ddd",
-            background: "white",
+            background: "var(--surface)",
             cursor: "pointer",
           }}
         >

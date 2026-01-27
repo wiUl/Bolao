@@ -210,7 +210,7 @@ export default function AdminTemporadasPage() {
     borderRadius: 8,
     border: "1px solid #ddd",
     cursor: "pointer",
-    background: "#fff",
+    background: "var(--surface)",
   };
   const smallText: React.CSSProperties = { fontSize: 13, opacity: 0.8 };
   const pillOk: React.CSSProperties = {

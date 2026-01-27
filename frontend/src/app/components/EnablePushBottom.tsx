@@ -75,8 +75,8 @@ export function EnablePushButton() {
         text-sm font-medium
         rounded-md
         border
-        border-gray-300
-        bg-white
+        bg-(--surface)
+        border-(--border)
         cursor-pointer
         disabled:opacity-50
         disabled:cursor-not-allowed

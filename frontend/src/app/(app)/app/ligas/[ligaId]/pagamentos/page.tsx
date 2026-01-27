@@ -316,7 +316,7 @@ export default function PagamentosPage() {
                 padding: "8px 12px",
                 borderRadius: 8,
                 border: "1px solid #ddd",
-                background: "white",
+                background: "var(--surface)",
                 cursor: "pointer",
                 fontWeight: 600,
               }}

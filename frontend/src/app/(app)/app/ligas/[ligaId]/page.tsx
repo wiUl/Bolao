@@ -322,7 +322,7 @@ export default function LigaPage() {
                       padding: "10px 14px",
                       borderRadius: 10,
                       border: "1px solid #ddd",
-                      background: "white",
+                      background: "var(--surface)",
                       cursor: "pointer",
                       fontWeight: 600,
                     }}
@@ -344,7 +344,7 @@ export default function LigaPage() {
                 </p>
               </div>
               <Link href={`/app/ligas/${ligaId}/palpites`} style={{ textDecoration: "none" }}>
-                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>
+                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"var(--surface)", cursor: "pointer", fontWeight: 600}}>
                 Ir para meus Palpites
                 </button>
               </Link>            
@@ -361,7 +361,7 @@ export default function LigaPage() {
                 </p>
               </div>
               <Link href={`/app/ligas/${ligaId}/ranking`} style={{ textDecoration: "none" }}>
-                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>Ver ranking</button>
+                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"var(--surface)", cursor: "pointer", fontWeight: 600}}>Ver ranking</button>
               </Link>           
             </div>   
           </section>
@@ -376,7 +376,7 @@ export default function LigaPage() {
                 </p>
               </div>
               <Link href={`/app/ligas/${ligaId}/rodadas/1`} style={{ textDecoration: "none" }}>
-                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"white", cursor: "pointer", fontWeight: 600}}>Ver palpites da rodada</button>
+                <button type="button" style={{padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd", background:"var(--surface)", cursor: "pointer", fontWeight: 600}}>Ver palpites da rodada</button>
               </Link>           
             </div>   
           </section>
@@ -398,7 +398,7 @@ export default function LigaPage() {
                     padding: "10px 14px",
                     borderRadius: 10,
                     border: "1px solid #ddd",
-                    background: "white",
+                    background: "var(--surface)",
                     cursor: "pointer",
                     fontWeight: 600
                   }}
@@ -496,7 +496,7 @@ export default function LigaPage() {
                       style={{
                         ...primaryBtnStyle(false),
                         borderColor: "#d32f2f",
-                        color: "#fff",
+                        color: "var(--danger-foreground)",
                         background: "#d32f2f",
                       }}
                       type="button"
@@ -670,7 +670,7 @@ const secondaryBtnStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
   border: "1px solid #ddd",
-  background: "white",
+  background: "var(--surface)",
   cursor: "pointer",
 };
 
@@ -679,7 +679,7 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
     padding: "10px 12px",
     borderRadius: 10,
     border: "1px solid #ddd",
-    background: disabled ? "#f5f5f5" : "white",
+    background: disabled ? "var(--muted)" : "var(--surface)",
     cursor: disabled ? "not-allowed" : "pointer",
     fontWeight: 600,
   };
@@ -689,7 +689,7 @@ const dangerBtnStyle: React.CSSProperties = {
   padding: "8px 10px",
   borderRadius: 10,
   border: "1px solid #f3c2c2",
-  background: "white",
+  background: "var(--surface)",
   cursor: "pointer",
   fontWeight: 600,
 };

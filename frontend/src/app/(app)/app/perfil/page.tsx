@@ -323,7 +323,7 @@ const secondaryBtnStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
   border: "1px solid #ddd",
-  background: "white",
+  background: "var(--surface)",
   cursor: "pointer",
 };
 
@@ -332,7 +332,7 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
     padding: "10px 12px",
     borderRadius: 10,
     border: "1px solid #ddd",
-    background: disabled ? "#f5f5f5" : "white",
+    background: disabled ? "var(--muted)" : "var(--surface)",
     cursor: disabled ? "not-allowed" : "pointer",
     fontWeight: 600,
   };
@@ -342,7 +342,7 @@ const dangerBtnStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
   border: "1px solid #f3c2c2",
-  background: "white",
+  background: "var(--surface)",
   cursor: "pointer",
   fontWeight: 600,
 };
