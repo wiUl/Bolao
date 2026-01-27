@@ -456,11 +456,15 @@ const labelStyle: React.CSSProperties = {
   gap: 6,
 };
 
-const inputStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
-  borderRadius: 10,
-  padding: "10px 12px",
-};
+  const inputStyle: React.CSSProperties = {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid var(--border)",
+    background: "var(--surface)",
+    color: "var(--foreground)",
+    outline: "none",
+    height: 42,
+  };
 
 const fieldStyle: React.CSSProperties = {
   display: "flex",

@@ -613,7 +613,10 @@ const fieldStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
+  background: "var(--surface)",
+  color: "var(--foreground)",
   outline: "none",
   height: 42,
 };
+

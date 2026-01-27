@@ -203,10 +203,14 @@ export default function AdminTimesPage() {
 
   const inputStyle: React.CSSProperties = {
     padding: "10px 12px",
-    border: "1px solid #ddd",
-    borderRadius: 8,
+    borderRadius: 10,
+    border: "1px solid var(--border)",
+    background: "var(--surface)",
+    color: "var(--foreground)",
     outline: "none",
+    height: 42, 
   };
+
 
   const btnStyle: React.CSSProperties = {
     padding: "10px 12px",

@@ -10,6 +10,9 @@
 
   --disabled-text: #666666;
   --danger-foreground: #ffffff;
+  
+  color-scheme: light dark;
+
 }
 
 @theme inline {
