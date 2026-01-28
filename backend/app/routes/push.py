@@ -2,6 +2,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 
 from app.database import get_db
 from app.core.dependencies import get_current_user
@@ -37,15 +38,17 @@ def unregister_token(payload: PushTokenIn, db: Session = Depends(get_db), user=D
 @router.post("/envia_alertas")
 def envia_alertas(db: Session = Depends(get_db), x_cron_secret: str | None = Header(default=None)):
     expected = os.getenv("PUSH_CRON_SECRET")
-
     if not expected:
         raise HTTPException(status_code=500, detail="PUSH_CRON_SECRET não configurado no servidor.")
-    
     if x_cron_secret != expected:
         raise HTTPException(status_code=403, detail="Forbidden")
-    
-    result = run_missing_bet_alerts(db)
-    return {"ok": True, "result": result}
+
+    try:
+        result = run_missing_bet_alerts(db)
+        return {"ok": True, "result": result}
+    except OperationalError as e:
+        # Timeout / rede / pooler fora
+        raise HTTPException(status_code=503, detail="DB indisponível (timeout/conexão). Tente novamente.") from e
 
 @router.post("/test", response_model=PushOk)
 def test_push(db: Session = Depends(get_db), user=Depends(get_current_user)):

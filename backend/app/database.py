@@ -17,6 +17,7 @@ else:
 
         # TLS (Supabase): seguro e recomendado
         "sslmode": "require",
+        "connect_timeout": 10,
 
         # Keepalive ajuda MUITO em cloud + pooler (evita conexão morrer em idle)
         "keepalives": 1,
