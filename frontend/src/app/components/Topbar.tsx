@@ -21,7 +21,7 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
              <img 
                 src="/favicon.ico" 
                 alt="FutBolão" 
-                className="w-6 h-6 rounded-lg"
+                className="w-6 h-6 rounded-full"
               />  <span className="text-lg font-bold">FutBolão</span>
              
           </Link>
