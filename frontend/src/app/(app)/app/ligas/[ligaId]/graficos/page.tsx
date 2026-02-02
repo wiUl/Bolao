@@ -578,15 +578,20 @@ export default function GraficosPage() {
         ) : null}
 
         {!loadingPizza && pizzaData.length > 0 ? (
-          <div style={{ width: "100%", height: 320, marginTop: 12 }}>
+          <div style={{ width: "100%", height: 380, marginTop: 12 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pizzaData}
                   dataKey="value"
                   nameKey="name"
-                  outerRadius={110}
-                  label={(d: any) => `${d.name} ${d.percent}%`}
+                  outerRadius="60%"
+                  label={(d: any) =>{
+                    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                      return `${d.percent}%`;
+                    }
+                    return `${d.name} ${d.percent}%`;
+                  } }
                 >
                   {pizzaData.map((_, idx) => (
                     <Cell
@@ -597,6 +602,10 @@ export default function GraficosPage() {
                 </Pie>
 
                 <Legend
+                  wrapperStyle={{
+                    paddingTop: "10px",
+                    fontSize: "14px"
+                  }}
                   formatter={(value: any, entry: any) => {
                     const v = entry?.payload?.value ?? 0;
                     const p = entry?.payload?.percent ?? 0;
