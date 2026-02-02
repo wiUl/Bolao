@@ -16,12 +16,12 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
           {/* Logo */}
           <Link 
             href={homeHref} 
-            className="text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-2 text-gray-900 hover:text-blue-600 transition-colors"
           >
              <img 
                 src="/favicon.ico" 
                 alt="FutBolão" 
-                className="w-6 h-6"
+                className="w-6 h-6 rounded-lg"
               />  <span className="text-lg font-bold">FutBolão</span>
              
           </Link>
