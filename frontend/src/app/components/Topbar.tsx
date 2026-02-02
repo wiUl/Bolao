@@ -22,8 +22,8 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
                 src="/favicon.ico" 
                 alt="FutBolão" 
                 className="w-6 h-6"
-              />
-             FutBolão
+              />FutBolão
+             
           </Link>
 
           {/* Desktop Menu */}
