@@ -18,7 +18,12 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
             href={homeHref} 
             className="text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors"
           >
-            ⚽ FutBolão
+             <img 
+                src="/favicon.ico" 
+                alt="FutBolão" 
+                className="w-6 h-6"
+              />
+             FutBolão
           </Link>
 
           {/* Desktop Menu */}
