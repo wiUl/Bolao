@@ -319,7 +319,7 @@ export default function RodadaLigaPage() {
                     ) : lista.length === 0 ? (
                       <p style={{ margin: 0, opacity: 0.8 }}>Ninguém palpitou ainda.</p>
                     ) : (
-                      <div style={{ overflowX: "auto" }}>
+                      <div style={{ overflowX: "auto", maxWidth: "100%", WebkitOverflowScrolling: "touch"  }}>
                         <table style={tableStyle}>
                           <thead>
                             <tr>
@@ -418,7 +418,7 @@ const secondaryBtnStyle: React.CSSProperties = {
 const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
-  minWidth: 520,
+  minWidth: 280,
 };
 
 const thStyle: React.CSSProperties = {
