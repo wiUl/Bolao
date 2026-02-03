@@ -527,7 +527,7 @@ export default function PalpitesRodadaPage() {
           <h2 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>Rodada</h2>
           
           {/* Botões Salvar e Remover Todos - Alinhados à direita */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginLeft: "auto" }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginLeft: "auto", justifyContent: "flex-end", paddingTop: 12}}>
             <button
               type="button"
               onClick={handleSalvarTodos}
