@@ -441,25 +441,6 @@ export default function PalpitesRodadaPage() {
       <section style={sectionStyle}>
         <h2 style={{ marginTop: 0, fontWeight: 600 }}>Rodada</h2>
 
-        {/* Botão Salvar Todos */}
-          <button
-            type="button"
-            onClick={handleSalvarTodos}
-            disabled={savingAll || loading || palpitesPreenchidos === 0}
-            style={saveAllButtonStyle(savingAll)}
-            title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
-          >
-            {savingAll ? (
-              <>
-                💾 Salvando {saveProgress.current}/{saveProgress.total}...
-              </>
-            ) : (
-              <>
-                💾 Salvar Todos ({palpitesPreenchidos})
-              </>
-            )}
-          </button>
-
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <button
             type="button"
@@ -484,6 +465,26 @@ export default function PalpitesRodadaPage() {
 
           <button type="button" style={secondaryBtnStyle} onClick={() => setRodada((r) => r + 1)} disabled={loading}>
             Próxima →
+          </button>
+
+
+          {/* Botão Salvar Todos */}
+          <button
+            type="button"
+            onClick={handleSalvarTodos}
+            disabled={savingAll || loading || palpitesPreenchidos === 0}
+            style={primaryBtnStyle(savingAll)}
+            title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
+          >
+            {savingAll ? (
+              <>
+                💾 Salvando {saveProgress.current}/{saveProgress.total}...
+              </>
+            ) : (
+              <>
+                💾 Salvar Todos ({palpitesPreenchidos})
+              </>
+            )}
           </button>
         </div>
       </section>
