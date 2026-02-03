@@ -473,7 +473,7 @@ export default function PalpitesRodadaPage() {
             type="button"
             onClick={handleSalvarTodos}
             disabled={savingAll || loading || palpitesPreenchidos === 0}
-            style={primaryBtnStyle(savingAll)}
+            style={saveAllButtonStyle(savingAll)}
             title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
           >
             {savingAll ? (
@@ -875,18 +875,14 @@ const scoreRowStyle: React.CSSProperties = {
 };
 
 function saveAllButtonStyle(disabled: boolean): React.CSSProperties {
-  return {
-    padding: "12px 20px",
+    return {
+    padding: "10px 12px",
     borderRadius: 10,
-    border: "none",
-    background: disabled ? "#ccc" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    color: "white",
+    border: "1px solid #ddd",
+    background: disabled ? "var(--muted)" : "var(--surface)",
     cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 700,
-    fontSize: 14,
-    boxShadow: disabled ? "none" : "0 4px 12px rgba(102, 126, 234, 0.4)",
-    transition: "all 0.3s ease",
-    opacity: disabled ? 0.6 : 1,
+    fontWeight: 600,
+    alignSelf: "flex-end"
   };
 }
 
