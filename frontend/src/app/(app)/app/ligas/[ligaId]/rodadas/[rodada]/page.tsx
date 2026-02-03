@@ -264,7 +264,20 @@ export default function RodadaLigaPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div>
                     <div style={{ fontWeight: 800 }}>
-                      {j.time_casa.nome} <span style={{ opacity: 0.7 }}>vs</span> {j.time_fora.nome}
+                    <img
+                          src={getEscudoSrcByTime(j.time_casa)}
+                          alt={`Escudo ${j.time_casa.nome}`}
+                          style={{ width: 28, height: 28, objectFit: "contain" }}
+                          onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                        />
+                      {j.time_casa.nome} <span style={{ opacity: 0.7 }}>X</span> {j.time_fora.nome}
+                    <img
+                          src={getEscudoSrcByTime(j.time_fora)}
+                          alt={`Escudo ${j.time_fora.nome}`}
+                          style={{ width: 28, height: 28, objectFit: "contain" }}
+                          onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+                        />
+                      
                     </div>
                     <div style={{ fontSize: 14, opacity: 0.85 }}>
                       {formatDateTimeSP(j.data_hora)} • Status: <code>{j.status}</code>
@@ -391,6 +404,13 @@ function alertStyle(kind: "error" | "success"): React.CSSProperties {
   return kind === "error"
     ? { ...base, borderColor: "#f3c2c2" }
     : { ...base, borderColor: "#b7e3c5" };
+}
+
+function getEscudoSrcByTime(time: { escudo_url?: string | null; sigla?: string | null }) {
+  // preferir o escudo_url do banco; fallback para pasta local (se você quiser manter)
+  if (time.escudo_url) return time.escudo_url;
+  if (time.sigla) return `/escudos/${time.sigla.toUpperCase()}.png`; // ajuste conforme seu padrão
+  return "/escudos/default.png";
 }
 
 const sectionStyle: React.CSSProperties = {
