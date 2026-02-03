@@ -522,7 +522,7 @@ export default function PalpitesRodadaPage() {
       ) : null}
 
       {/* Seletor de rodada */}
-      <section style={sectionStyle}>
+      <section style={{ ...sectionStyle, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <h2 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>Rodada</h2>
           
