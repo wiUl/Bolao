@@ -23,6 +23,14 @@ type FormState = {
   saving?: boolean;
 };
 
+type ToastType = "success" | "error" | "info";
+type ToastMessage = {
+  type: ToastType;
+  title: string;
+  message: string;
+  show: boolean;
+};
+
 export default function PalpitesRodadaPage() {
   const params = useParams();
 
@@ -52,6 +60,16 @@ export default function PalpitesRodadaPage() {
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [meusPalpites, setMeusPalpites] = useState<MeuPalpiteRodadaItem[]>([]);
 
+  const [toast, setToast] = useState<ToastMessage>({
+    type: "info",
+    title: "",
+    message: "",
+    show: false
+  });
+
+  const [savingAll, setSavingAll] = useState(false);
+  const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
+
   const meusPalpitesMap = useMemo(() => {
     const m = new Map<number, MeuPalpiteRodadaItem>();
     for (const p of meusPalpites) m.set(p.jogo_id, p);
@@ -59,6 +77,13 @@ export default function PalpitesRodadaPage() {
   }, [meusPalpites]);
 
   const [forms, setForms] = useState<Record<number, FormState>>({});
+
+  const showToast = (type: ToastType, title: string, message: string) => {
+    setToast({ type, title, message, show: true });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
 
   // auto-hide de sucesso
   useEffect(() => {
@@ -214,6 +239,101 @@ export default function PalpitesRodadaPage() {
     }
   }
 
+  async function handleSalvarTodos() {
+    setErr(null);
+    
+    // Validar todos os forms primeiro
+    const palpitesParaSalvar: Array<{ jogoId: number; casa: number; fora: number }> = [];
+    
+    for (const jogo of jogos) {
+      // Pular jogos finalizados
+      if (isFinalizado(jogo.status)) continue;
+      
+      const f = forms[jogo.id];
+      if (!f) continue;
+
+      const casaStr = f.palpite_casa.trim();
+      const foraStr = f.palpite_fora.trim();
+
+      // Pular se estiver vazio (usuário não quer palpitar esse jogo)
+      if (casaStr === "" && foraStr === "") continue;
+
+      // Validar se um está preenchido e o outro não
+      if (casaStr === "" || foraStr === "") {
+        showToast("error", "Erro de Validação", 
+          `Jogo ${jogo.time_casa.sigla} x ${jogo.time_fora.sigla}: preencha ambos os placares ou deixe ambos em branco.`);
+        return;
+      }
+
+      const casa = Number(casaStr);
+      const fora = Number(foraStr);
+
+      if (!Number.isInteger(casa) || !Number.isInteger(fora)) {
+        showToast("error", "Erro de Validação", 
+          `Jogo ${jogo.time_casa.sigla} x ${jogo.time_fora.sigla}: os placares precisam ser números inteiros.`);
+        return;
+      }
+
+      if (casa < 0 || fora < 0 || casa > 20 || fora > 20) {
+        showToast("error", "Erro de Validação", 
+          `Jogo ${jogo.time_casa.sigla} x ${jogo.time_fora.sigla}: placares devem estar entre 0 e 20.`);
+        return;
+      }
+
+      palpitesParaSalvar.push({ jogoId: jogo.id, casa, fora });
+    }
+
+    if (palpitesParaSalvar.length === 0) {
+      showToast("info", "Nenhum palpite", "Não há palpites novos para salvar.");
+      return;
+    }
+
+    // Confirmar ação
+    const confirmMsg = `Você está prestes a salvar ${palpitesParaSalvar.length} palpite(s). Deseja continuar?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    // Salvar sequencialmente
+    setSavingAll(true);
+    setSaveProgress({ current: 0, total: palpitesParaSalvar.length });
+
+    let sucessos = 0;
+    let erros = 0;
+
+    for (let i = 0; i < palpitesParaSalvar.length; i++) {
+      const { jogoId, casa, fora } = palpitesParaSalvar[i];
+      
+      setSaveProgress({ current: i + 1, total: palpitesParaSalvar.length });
+
+      try {
+        await upsertMeuPalpite(ligaId, jogoId, { placar_casa: casa, placar_fora: fora });
+        sucessos++;
+      } catch (e: any) {
+        erros++;
+        console.error(`Erro ao salvar palpite do jogo ${jogoId}:`, e);
+      }
+    }
+
+    setSavingAll(false);
+    setSaveProgress({ current: 0, total: 0 });
+
+    // Recarregar palpites
+    try {
+      const lista = await listarMeusPalpitesNaRodada(ligaId, rodada);
+      setMeusPalpites(lista);
+    } catch (e) {
+      console.error("Erro ao recarregar palpites:", e);
+    }
+
+    // Mostrar resultado
+    if (erros === 0) {
+      showToast("success", "Todos salvos!", `${sucessos} palpite(s) salvos com sucesso! 🎉`);
+    } else if (sucessos > 0) {
+      showToast("info", "Parcialmente salvo", `${sucessos} salvos, ${erros} com erro. Verifique os palpites.`);
+    } else {
+      showToast("error", "Erro ao salvar", `Não foi possível salvar nenhum palpite. Tente novamente.`);
+    }
+  }
+
   async function handleDeletar(jogoId: number) {
     setErr(null);
     setMsg(null);
@@ -245,8 +365,41 @@ export default function PalpitesRodadaPage() {
     }
   }
 
+  const palpitesPreenchidos = useMemo(() => {
+    return jogos.filter(jogo => {
+      if (isFinalizado(jogo.status)) return false;
+      const f = forms[jogo.id];
+      return f && f.palpite_casa.trim() !== "" && f.palpite_fora.trim() !== "";
+    }).length;
+  }, [jogos, forms]);
+
   return (
     <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
+      {/* Pop-up Toast */}
+      {toast.show && (
+        <div style={toastContainerStyle}>
+          <div style={toastStyle(toast.type)}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+                  {getToastIcon(toast.type)} {toast.title}
+                </div>
+                <div style={{ fontSize: 14, opacity: 0.9 }}>
+                  {toast.message}
+                </div>
+              </div>
+              <button
+                onClick={() => setToast(prev => ({ ...prev, show: false }))}
+                style={closeButtonStyle}
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
@@ -287,6 +440,25 @@ export default function PalpitesRodadaPage() {
       {/* Seletor de rodada */}
       <section style={sectionStyle}>
         <h2 style={{ marginTop: 0, fontWeight: 600 }}>Rodada</h2>
+
+        {/* Botão Salvar Todos */}
+          <button
+            type="button"
+            onClick={handleSalvarTodos}
+            disabled={savingAll || loading || palpitesPreenchidos === 0}
+            style={saveAllButtonStyle(savingAll)}
+            title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
+          >
+            {savingAll ? (
+              <>
+                💾 Salvando {saveProgress.current}/{saveProgress.total}...
+              </>
+            ) : (
+              <>
+                💾 Salvar Todos ({palpitesPreenchidos})
+              </>
+            )}
+          </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <button
@@ -619,6 +791,15 @@ function extractApiErrorMessage(e: any): string {
   return e?.message || "Erro inesperado.";
 }
 
+function getToastIcon(type: ToastType): string {
+  switch (type) {
+    case "success": return "✅";
+    case "error": return "❌";
+    case "info": return "ℹ️";
+    default: return "📌";
+  }
+}
+
 function alertStyle(kind: "success" | "error"): React.CSSProperties {
   const base: React.CSSProperties = {
     border: "1px solid #ddd",
@@ -690,4 +871,61 @@ const scoreRowStyle: React.CSSProperties = {
   alignItems: "center",
   gap: 10,
   flexWrap: "wrap",
+};
+
+function saveAllButtonStyle(disabled: boolean): React.CSSProperties {
+  return {
+    padding: "12px 20px",
+    borderRadius: 10,
+    border: "none",
+    background: disabled ? "#ccc" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    color: "white",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 700,
+    fontSize: 14,
+    boxShadow: disabled ? "none" : "0 4px 12px rgba(102, 126, 234, 0.4)",
+    transition: "all 0.3s ease",
+    opacity: disabled ? 0.6 : 1,
+  };
+}
+
+
+const toastContainerStyle: React.CSSProperties = {
+  position: "fixed",
+  top: 20,
+  right: 20,
+  zIndex: 9999,
+  maxWidth: "90vw",
+  width: 420,
+  animation: "slideInRight 0.3s ease-out",
+};
+
+function toastStyle(type: ToastType): React.CSSProperties {
+  const backgrounds = {
+    success: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    error: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    info: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  };
+
+  return {
+    background: backgrounds[type],
+    color: "white",
+    padding: "16px 20px",
+    borderRadius: 12,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255,255,255,0.2)",
+  };
+}
+
+const closeButtonStyle: React.CSSProperties = {
+  background: "transparent",
+  border: "none",
+  color: "white",
+  fontSize: 20,
+  cursor: "pointer",
+  padding: 4,
+  lineHeight: 1,
+  opacity: 0.8,
+  transition: "opacity 0.2s",
 };
