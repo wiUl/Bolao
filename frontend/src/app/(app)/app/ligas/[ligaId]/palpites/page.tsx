@@ -522,41 +522,41 @@ export default function PalpitesRodadaPage() {
       ) : null}
 
       {/* Seletor de rodada */}
-      <section style={{ ...sectionStyle, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <h2 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>Rodada</h2>
-        </div>
+      <section style={sectionStyle}>
+        <h2 style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Rodada</h2>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-          <button
-            type="button"
-            style={secondaryBtnStyle}
-            onClick={() => setRodada((r) => Math.max(1, r - 1))}
-            disabled={rodada <= 1 || loading}
-          >
-            ← Anterior
-          </button>
+        {/* Linha única com todos os botões alinhados */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "space-between" }}>
+          {/* Navegação de rodada à esquerda */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              style={secondaryBtnStyle}
+              onClick={() => setRodada((r) => Math.max(1, r - 1))}
+              disabled={rodada <= 1 || loading}
+            >
+              ← Anterior
+            </button>
 
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span>Número:</span>
-            <input
-              type="number"
-              value={rodada}
-              onChange={(e) => setRodada(Math.max(1, Number(e.target.value)))}
-              min={1}
-              style={{ ...inputStyle, width: 120 }}
-              disabled={loading}
-            />
-          </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>Número:</span>
+              <input
+                type="number"
+                value={rodada}
+                onChange={(e) => setRodada(Math.max(1, Number(e.target.value)))}
+                min={1}
+                style={{ ...inputStyle, width: 100 }}
+                disabled={loading}
+              />
+            </label>
 
-          <button type="button" style={secondaryBtnStyle} onClick={() => setRodada((r) => r + 1)} disabled={loading}>
-            Próxima →
-          </button>
-        </div>
+            <button type="button" style={secondaryBtnStyle} onClick={() => setRodada((r) => r + 1)} disabled={loading}>
+              Próxima →
+            </button>
+          </div>
 
-
-        {/* Botões Salvar e Remover Todos - Alinhados à direita */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginLeft: "auto"}}>
+          {/* Botões de ação à direita */}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
               type="button"
               onClick={handleSalvarTodos}
@@ -593,6 +593,7 @@ export default function PalpitesRodadaPage() {
               )}
             </button>
           </div>
+        </div>
       </section>
 
       {/* Lista de jogos */}
