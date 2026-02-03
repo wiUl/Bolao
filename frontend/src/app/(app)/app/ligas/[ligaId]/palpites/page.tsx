@@ -556,7 +556,7 @@ export default function PalpitesRodadaPage() {
 
 
         {/* Botões Salvar e Remover Todos - Alinhados à direita */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginLeft: "auto", justifyContent: "flex-end", paddingTop: 12}}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginLeft: "auto"}}>
             <button
               type="button"
               onClick={handleSalvarTodos}
