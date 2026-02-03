@@ -263,7 +263,7 @@ export default function RodadaLigaPage() {
                 {/* topo */}
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div>
-                    <div className="flex items font-bold">
+                    <div className="flex items font-bold gap-3">
                     <img
                           src={getEscudoSrcByTime(j.time_casa)}
                           alt={`Escudo ${j.time_casa.nome}`}
