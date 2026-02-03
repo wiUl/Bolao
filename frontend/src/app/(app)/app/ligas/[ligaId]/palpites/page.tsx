@@ -18,11 +18,12 @@ import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
 import { formatDateTimeSP } from "@/app/utils/datetime";
 
 type FormState = {
-  palpite_casa: string; // controla input
+  palpite_casa: string;
   palpite_fora: string;
   saving?: boolean;
 };
 
+// Tipo para o Pop-up
 type ToastType = "success" | "error" | "info";
 type ToastMessage = {
   type: ToastType;
@@ -33,8 +34,6 @@ type ToastMessage = {
 
 export default function PalpitesRodadaPage() {
   const params = useParams();
-
-  // suporte a ambos formatos (ligaId / liga_id), caso seu segmento varie
   const rawLigaId: any = (params as any)?.ligaId ?? (params as any)?.liga_id ?? (params as any)?.id;
   const ligaId = Number(rawLigaId);
 
@@ -55,11 +54,8 @@ export default function PalpitesRodadaPage() {
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
-
-  const [jogos, setJogos] = useState<Jogo[]>([]);
-  const [meusPalpites, setMeusPalpites] = useState<MeuPalpiteRodadaItem[]>([]);
-
+  
+  // Estado para o pop-up de toast
   const [toast, setToast] = useState<ToastMessage>({
     type: "info",
     title: "",
@@ -67,8 +63,16 @@ export default function PalpitesRodadaPage() {
     show: false
   });
 
+  // Estado para salvamento em lote
   const [savingAll, setSavingAll] = useState(false);
   const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
+
+  // Estado para remoção em lote
+  const [removingAll, setRemovingAll] = useState(false);
+  const [removeProgress, setRemoveProgress] = useState({ current: 0, total: 0 });
+
+  const [jogos, setJogos] = useState<Jogo[]>([]);
+  const [meusPalpites, setMeusPalpites] = useState<MeuPalpiteRodadaItem[]>([]);
 
   const meusPalpitesMap = useMemo(() => {
     const m = new Map<number, MeuPalpiteRodadaItem>();
@@ -78,6 +82,7 @@ export default function PalpitesRodadaPage() {
 
   const [forms, setForms] = useState<Record<number, FormState>>({});
 
+  // Função para mostrar toast
   const showToast = (type: ToastType, title: string, message: string) => {
     setToast({ type, title, message, show: true });
     setTimeout(() => {
@@ -85,14 +90,7 @@ export default function PalpitesRodadaPage() {
     }, 4000);
   };
 
-  // auto-hide de sucesso
-  useEffect(() => {
-    if (!msg) return;
-    const t = setTimeout(() => setMsg(null), 3000);
-    return () => clearTimeout(t);
-  }, [msg]);
-
-  // 1) Carrega a liga (pra pegar temporada_id)
+  // 1) Carrega a liga
   useEffect(() => {
     let alive = true;
 
@@ -134,7 +132,7 @@ export default function PalpitesRodadaPage() {
     };
   }, [ligaId]);
 
-  // 2) Carrega jogos + meus palpites quando (liga + rodada) estiverem prontos
+  // 2) Carrega jogos + palpites
   useEffect(() => {
     if (!liga) return;
 
@@ -143,7 +141,6 @@ export default function PalpitesRodadaPage() {
 
     async function loadRodada() {
       setErr(null);
-      setMsg(null);
       setLoading(true);
 
       try {
@@ -157,7 +154,6 @@ export default function PalpitesRodadaPage() {
         setJogos(listaJogos);
         setMeusPalpites(listaPalpites);
 
-        // Inicializa inputs com os palpites existentes
         const nextForms: Record<number, FormState> = {};
         for (const j of listaJogos) {
           const p = listaPalpites.find((x) => x.jogo_id === j.id);
@@ -197,9 +193,9 @@ export default function PalpitesRodadaPage() {
     return s.includes("final") || s.includes("encerr") || s === "finalizado";
   }
 
+  // Salvar palpite individual
   async function handleSalvar(jogoId: number) {
     setErr(null);
-    setMsg(null);
 
     const f = forms[jogoId];
     if (!f) return;
@@ -208,7 +204,7 @@ export default function PalpitesRodadaPage() {
     const foraStr = f.palpite_fora.trim();
 
     if (casaStr === "" || foraStr === "") {
-      setErr("Preencha os dois placares para salvar o palpite.");
+      showToast("error", "Erro", "Preencha os dois placares para salvar o palpite.");
       return;
     }
 
@@ -216,11 +212,11 @@ export default function PalpitesRodadaPage() {
     const fora = Number(foraStr);
 
     if (!Number.isInteger(casa) || !Number.isInteger(fora)) {
-      setErr("Os placares precisam ser números inteiros.");
+      showToast("error", "Erro", "Os placares precisam ser números inteiros.");
       return;
     }
     if (casa < 0 || fora < 0 || casa > 20 || fora > 20) {
-      setErr("Placares devem estar entre 0 e 20.");
+      showToast("error", "Erro", "Placares devem estar entre 0 e 20.");
       return;
     }
 
@@ -228,17 +224,20 @@ export default function PalpitesRodadaPage() {
 
     try {
       await upsertMeuPalpite(ligaId, jogoId, { placar_casa: casa, placar_fora: fora });
-      setMsg("Palpite salvo.");
+      showToast("success", "Sucesso!", "Palpite salvo com sucesso.");
 
       const lista = await listarMeusPalpitesNaRodada(ligaId, rodada);
       setMeusPalpites(lista);
     } catch (e: any) {
-      setErr(extractApiErrorMessage(e));
+      const errorMsg = extractApiErrorMessage(e);
+      setErr(errorMsg);
+      showToast("error", "Erro ao salvar", errorMsg);
     } finally {
       setForms((prev) => ({ ...prev, [jogoId]: { ...prev[jogoId], saving: false } }));
     }
   }
 
+  // NOVA FUNÇÃO: Salvar todos os palpites
   async function handleSalvarTodos() {
     setErr(null);
     
@@ -334,9 +333,88 @@ export default function PalpitesRodadaPage() {
     }
   }
 
+  // NOVA FUNÇÃO: Remover todos os palpites
+  async function handleRemoverTodos() {
+    setErr(null);
+    
+    // Coletar palpites salvos para remover
+    const palpitesParaRemover: number[] = [];
+    
+    for (const jogo of jogos) {
+      // Pular jogos finalizados
+      if (isFinalizado(jogo.status)) continue;
+      
+      const meu = meusPalpitesMap.get(jogo.id);
+      // Só adiciona se tiver palpite salvo
+      if (meu && meu.palpite_casa != null && meu.palpite_fora != null) {
+        palpitesParaRemover.push(jogo.id);
+      }
+    }
+
+    if (palpitesParaRemover.length === 0) {
+      showToast("info", "Nenhum palpite", "Não há palpites salvos para remover.");
+      return;
+    }
+
+    // Confirmar ação
+    const confirmMsg = `Você está prestes a remover ${palpitesParaRemover.length} palpite(s). Esta ação não pode ser desfeita. Deseja continuar?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    // Remover sequencialmente
+    setRemovingAll(true);
+    setRemoveProgress({ current: 0, total: palpitesParaRemover.length });
+
+    let sucessos = 0;
+    let erros = 0;
+
+    for (let i = 0; i < palpitesParaRemover.length; i++) {
+      const jogoId = palpitesParaRemover[i];
+      
+      setRemoveProgress({ current: i + 1, total: palpitesParaRemover.length });
+
+      try {
+        await deletarMeuPalpite(ligaId, jogoId);
+        
+        // Limpar formulário
+        setForms((prev) => ({
+          ...prev,
+          [jogoId]: {
+            palpite_casa: "",
+            palpite_fora: "",
+            saving: false,
+          },
+        }));
+        
+        sucessos++;
+      } catch (e: any) {
+        erros++;
+        console.error(`Erro ao remover palpite do jogo ${jogoId}:`, e);
+      }
+    }
+
+    setRemovingAll(false);
+    setRemoveProgress({ current: 0, total: 0 });
+
+    // Recarregar palpites
+    try {
+      const lista = await listarMeusPalpitesNaRodada(ligaId, rodada);
+      setMeusPalpites(lista);
+    } catch (e) {
+      console.error("Erro ao recarregar palpites:", e);
+    }
+
+    // Mostrar resultado
+    if (erros === 0) {
+      showToast("success", "Todos removidos!", `${sucessos} palpite(s) removidos com sucesso! 🗑️`);
+    } else if (sucessos > 0) {
+      showToast("info", "Parcialmente removido", `${sucessos} removidos, ${erros} com erro.`);
+    } else {
+      showToast("error", "Erro ao remover", `Não foi possível remover nenhum palpite. Tente novamente.`);
+    }
+  }
+
   async function handleDeletar(jogoId: number) {
     setErr(null);
-    setMsg(null);
 
     const ok = window.confirm("Deseja remover seu palpite deste jogo?");
     if (!ok) return;
@@ -345,7 +423,7 @@ export default function PalpitesRodadaPage() {
 
     try {
       await deletarMeuPalpite(ligaId, jogoId);
-      setMsg("Palpite removido.");
+      showToast("success", "Removido!", "Palpite removido com sucesso.");
 
       setForms((prev) => ({
         ...prev,
@@ -360,11 +438,14 @@ export default function PalpitesRodadaPage() {
       const lista = await listarMeusPalpitesNaRodada(ligaId, rodada);
       setMeusPalpites(lista);
     } catch (e: any) {
-      setErr(extractApiErrorMessage(e));
+      const errorMsg = extractApiErrorMessage(e);
+      setErr(errorMsg);
+      showToast("error", "Erro ao remover", errorMsg);
       setForms((prev) => ({ ...prev, [jogoId]: { ...prev[jogoId], saving: false } }));
     }
   }
 
+  // Contar palpites preenchidos (para Salvar Todos)
   const palpitesPreenchidos = useMemo(() => {
     return jogos.filter(jogo => {
       if (isFinalizado(jogo.status)) return false;
@@ -372,6 +453,15 @@ export default function PalpitesRodadaPage() {
       return f && f.palpite_casa.trim() !== "" && f.palpite_fora.trim() !== "";
     }).length;
   }, [jogos, forms]);
+
+  // Contar palpites salvos (para Remover Todos)
+  const palpitesSalvos = useMemo(() => {
+    return jogos.filter(jogo => {
+      if (isFinalizado(jogo.status)) return false;
+      const meu = meusPalpitesMap.get(jogo.id);
+      return meu && meu.palpite_casa != null && meu.palpite_fora != null;
+    }).length;
+  }, [jogos, meusPalpitesMap]);
 
   return (
     <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
@@ -402,7 +492,7 @@ export default function PalpitesRodadaPage() {
 
       {/* Header */}
       <section style={sectionStyle}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <h1 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>
             Palpites — Rodada {rodada}
           </h1>
@@ -431,17 +521,52 @@ export default function PalpitesRodadaPage() {
         </div>
       ) : null}
 
-      {msg ? (
-        <div style={alertStyle("success")} role="status" aria-live="polite">
-          <strong>Ok:</strong> {msg}
-        </div>
-      ) : null}
-
       {/* Seletor de rodada */}
       <section style={sectionStyle}>
-        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Rodada</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <h2 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>Rodada</h2>
+          
+          {/* Botões Salvar e Remover Todos - Alinhados à direita */}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginLeft: "auto" }}>
+            <button
+              type="button"
+              onClick={handleSalvarTodos}
+              disabled={savingAll || removingAll || loading || palpitesPreenchidos === 0}
+              style={saveAllButtonStyle(savingAll || removingAll)}
+              title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
+            >
+              {savingAll ? (
+                <>
+                  💾 Salvando {saveProgress.current}/{saveProgress.total}...
+                </>
+              ) : (
+                <>
+                  💾 Salvar Todos ({palpitesPreenchidos})
+                </>
+              )}
+            </button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={handleRemoverTodos}
+              disabled={savingAll || removingAll || loading || palpitesSalvos === 0}
+              style={removeAllButtonStyle(removingAll || savingAll)}
+              title={palpitesSalvos === 0 ? "Não há palpites para remover" : `Remover ${palpitesSalvos} palpite(s)`}
+            >
+              {removingAll ? (
+                <>
+                  🗑️ Removendo {removeProgress.current}/{removeProgress.total}...
+                </>
+              ) : (
+                <>
+                  🗑️ Remover Todos ({palpitesSalvos})
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
           <button
             type="button"
             style={secondaryBtnStyle}
@@ -466,103 +591,75 @@ export default function PalpitesRodadaPage() {
           <button type="button" style={secondaryBtnStyle} onClick={() => setRodada((r) => r + 1)} disabled={loading}>
             Próxima →
           </button>
-
-
-          {/* Botão Salvar Todos */}
-          <button
-            type="button"
-            onClick={handleSalvarTodos}
-            disabled={savingAll || loading || palpitesPreenchidos === 0}
-            style={saveAllButtonStyle(savingAll)}
-            title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
-          >
-            {savingAll ? (
-              <>
-                💾 Salvando {saveProgress.current}/{saveProgress.total}...
-              </>
-            ) : (
-              <>
-                💾 Salvar Todos ({palpitesPreenchidos})
-              </>
-            )}
-          </button>
         </div>
       </section>
 
       {/* Lista de jogos */}
       <section style={sectionStyle}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <h2 style={{ marginTop: 0, fontWeight: 600 }}>Jogos</h2>
-          {loading ? <span style={{ fontSize: 14, opacity: 0.8 }}>Carregando...</span> : null}
-        </div>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Jogos</h2>
 
-        {!loading && jogos.length === 0 ? <p>Nenhum jogo encontrado para essa rodada.</p> : null}
+        {loading ? <p>Carregando jogos...</p> : null}
+        {!loading && jogos.length === 0 ? <p>Nenhum jogo encontrado nesta rodada.</p> : null}
 
         <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
           {jogos.map((j) => {
+            const meu = meusPalpitesMap.get(j.id) ?? null;
             const f = forms[j.id] ?? { palpite_casa: "", palpite_fora: "" };
-            const p = meusPalpitesMap.get(j.id) ?? null;
-
             const finalizado = isFinalizado(j.status);
-            const disabled = finalizado || !!f.saving;
+            const disabled = finalizado || !!f.saving || savingAll || removingAll;
 
             return (
               <div key={j.id} style={gameCard}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
                   <div>
-                    <strong>
-                      {j.time_casa.nome} x {j.time_fora.nome}
-                    </strong>
-                    <div style={{ fontSize: 14, opacity: 0.85 }}>
-                      {formatDateTimeSP(j.data_hora)} • Status: <code>{j.status}</code>
+                    <div style={{ fontWeight: 800, fontSize: 16 }}>
+                      {j.time_casa.nome} <span style={{ opacity: 0.7 }}>vs</span> {j.time_fora.nome}
+                    </div>
+                    <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>
+                      {formatDateTimeSP(j.data_hora)} • <code>{j.status}</code>
                     </div>
                   </div>
 
-                  {p?.pontos != null ? (
-                    <div style={{ fontSize: 14 }}>
-                      Pontos: <strong>{p.pontos}</strong>
+                  {meu && meu.pontos != null ? (
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>
+                      Pontos: <span style={{ color: "#2ca02c" }}>{meu.pontos}</span>
                     </div>
                   ) : null}
                 </div>
 
-                {/* Aqui está o layout de inputs + botões */}
-                <div style={{ marginTop: 12, width: "100%" }}>
-                  {/* Para evitar React #418, só decide mobile/desktop depois de mounted */}
-                  {mounted && mobile ? (
-                    <MobilePlacar
-                      j={j}
-                      f={f}
-                      p={p}
-                      disabled={disabled}
-                      finalizado={finalizado}
-                      onChangeCasa={(v) => setFormValue(j.id, "palpite_casa", v)}
-                      onChangeFora={(v) => setFormValue(j.id, "palpite_fora", v)}
-                      onSalvar={() => handleSalvar(j.id)}
-                      onRemover={() => handleDeletar(j.id)}
-                    />
-                  ) : (
-                    <DesktopPlacar
-                      j={j}
-                      f={f}
-                      p={p}
-                      disabled={disabled}
-                      finalizado={finalizado}
-                      onChangeCasa={(v) => setFormValue(j.id, "palpite_casa", v)}
-                      onChangeFora={(v) => setFormValue(j.id, "palpite_fora", v)}
-                      onSalvar={() => handleSalvar(j.id)}
-                      onRemover={() => handleDeletar(j.id)}
-                    />
-                  )}
-                </div>
-
-                {p && (p.placar_real_casa != null || p.placar_real_fora != null) ? (
-                  <div style={{ marginTop: 10, fontSize: 14, opacity: 0.9 }}>
-                    Placar real:{" "}
-                    <strong>
-                      {p.placar_real_casa ?? "—"} x {p.placar_real_fora ?? "—"}
-                    </strong>
+                {/* Placar real (se disponível) */}
+                {(j.gols_casa != null || j.gols_fora != null) && finalizado ? (
+                  <div style={{ fontSize: 14, marginBottom: 12, opacity: 0.9 }}>
+                    Placar final: <strong>{j.gols_casa ?? "—"} x {j.gols_fora ?? "—"}</strong>
                   </div>
                 ) : null}
+
+                {/* Formulário de palpite */}
+                {mobile ? (
+                  <MobilePlacar
+                    j={j}
+                    f={f}
+                    p={meu}
+                    disabled={disabled}
+                    finalizado={finalizado}
+                    onChangeCasa={(v) => setFormValue(j.id, "palpite_casa", v)}
+                    onChangeFora={(v) => setFormValue(j.id, "palpite_fora", v)}
+                    onSalvar={() => handleSalvar(j.id)}
+                    onRemover={() => handleDeletar(j.id)}
+                  />
+                ) : (
+                  <DesktopPlacar
+                    j={j}
+                    f={f}
+                    p={meu}
+                    disabled={disabled}
+                    finalizado={finalizado}
+                    onChangeCasa={(v) => setFormValue(j.id, "palpite_casa", v)}
+                    onChangeFora={(v) => setFormValue(j.id, "palpite_fora", v)}
+                    onSalvar={() => handleSalvar(j.id)}
+                    onRemover={() => handleDeletar(j.id)}
+                  />
+                )}
               </div>
             );
           })}
@@ -572,7 +669,7 @@ export default function PalpitesRodadaPage() {
   );
 }
 
-/* ----------------------------- Subcomponentes ----------------------------- */
+/* ----------------------------- Componentes de Placar ----------------------------- */
 
 function MobilePlacar(props: {
   j: Jogo;
@@ -589,9 +686,7 @@ function MobilePlacar(props: {
 
   return (
     <div style={{ display: "grid", gap: 12, width: "100%" }}>
-      {/* Placar em 2 colunas */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, width: "100%" }}>
-        {/* CASA */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img
@@ -617,7 +712,6 @@ function MobilePlacar(props: {
           />
         </div>
 
-        {/* FORA */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
             <strong>{j.time_fora.sigla}</strong>
@@ -644,7 +738,6 @@ function MobilePlacar(props: {
         </div>
       </div>
 
-      {/* Botões */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%" }}>
         <button
           type="button"
@@ -685,10 +778,8 @@ function DesktopPlacar(props: {
 
   return (
     <div style={scoreRowStyle}>
-      {/* Casa */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <strong style={{ width: 42 }}>{j.time_casa.sigla}</strong>
-
         <img
           src={getEscudoSrc(j.time_casa.sigla)}
           alt={`Escudo ${j.time_casa.nome}`}
@@ -699,7 +790,6 @@ function DesktopPlacar(props: {
         />
       </div>
 
-      {/* Inputs */}
       <input
         type="number"
         min={0}
@@ -724,7 +814,6 @@ function DesktopPlacar(props: {
         placeholder="Fora"
       />
 
-      {/* Fora */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <img
           src={getEscudoSrc(j.time_fora.sigla)}
@@ -737,7 +826,6 @@ function DesktopPlacar(props: {
         <strong style={{ width: 42, textAlign: "right" }}>{j.time_fora.sigla}</strong>
       </div>
 
-      {/* Botões */}
       <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
         <button
           type="button"
@@ -767,10 +855,9 @@ function DesktopPlacar(props: {
 
 function getEscudoSrc(sigla: string | null | undefined): string {
   if (!sigla) return "/escudos/default.png";
-  return `/escudos/${sigla.toUpperCase()}.png`; // bate com FLU.png etc na Vercel
+  return `/escudos/${sigla.toUpperCase()}.png`;
 }
 
-/** Evita "[object Object]" com FastAPI */
 function extractApiErrorMessage(e: any): string {
   const data = e?.response?.data;
   const detail = data?.detail;
@@ -836,7 +923,7 @@ const inputStyle: React.CSSProperties = {
   background: "var(--surface)",
   color: "var(--foreground)",
   outline: "none",
-  height: 42, 
+  height: 42,
 };
 
 const secondaryBtnStyle: React.CSSProperties = {
@@ -874,19 +961,41 @@ const scoreRowStyle: React.CSSProperties = {
   flexWrap: "wrap",
 };
 
+// Estilo do botão "Salvar Todos"
 function saveAllButtonStyle(disabled: boolean): React.CSSProperties {
-    return {
-    padding: "10px 12px",
+  return {
+    padding: "12px 20px",
     borderRadius: 10,
-    border: "1px solid #ddd",
-    background: disabled ? "var(--muted)" : "var(--surface)",
+    border: "none",
+    background: disabled ? "#ccc" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    color: "white",
     cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 600,
-    alignSelf: "flex-end"
+    fontWeight: 700,
+    fontSize: 14,
+    boxShadow: disabled ? "none" : "0 4px 12px rgba(102, 126, 234, 0.4)",
+    transition: "all 0.3s ease",
+    opacity: disabled ? 0.6 : 1,
   };
 }
 
+// Estilo do botão "Remover Todos"
+function removeAllButtonStyle(disabled: boolean): React.CSSProperties {
+  return {
+    padding: "12px 20px",
+    borderRadius: 10,
+    border: "none",
+    background: disabled ? "#ccc" : "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    color: "white",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 700,
+    fontSize: 14,
+    boxShadow: disabled ? "none" : "0 4px 12px rgba(240, 147, 251, 0.4)",
+    transition: "all 0.3s ease",
+    opacity: disabled ? 0.6 : 1,
+  };
+}
 
+// Estilos do Toast (Pop-up)
 const toastContainerStyle: React.CSSProperties = {
   position: "fixed",
   top: 20,

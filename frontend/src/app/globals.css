@@ -41,3 +41,45 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Adicione estas animações ao seu arquivo globals.css */
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Estilo hover para o botão de fechar do toast */
+button[aria-label="Fechar"]:hover {
+  opacity: 1 !important;
+  transform: scale(1.1);
+}
+
+/* Responsividade do toast para mobile */
+@media (max-width: 768px) {
+  /* O toast ocupa mais espaço em mobile */
+  div[style*="position: fixed"][style*="top: 20"] {
+    top: 10px !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}
