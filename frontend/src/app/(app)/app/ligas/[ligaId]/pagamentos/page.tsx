@@ -167,7 +167,7 @@ export default function PagamentosPage() {
           const copy: PagamentosState = { ...prev };
           for (const m of membros) {
             const uid = m.usuario_id;
-            copy[uid] = { ...(copy[uid] ?? {}), [mes]: (copy[uid]?.[mes] ?? false) };
+            copy[uid] = { ...(copy[uid] ?? {}), [mes]: copy[uid]?.[mes] ?? false };
           }
           return copy;
         });
@@ -233,75 +233,73 @@ export default function PagamentosPage() {
   }, [membros, state, mesesAtivos]);
 
   // ===== estilos =====
-// ===== estilos =====
-const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 1200, margin: "0 auto" };
+  const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 1200, margin: "0 auto" };
 
-const sectionStyle: React.CSSProperties = {
-  marginTop: 18,
-  padding: 16,
-  border: "1px solid var(--border)",
-  borderRadius: 10,
-  background: "var(--surface)",
-};
+  const sectionStyle: React.CSSProperties = {
+    marginTop: 18,
+    padding: 16,
+    border: "1px solid var(--border)",
+    borderRadius: 10,
+    background: "var(--surface)",
+  };
 
-const headCell: React.CSSProperties = {
-  background: "var(--table-head-bg)",
-  color: "var(--table-head-fg)",
-  padding: "10px 8px",
-  borderBottom: "1px solid var(--border)",
-  textAlign: "center",
-  fontWeight: 700,
-  position: "sticky",
-  top: 0,
-  zIndex: 3,
-  minWidth: 70,
-};
+  const headCell: React.CSSProperties = {
+    background: "var(--table-head-bg)",
+    color: "var(--table-head-fg)",
+    padding: "10px 8px",
+    borderBottom: "1px solid var(--border)",
+    textAlign: "center",
+    fontWeight: 700,
+    position: "sticky",
+    top: 0,
+    zIndex: 3,
+    minWidth: 70,
+  };
 
-const headNameCell: React.CSSProperties = {
-  ...headCell,
-  left: 0,
-  zIndex: 4,
-  minWidth: 190,
-  textAlign: "left",
-};
+  const headNameCell: React.CSSProperties = {
+    ...headCell,
+    left: 0,
+    zIndex: 4,
+    minWidth: 190,
+    textAlign: "left",
+  };
 
-const nameCell: React.CSSProperties = {
-  background: "var(--table-name-bg)",
-  padding: "10px 8px",
-  borderBottom: "1px solid var(--border)",
-  fontWeight: 700,
-  position: "sticky",
-  left: 0,
-  zIndex: 2,
-  minWidth: 190,
-};
+  const nameCell: React.CSSProperties = {
+    background: "var(--table-name-bg)",
+    padding: "10px 8px",
+    borderBottom: "1px solid var(--border)",
+    fontWeight: 700,
+    position: "sticky",
+    left: 0,
+    zIndex: 2,
+    minWidth: 190,
+  };
 
-const cellStyle = (checked: boolean, isSaving: boolean): React.CSSProperties => ({
-  background: checked ? "var(--success-bg)" : "var(--danger-bg)",
-  color: checked ? "var(--success-fg)" : "var(--danger-fg)",
-  opacity: isSaving ? 0.6 : 1,
-  padding: "10px 8px",
-  borderBottom: "1px solid var(--border)",
-  borderRight: "1px solid var(--border)",
-  textAlign: "center",
-  cursor: isSaving ? "not-allowed" : "pointer",
-  userSelect: "none",
-  fontWeight: 800,
-  minWidth: 70,
-});
+  const cellStyle = (checked: boolean, isSaving: boolean): React.CSSProperties => ({
+    background: checked ? "var(--success-bg)" : "var(--danger-bg)",
+    color: checked ? "var(--success-fg)" : "var(--danger-fg)",
+    opacity: isSaving ? 0.6 : 1,
+    padding: "10px 8px",
+    borderBottom: "1px solid var(--border)",
+    borderRight: "1px solid var(--border)",
+    textAlign: "center",
+    cursor: isSaving ? "not-allowed" : "pointer",
+    userSelect: "none",
+    fontWeight: 800,
+    minWidth: 70,
+  });
 
-const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
-  padding: "8px 10px",
-  borderRadius: 999,
-  border: "1px solid var(--border)",
-  background: active ? "var(--success-bg)" : "var(--danger-bg)",
-  color: active ? "var(--success-fg)" : "var(--danger-fg)",
-  cursor: disabled ? "not-allowed" : "pointer",
-  fontWeight: 700,
-  opacity: disabled ? 0.6 : 1,
-  userSelect: "none",
-});
-
+  const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
+    padding: "8px 10px",
+    borderRadius: 999,
+    border: "1px solid var(--border)",
+    background: active ? "var(--success-bg)" : "var(--danger-bg)",
+    color: active ? "var(--success-fg)" : "var(--danger-fg)",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 700,
+    opacity: disabled ? 0.6 : 1,
+    userSelect: "none",
+  });
 
   return (
     <RequireAdminLiga>
@@ -332,14 +330,11 @@ const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => (
               {reloading || loading ? "Carregando..." : "Recarregar"}
             </button>
 
-            <div style={{ marginLeft: "auto", fontSize: 14, opacity: 0.9 }}>
-              Verde = pago • Vermelho = pendente
-            </div>
+            <div style={{ marginLeft: "auto", fontSize: 14, opacity: 0.9 }}>Verde = pago • Vermelho = pendente</div>
           </div>
 
           {ok ? <p style={{ marginTop: 10, color: "var(--success-text)", fontWeight: 600 }}>{ok}</p> : null}
           {err ? <p style={{ marginTop: 10, color: "var(--danger-text)", fontWeight: 600 }}>{err}</p> : null}
-
         </section>
 
         {/* Configuração dos meses */}
@@ -373,9 +368,7 @@ const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => (
           )}
 
           {mesesAtivos.length === 0 && !loading ? (
-            <p style={{ marginTop: 12 }}>
-              Nenhum mês ativo. Ative pelo menos 1 mês para poder marcar pagamentos.
-            </p>
+            <p style={{ marginTop: 12 }}>Nenhum mês ativo. Ative pelo menos 1 mês para poder marcar pagamentos.</p>
           ) : null}
         </section>
 
@@ -410,15 +403,12 @@ const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => (
                 <tbody>
                   {membros.map((m) => (
                     <tr key={m.usuario_id}>
-                      {/* Coluna "Usuário" (precisa existir e fechar corretamente) */}
-                      <td style={nameCell}>
-                        {m?.usuario?.nome ?? m?.usuario?.email ?? `Usuário #${m.usuario_id}`}
-                      </td>
-                
+                      <td style={nameCell}>{m.nome || `Usuário #${m.usuario_id}`}</td>
+
                       {mesesAtivos.map((mes) => {
                         const checked = state?.[m.usuario_id]?.[mes] ?? false;
                         const isSaving = !!savingCell[keyCell(m.usuario_id, mes)];
-                
+
                         return (
                           <td
                             key={mes}
@@ -430,7 +420,7 @@ const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => (
                           </td>
                         );
                       })}
-                
+
                       <td style={{ ...cellStyle(false, false), background: "#f7f7f7", cursor: "default" }}>
                         {totals.get(m.usuario_id) ?? 0}/{mesesAtivos.length}
                       </td>
