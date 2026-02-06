@@ -233,68 +233,75 @@ export default function PagamentosPage() {
   }, [membros, state, mesesAtivos]);
 
   // ===== estilos =====
-  const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 1200, margin: "0 auto" };
-  const sectionStyle: React.CSSProperties = {
-    marginTop: 18,
-    padding: 16,
-    border: "1px solid #e5e5e5",
-    borderRadius: 10,
-  };
+// ===== estilos =====
+const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 1200, margin: "0 auto" };
 
-  const headCell: React.CSSProperties = {
-    background: "#ffeb3b",
-    padding: "10px 8px",
-    borderBottom: "1px solid #eee",
-    textAlign: "center",
-    fontWeight: 700,
-    position: "sticky",
-    top: 0,
-    zIndex: 3,
-    minWidth: 70,
-  };
+const sectionStyle: React.CSSProperties = {
+  marginTop: 18,
+  padding: 16,
+  border: "1px solid var(--border)",
+  borderRadius: 10,
+  background: "var(--surface)",
+};
 
-  const headNameCell: React.CSSProperties = {
-    ...headCell,
-    left: 0,
-    zIndex: 4,
-    minWidth: 190,
-    textAlign: "left",
-  };
+const headCell: React.CSSProperties = {
+  background: "var(--table-head-bg)",
+  color: "var(--table-head-fg)",
+  padding: "10px 8px",
+  borderBottom: "1px solid var(--border)",
+  textAlign: "center",
+  fontWeight: 700,
+  position: "sticky",
+  top: 0,
+  zIndex: 3,
+  minWidth: 70,
+};
 
-  const nameCell: React.CSSProperties = {
-    background: "#d9f2d3",
-    padding: "10px 8px",
-    borderBottom: "1px solid #f2f2f2",
-    fontWeight: 700,
-    position: "sticky",
-    left: 0,
-    zIndex: 2,
-    minWidth: 190,
-  };
+const headNameCell: React.CSSProperties = {
+  ...headCell,
+  left: 0,
+  zIndex: 4,
+  minWidth: 190,
+  textAlign: "left",
+};
 
-  const cellStyle = (checked: boolean, isSaving: boolean): React.CSSProperties => ({
-    background: checked ? "#d9f9e3" : "#ffe0e0",
-    opacity: isSaving ? 0.6 : 1,
-    padding: "10px 8px",
-    borderBottom: "1px solid #f2f2f2",
-    borderRight: "1px solid #f2f2f2",
-    textAlign: "center",
-    cursor: isSaving ? "not-allowed" : "pointer",
-    userSelect: "none",
-    fontWeight: 800,
-    minWidth: 70,
-  });
+const nameCell: React.CSSProperties = {
+  background: "var(--table-name-bg)",
+  padding: "10px 8px",
+  borderBottom: "1px solid var(--border)",
+  fontWeight: 700,
+  position: "sticky",
+  left: 0,
+  zIndex: 2,
+  minWidth: 190,
+};
 
-  const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
-    padding: "8px 10px",
-    borderRadius: 999,
-    border: "1px solid #ddd",
-    background: active ? "#d9f9e3" : "#ffe0e0",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 700,
-    opacity: disabled ? 0.6 : 1,
-    userSelect: "none",
-  });
+const cellStyle = (checked: boolean, isSaving: boolean): React.CSSProperties => ({
+  background: checked ? "var(--success-bg)" : "var(--danger-bg)",
+  color: checked ? "var(--success-fg)" : "var(--danger-fg)",
+  opacity: isSaving ? 0.6 : 1,
+  padding: "10px 8px",
+  borderBottom: "1px solid var(--border)",
+  borderRight: "1px solid var(--border)",
+  textAlign: "center",
+  cursor: isSaving ? "not-allowed" : "pointer",
+  userSelect: "none",
+  fontWeight: 800,
+  minWidth: 70,
+});
+
+const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
+  padding: "8px 10px",
+  borderRadius: 999,
+  border: "1px solid var(--border)",
+  background: active ? "var(--success-bg)" : "var(--danger-bg)",
+  color: active ? "var(--success-fg)" : "var(--danger-fg)",
+  cursor: disabled ? "not-allowed" : "pointer",
+  fontWeight: 700,
+  opacity: disabled ? 0.6 : 1,
+  userSelect: "none",
+});
+
 
   return (
     <RequireAdminLiga>
@@ -303,7 +310,7 @@ export default function PagamentosPage() {
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
             <h1 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>Pagamentos · Liga #{ligaId}</h1>
 
-            <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 600 }}>
+            <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 600, color: "inherit" }}>
               Voltar
             </Link>
           </div>
@@ -315,7 +322,7 @@ export default function PagamentosPage() {
               style={{
                 padding: "8px 12px",
                 borderRadius: 8,
-                border: "1px solid #ddd",
+                border: "1px solid var(--border)",
                 background: "var(--surface)",
                 cursor: "pointer",
                 fontWeight: 600,
@@ -330,8 +337,9 @@ export default function PagamentosPage() {
             </div>
           </div>
 
-          {ok ? <p style={{ marginTop: 10, color: "#1f7a3f", fontWeight: 600 }}>{ok}</p> : null}
-          {err ? <p style={{ marginTop: 10, color: "#b42318", fontWeight: 600 }}>{err}</p> : null}
+          {ok ? <p style={{ marginTop: 10, color: "var(--success-text)", fontWeight: 600 }}>{ok}</p> : null}
+          {err ? <p style={{ marginTop: 10, color: "var(--danger-text)", fontWeight: 600 }}>{err}</p> : null}
+
         </section>
 
         {/* Configuração dos meses */}
@@ -402,7 +410,8 @@ export default function PagamentosPage() {
                 <tbody>
                   {membros.map((m) => (
                     <tr key={m.usuario_id}>
-                      <td style={nameCell}>{m?.nome ?? m.nome ?? `Usuário #${m.usuario_id}`}</td>
+                      <td style={{ ...cellStyle(false, false), background: "var(--table-total-bg)", cursor: "default" }}>
+
 
                       {mesesAtivos.map((mes) => {
                         const checked = state?.[m.usuario_id]?.[mes] ?? false;
