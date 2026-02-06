@@ -421,7 +421,7 @@ export default function PagamentosPage() {
                         );
                       })}
 
-                      <td style={{ ...cellStyle(false, false), background: "#f7f7f7", cursor: "default" }}>
+                      <td style={{ ...cellStyle(false, false), background: "var(--table-total-bg)", cursor: "default" }}>
                         {totals.get(m.usuario_id) ?? 0}/{mesesAtivos.length}
                       </td>
                     </tr>
