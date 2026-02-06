@@ -410,13 +410,15 @@ const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => (
                 <tbody>
                   {membros.map((m) => (
                     <tr key={m.usuario_id}>
-                      <td style={{ ...cellStyle(false, false), background: "var(--table-total-bg)", cursor: "default" }}>
-
-
+                      {/* Coluna "Usuário" (precisa existir e fechar corretamente) */}
+                      <td style={nameCell}>
+                        {m?.usuario?.nome ?? m?.usuario?.email ?? `Usuário #${m.usuario_id}`}
+                      </td>
+                
                       {mesesAtivos.map((mes) => {
                         const checked = state?.[m.usuario_id]?.[mes] ?? false;
                         const isSaving = !!savingCell[keyCell(m.usuario_id, mes)];
-
+                
                         return (
                           <td
                             key={mes}
@@ -428,7 +430,7 @@ const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => (
                           </td>
                         );
                       })}
-
+                
                       <td style={{ ...cellStyle(false, false), background: "#f7f7f7", cursor: "default" }}>
                         {totals.get(m.usuario_id) ?? 0}/{mesesAtivos.length}
                       </td>
