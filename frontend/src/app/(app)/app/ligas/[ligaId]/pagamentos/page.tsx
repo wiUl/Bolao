@@ -167,7 +167,7 @@ export default function PagamentosPage() {
           const copy: PagamentosState = { ...prev };
           for (const m of membros) {
             const uid = m.usuario_id;
-            copy[uid] = { ...(copy[uid] ?? {}), [mes]: (copy[uid]?.[mes] ?? false) };
+            copy[uid] = { ...(copy[uid] ?? {}), [mes]: copy[uid]?.[mes] ?? false };
           }
           return copy;
         });
@@ -234,17 +234,20 @@ export default function PagamentosPage() {
 
   // ===== estilos =====
   const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 1200, margin: "0 auto" };
+
   const sectionStyle: React.CSSProperties = {
     marginTop: 18,
     padding: 16,
-    border: "1px solid #e5e5e5",
+    border: "1px solid var(--border)",
     borderRadius: 10,
+    background: "var(--surface)",
   };
 
   const headCell: React.CSSProperties = {
-    background: "#ffeb3b",
+    background: "var(--table-head-bg)",
+    color: "var(--table-head-fg)",
     padding: "10px 8px",
-    borderBottom: "1px solid #eee",
+    borderBottom: "1px solid var(--border)",
     textAlign: "center",
     fontWeight: 700,
     position: "sticky",
@@ -262,9 +265,9 @@ export default function PagamentosPage() {
   };
 
   const nameCell: React.CSSProperties = {
-    background: "#d9f2d3",
+    background: "var(--table-name-bg)",
     padding: "10px 8px",
-    borderBottom: "1px solid #f2f2f2",
+    borderBottom: "1px solid var(--border)",
     fontWeight: 700,
     position: "sticky",
     left: 0,
@@ -273,11 +276,12 @@ export default function PagamentosPage() {
   };
 
   const cellStyle = (checked: boolean, isSaving: boolean): React.CSSProperties => ({
-    background: checked ? "#d9f9e3" : "#ffe0e0",
+    background: checked ? "var(--success-bg)" : "var(--danger-bg)",
+    color: checked ? "var(--success-fg)" : "var(--danger-fg)",
     opacity: isSaving ? 0.6 : 1,
     padding: "10px 8px",
-    borderBottom: "1px solid #f2f2f2",
-    borderRight: "1px solid #f2f2f2",
+    borderBottom: "1px solid var(--border)",
+    borderRight: "1px solid var(--border)",
     textAlign: "center",
     cursor: isSaving ? "not-allowed" : "pointer",
     userSelect: "none",
@@ -288,8 +292,9 @@ export default function PagamentosPage() {
   const chipStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
     padding: "8px 10px",
     borderRadius: 999,
-    border: "1px solid #ddd",
-    background: active ? "#d9f9e3" : "#ffe0e0",
+    border: "1px solid var(--border)",
+    background: active ? "var(--success-bg)" : "var(--danger-bg)",
+    color: active ? "var(--success-fg)" : "var(--danger-fg)",
     cursor: disabled ? "not-allowed" : "pointer",
     fontWeight: 700,
     opacity: disabled ? 0.6 : 1,
@@ -303,7 +308,7 @@ export default function PagamentosPage() {
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
             <h1 style={{ marginTop: 0, marginBottom: 0, fontWeight: 600 }}>Pagamentos · Liga #{ligaId}</h1>
 
-            <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 600 }}>
+            <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 600, color: "inherit" }}>
               Voltar
             </Link>
           </div>
@@ -315,7 +320,7 @@ export default function PagamentosPage() {
               style={{
                 padding: "8px 12px",
                 borderRadius: 8,
-                border: "1px solid #ddd",
+                border: "1px solid var(--border)",
                 background: "var(--surface)",
                 cursor: "pointer",
                 fontWeight: 600,
@@ -325,13 +330,11 @@ export default function PagamentosPage() {
               {reloading || loading ? "Carregando..." : "Recarregar"}
             </button>
 
-            <div style={{ marginLeft: "auto", fontSize: 14, opacity: 0.9 }}>
-              Verde = pago • Vermelho = pendente
-            </div>
+            <div style={{ marginLeft: "auto", fontSize: 14, opacity: 0.9 }}>Verde = pago • Vermelho = pendente</div>
           </div>
 
-          {ok ? <p style={{ marginTop: 10, color: "#1f7a3f", fontWeight: 600 }}>{ok}</p> : null}
-          {err ? <p style={{ marginTop: 10, color: "#b42318", fontWeight: 600 }}>{err}</p> : null}
+          {ok ? <p style={{ marginTop: 10, color: "var(--success-text)", fontWeight: 600 }}>{ok}</p> : null}
+          {err ? <p style={{ marginTop: 10, color: "var(--danger-text)", fontWeight: 600 }}>{err}</p> : null}
         </section>
 
         {/* Configuração dos meses */}
@@ -365,9 +368,7 @@ export default function PagamentosPage() {
           )}
 
           {mesesAtivos.length === 0 && !loading ? (
-            <p style={{ marginTop: 12 }}>
-              Nenhum mês ativo. Ative pelo menos 1 mês para poder marcar pagamentos.
-            </p>
+            <p style={{ marginTop: 12 }}>Nenhum mês ativo. Ative pelo menos 1 mês para poder marcar pagamentos.</p>
           ) : null}
         </section>
 
@@ -402,7 +403,7 @@ export default function PagamentosPage() {
                 <tbody>
                   {membros.map((m) => (
                     <tr key={m.usuario_id}>
-                      <td style={nameCell}>{m?.nome ?? m.nome ?? `Usuário #${m.usuario_id}`}</td>
+                      <td style={nameCell}>{m.nome || `Usuário #${m.usuario_id}`}</td>
 
                       {mesesAtivos.map((mes) => {
                         const checked = state?.[m.usuario_id]?.[mes] ?? false;
@@ -420,7 +421,7 @@ export default function PagamentosPage() {
                         );
                       })}
 
-                      <td style={{ ...cellStyle(false, false), background: "#f7f7f7", cursor: "default" }}>
+                      <td style={{ ...cellStyle(false, false), background: "var(--table-total-bg)", cursor: "default" }}>
                         {totals.get(m.usuario_id) ?? 0}/{mesesAtivos.length}
                       </td>
                     </tr>
