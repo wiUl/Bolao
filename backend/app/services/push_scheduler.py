@@ -13,6 +13,12 @@ from app.models.push_token import PushToken
 from app.models.push_alert_log import PushAlertLog
 from app.services.push_sender import send_to_token
 
+from firebase_admin._messaging_utils import UnregisteredError
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 
 TZ = ZoneInfo("America/Sao_Paulo")
 
@@ -156,9 +162,25 @@ def run_missing_bet_alerts(db: Session):
                                 "offset_min": str(offset),
                             },
                         )
-                    except Exception:
-                        # Se falhar (token inválido, etc.), desativa
+
+                    except UnregisteredError:
+                        # token não existe mais / foi invalidado → desativa
                         t.is_active = False
 
+                    except Exception as e:
+                        # erro temporário (rede, credencial, quota, etc.) → NÃO desativa
+                        logger.exception(
+                            "Falha ao enviar push (mantendo token ativo)",
+                            extra={
+                                "user_id": getattr(t, "user_id", None),
+                                "push_token_id": getattr(t, "id", None),
+                                "jogo_id": jogo.id,
+                                "liga_id": liga.id,
+                                "alert_type": alert_type,
+                            },
+                        )
+
+
                 db.add(PushAlertLog(jogo_id=jogo.id, liga_id=liga.id, alert_type=alert_type))
+                db.flush()
                 db.commit()

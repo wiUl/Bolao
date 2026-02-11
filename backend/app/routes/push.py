@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
+from firebase_admin._messaging_utils import UnregisteredError
+
 
 from app.database import get_db
 from app.core.dependencies import get_current_user
@@ -62,11 +64,37 @@ def test_push(db: Session = Depends(get_db), user=Depends(get_current_user)):
         return {"ok": False, "reason": "no_active_tokens", "count": 0}
 
     sent = 0
-    for t in tokens:
-        send_to_token(t.token, "Teste Bolão", "Se você recebeu isso, funcionou ✅", {"kind": "test"})
-        sent += 1
+    disabled = 0
+    errors = []
 
-    return {"ok": True, "count": len(tokens), "sent": sent}
+    for t in tokens:
+        try:
+            send_to_token(
+                t.token,
+                "Teste Bolão",
+                "Se você recebeu isso, funcionou ✅",
+                {"kind": "test"},
+            )
+            sent += 1
+
+        except UnregisteredError:
+            # token não existe mais → desativa
+            t.is_active = False
+            disabled += 1
+
+        except Exception as e:
+            # erro real (credencial, rede, etc)
+            errors.append(str(e))
+
+    db.commit()
+
+    return {
+        "ok": True,
+        "tokens": len(tokens),
+        "sent": sent,
+        "disabled": disabled,
+        "errors": errors,
+    }
 
 @router.post("/logs/cleanup")
 def cleanup_push_logs(days: int = 30, db: Session = Depends(get_db), user=Depends(get_current_user)):
