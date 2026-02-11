@@ -57,9 +57,16 @@ def test_push(db: Session = Depends(get_db), user=Depends(get_current_user)):
         .filter(PushToken.user_id == user.id, PushToken.is_active == True)  # noqa
         .all()
     )
+
+    if not tokens:
+        return {"ok": False, "reason": "no_active_tokens", "count": 0}
+
+    sent = 0
     for t in tokens:
         send_to_token(t.token, "Teste Bolão", "Se você recebeu isso, funcionou ✅", {"kind": "test"})
-    return {"ok": True}
+        sent += 1
+
+    return {"ok": True, "count": len(tokens), "sent": sent}
 
 @router.post("/logs/cleanup")
 def cleanup_push_logs(days: int = 30, db: Session = Depends(get_db), user=Depends(get_current_user)):
