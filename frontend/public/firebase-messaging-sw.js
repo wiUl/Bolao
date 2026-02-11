@@ -13,6 +13,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+  console.log("=== PUSH RECEBIDO NO SW ===");
+  console.log("payload:", payload);
+  console.log("payload.notification:", payload?.notification);
+  console.log("payload.data:", payload?.data);
+
   const title = payload?.data?.title || "Bolão";
   const options = {
     body: payload?.data?.body || "",
