@@ -16,7 +16,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FutBolão",
   description: "Crie ligas e dê seus palpites",
+  appleWebApp: {
+    capable: true,
+    title: "FutBolão",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+    icon: "/favicon.ico",
+  },
 };
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
