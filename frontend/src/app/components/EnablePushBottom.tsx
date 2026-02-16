@@ -23,6 +23,11 @@ export function EnablePushButton() {
     setMsg(null);
     setLoading(true);
 
+    if (isIOS() && !isStandalone()) {
+      showMsg("No iPhone/iPad: abra no Safari → Compartilhar → Adicionar à Tela de Início. Depois abra pelo ícone e ative as notificações.", 4000);
+      return;
+    }
+
     try {
       if (!("Notification" in window)) {
         showMsg("Seu navegador não suporta notificações.", 4000);
@@ -87,6 +92,19 @@ export function EnablePushButton() {
       {msg && <small>{msg}</small>}
     </div>
   );
+}
+
+function isIOS(): boolean {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
+function isStandalone(): boolean {
+  // iOS antigo:
+  // @ts-expect-error
+  const navStandalone = typeof navigator !== "undefined" && navigator.standalone === true;
+  // padrão moderno:
+  const mql = typeof window !== "undefined" && window.matchMedia?.("(display-mode: standalone)").matches;
+  return Boolean(navStandalone || mql);
 }
 
 
