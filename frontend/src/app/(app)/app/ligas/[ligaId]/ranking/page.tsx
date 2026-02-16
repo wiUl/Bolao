@@ -209,7 +209,7 @@ export default function RankingPage() {
         {!loading && tabela.length === 0 ? <p style={{ marginTop: 12 }}>Sem dados para exibir.</p> : null}
 
         {!loading && tabela.length > 0 ? (
-          <div style={{ overflowX: "auto", marginTop: 12 }}>
+          <div style={{ overflowX: "auto", marginTop: 12, maxWidth: "100%" }}>
             <table style={tableStyle}>
               <thead>
                 <tr>
@@ -332,22 +332,23 @@ const secondaryBtnStyle: React.CSSProperties = {
 const tabBtn: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 10,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   background: "var(--surface)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: 600,
 };
 
 const tabBtnActive: React.CSSProperties = {
   ...tabBtn,
-  borderColor: "#bbb",
-  background: "#f7f7f7",
+  borderColor: "var(--border)",
+  background: "var(--muted)",
+  color: "var(--foreground)",
 };
 
 const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
-  minWidth: 820,
 };
 
 const thStyle: React.CSSProperties = {
