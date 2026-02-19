@@ -40,147 +40,134 @@ def _format_offset(minutes: int) -> str:
 
 
 def run_missing_bet_alerts(db: Session):
-    # Detecta qual banco está sendo usado 
-    dialect = db.get_bind().dialect.name  
-
-    # Base "agora"
+    dialect = db.get_bind().dialect.name
     now_local = datetime.now(TZ)
     now_utc = now_local.astimezone(timezone.utc)
 
-    for offset in ALERT_OFFSETS_MIN:
-        alert_type = f"PRE_{offset}"
+    try:
+        for offset in ALERT_OFFSETS_MIN:
+            alert_type = f"PRE_{offset}"
 
-        # Janela de 1 minuto 
-        if dialect == "sqlite":
-            start_local = now_local + timedelta(minutes=offset)
-            end_local = now_local + timedelta(minutes=offset + 1)
-            start_cmp = start_local.replace(tzinfo=None)
-            end_cmp = end_local.replace(tzinfo=None)
-        else:
-            start_cmp = now_utc + timedelta(minutes=offset)
-            end_cmp = now_utc + timedelta(minutes=offset + 1)
+            if dialect == "sqlite":
+                start_local = now_local + timedelta(minutes=offset)
+                end_local = now_local + timedelta(minutes=offset + 1)
+                start_cmp = start_local.replace(tzinfo=None)
+                end_cmp = end_local.replace(tzinfo=None)
+            else:
+                start_cmp = now_utc + timedelta(minutes=offset)
+                end_cmp = now_utc + timedelta(minutes=offset + 1)
 
-        jogos = (
-            db.query(Jogo)
-            .filter(
-                Jogo.status == "agendado",
-                Jogo.data_hora.isnot(None),
-                Jogo.data_hora >= start_cmp,
-                Jogo.data_hora < end_cmp,
+            jogos = (
+                db.query(Jogo)
+                .filter(
+                    Jogo.status == "agendado",
+                    Jogo.data_hora.isnot(None),
+                    Jogo.data_hora >= start_cmp,
+                    Jogo.data_hora < end_cmp,
+                )
+                .all()
             )
-            .all()
-        )
 
-        for jogo in jogos:
-            ligas = db.query(Liga).filter(Liga.temporada_id == jogo.temporada_id).all()
-            if not ligas:
-                continue
-
-            for liga in ligas:
-                # log por (jogo, liga, tipo)
-                already = (
-                    db.query(PushAlertLog)
-                    .filter(
-                        PushAlertLog.jogo_id == jogo.id,
-                        PushAlertLog.liga_id == liga.id,
-                        PushAlertLog.alert_type == alert_type,
-                    )
-                    .first()
-                )
-                if already:
+            for jogo in jogos:
+                ligas = db.query(Liga).filter(Liga.temporada_id == jogo.temporada_id).all()
+                if not ligas:
                     continue
 
-                # usuários da liga que NÃO têm palpite para esse jogo nessa liga
-                missing_users = (
-                    db.query(LigaMembro.usuario_id)
-                    .filter(LigaMembro.liga_id == liga.id)
-                    .filter(
-                        ~exists().where(
-                            and_(
-                                Palpite.liga_id == liga.id,
-                                Palpite.jogo_id == jogo.id,
-                                Palpite.usuario_id == LigaMembro.usuario_id,
-                            )
+                for liga in ligas:
+                    already = (
+                        db.query(PushAlertLog)
+                        .filter(
+                            PushAlertLog.jogo_id == jogo.id,
+                            PushAlertLog.liga_id == liga.id,
+                            PushAlertLog.alert_type == alert_type,
                         )
-                    )
-                    .all()
-                )
-                user_ids = [r[0] for r in missing_users]
-
-                # Se ninguém estiver pendente, registra log e segue
-                if not user_ids:
-                    db.add(PushAlertLog(jogo_id=jogo.id, liga_id=liga.id, alert_type=alert_type))
-                    db.commit()
-                    continue
-
-                tokens = (
-                    db.query(PushToken)
-                    .filter(PushToken.user_id.in_(user_ids), PushToken.is_active.is_(True))
-                    .all()
-                )
-
-                # Monta mensagem
-                offset_txt = _format_offset(offset)
-
-                jogo_dt = jogo.data_hora
-                if jogo_dt is not None:
-                    if dialect == "sqlite":
-                        
-                        jogo_dt_sp = jogo_dt.replace(tzinfo=TZ)
-                    else:
-                        jogo_dt_sp = to_utc(jogo_dt).astimezone(TZ)
-                    
-                    mandante = aliased(Time)
-                    visitante = aliased(Time)
-
-                    row = (
-                        db.query(Jogo, mandante.nome.label("mandante_nome"), visitante.nome.label("visitante_nome"))
-                        .join(mandante, mandante.id == Jogo.time_casa_id)
-                        .join(visitante, visitante.id == Jogo.time_fora_id)
-                        .filter(Jogo.id == jogo.id)
                         .first()
                     )
+                    if already:
+                        continue
 
-                    jogo_obj, mandante_nome, visitante_nome = row
-
-                    body = f"Faltam {offset_txt} pro jogo {mandante_nome} x {visitante_nome} . Envie seu palpite!"
-                else:
-                    body = f"Faltam {offset_txt} pro jogo. Envie seu palpite!"
-
-                title = "Palpite pendente 👀"
-
-                for t in tokens:
-                    try:
-                        send_to_token(
-                            t.token,
-                            title,
-                            body,
-                            {
-                                "kind": "missing_bet",
-                                "jogo_id": str(jogo.id),
-                                "liga_id": str(liga.id),
-                                "offset_min": str(offset),
-                            },
+                    missing_users = (
+                        db.query(LigaMembro.usuario_id)
+                        .filter(LigaMembro.liga_id == liga.id)
+                        .filter(
+                            ~exists().where(
+                                and_(
+                                    Palpite.liga_id == liga.id,
+                                    Palpite.jogo_id == jogo.id,
+                                    Palpite.usuario_id == LigaMembro.usuario_id,
+                                )
+                            )
                         )
+                        .all()
+                    )
+                    user_ids = [r[0] for r in missing_users]
 
-                    except UnregisteredError:
-                        # token não existe mais / foi invalidado → desativa
-                        t.is_active = False
+                    if not user_ids:
+                        db.add(PushAlertLog(jogo_id=jogo.id, liga_id=liga.id, alert_type=alert_type))
+                        continue  # ✅ sem commit aqui, acumula e commita no final
 
-                    except Exception as e:
-                        # erro temporário (rede, credencial, quota, etc.) → NÃO desativa
-                        logger.exception(
-                            "Falha ao enviar push (mantendo token ativo)",
-                            extra={
-                                "user_id": getattr(t, "user_id", None),
-                                "push_token_id": getattr(t, "id", None),
-                                "jogo_id": jogo.id,
-                                "liga_id": liga.id,
-                                "alert_type": alert_type,
-                            },
+                    tokens = (
+                        db.query(PushToken)
+                        .filter(PushToken.user_id.in_(user_ids), PushToken.is_active.is_(True))
+                        .all()
+                    )
+
+                    offset_txt = _format_offset(offset)
+                    jogo_dt = jogo.data_hora
+
+                    if jogo_dt is not None:
+                        if dialect == "sqlite":
+                            jogo_dt_sp = jogo_dt.replace(tzinfo=TZ)
+                        else:
+                            jogo_dt_sp = to_utc(jogo_dt).astimezone(TZ)
+
+                        mandante = aliased(Time)
+                        visitante = aliased(Time)
+
+                        row = (
+                            db.query(Jogo, mandante.nome.label("mandante_nome"), visitante.nome.label("visitante_nome"))
+                            .join(mandante, mandante.id == Jogo.time_casa_id)
+                            .join(visitante, visitante.id == Jogo.time_fora_id)
+                            .filter(Jogo.id == jogo.id)
+                            .first()
                         )
+                        jogo_obj, mandante_nome, visitante_nome = row
+                        body = f"Faltam {offset_txt} pro jogo {mandante_nome} x {visitante_nome}. Envie seu palpite!"
+                    else:
+                        body = f"Faltam {offset_txt} pro jogo. Envie seu palpite!"
 
+                    title = "Palpite pendente 👀"
 
-                db.add(PushAlertLog(jogo_id=jogo.id, liga_id=liga.id, alert_type=alert_type))
-                db.flush()
-                db.commit()
+                    for t in tokens:
+                        try:
+                            send_to_token(
+                                t.token, title, body,
+                                {
+                                    "kind": "missing_bet",
+                                    "jogo_id": str(jogo.id),
+                                    "liga_id": str(liga.id),
+                                    "offset_min": str(offset),
+                                },
+                            )
+                        except UnregisteredError:
+                            t.is_active = False
+                        except Exception as e:
+                            logger.exception(
+                                "Falha ao enviar push (mantendo token ativo)",
+                                extra={
+                                    "user_id": getattr(t, "user_id", None),
+                                    "push_token_id": getattr(t, "id", None),
+                                    "jogo_id": jogo.id,
+                                    "liga_id": liga.id,
+                                    "alert_type": alert_type,
+                                },
+                            )
+
+                    db.add(PushAlertLog(jogo_id=jogo.id, liga_id=liga.id, alert_type=alert_type))
+
+        # ✅ Um único commit no final de tudo
+        db.commit()
+
+    except Exception:
+        db.rollback()  # ✅ Garante limpeza se algo explodir no meio
+        raise
