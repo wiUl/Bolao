@@ -22,8 +22,6 @@ else:
         "keepalives_idle": 60,
         "keepalives_interval": 10,
         "keepalives_count": 5,
-        # SSL via sslmode no psycopg3 vai dentro de conninfo, então use assim:
-        "sslmode": "require",
     }
 
     # Se estiver no Render free tier (app hiberna), NullPool é mais seguro
@@ -34,10 +32,10 @@ else:
     else:
         engine_kwargs.update({
             "pool_pre_ping": True,
-            "pool_size": int(os.getenv("DB_POOL_SIZE", "3")),       # Reduzido: Supabase free tem limite
-            "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "5")), # Reduzido também
-            "pool_timeout": int(os.getenv("DB_POOL_TIMEOUT", "30")),
-            "pool_recycle": int(os.getenv("DB_POOL_RECYCLE", "240")),  # ✅ 4 min (abaixo do timeout do Supabase)
+            "pool_size": int(os.getenv("DB_POOL_SIZE", "1")),       # Reduzido: Supabase free tem limite
+            "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "2")), # Reduzido também
+            "pool_timeout": int(os.getenv("DB_POOL_TIMEOUT", "10")),
+            "pool_recycle": int(os.getenv("DB_POOL_RECYCLE", "120")),  # ✅ 4 min (abaixo do timeout do Supabase)
         })
 
 engine = create_engine(
