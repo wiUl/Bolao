@@ -297,22 +297,23 @@ export default function RodadaLigaPage() {
 
                       {/* Linha 2 — Pontos */}
                       {meu.pontos != null && (
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontWeight: 600,
-                            color:
-                              meu.pontos === 5
-                                ? "var(--pontos-5)"
-                                : meu.pontos === 4
-                                ? "var(--pontos-4)"
-                                : meu.pontos === 3
-                                ? "var(--pontos-3)"
-                                : "var(--pontos-0)",
-                          }}
-                        >
-                          Pontos: {meu.pontos}
-                        </div>
+                              <div style={{ marginTop: 4 }}>
+                                Pontos:{" "}
+                                <strong
+                                  style={{
+                                    color:
+                                      meu.pontos === 5
+                                        ? "var(--pontos-5)"
+                                        : meu.pontos === 4
+                                        ? "var(--pontos-4)"
+                                        : meu.pontos === 3
+                                        ? "var(--pontos-3)"
+                                        : "var(--pontos-0)",
+                                  }}
+                                >
+                                  {meu.pontos}
+                                </strong>
+                              </div>
                       )}
                     </div>
                   ) : (
