@@ -11,6 +11,14 @@
   --disabled-text: #666666;
   --danger-foreground: #ffffff;
 
+  /* Topbar */
+  --topbar-bg: var(--surface);
+  --topbar-border: var(--border);
+  --topbar-text: var(--foreground);
+  --topbar-muted-text: var(--disabled-text);
+  --topbar-hover-bg: var(--muted);
+  --topbar-link-hover: #2563eb; /* azul de hover (pode trocar) */
+
 
   --success-bg: #d9f9e3;
   --success-fg: #0f3d22;
@@ -28,6 +36,11 @@
   --danger-text: #b42318;
   
   color-scheme: light dark;
+
+  --pontos-5: #2ca02c; 
+  --pontos-4: #ffb000; 
+  --pontos-3: #1f77b4; 
+  --pontos-0: #d62728; 
 
 }
 
@@ -50,6 +63,14 @@
     --disabled-text: #9a9a9a;
     --danger-foreground: #ffffff;
 
+    /* Topbar */
+    --topbar-bg: var(--surface);
+    --topbar-border: var(--border);
+    --topbar-text: var(--foreground);
+    --topbar-muted-text: var(--disabled-text);
+    --topbar-hover-bg: rgba(255,255,255,0.06);
+    --topbar-link-hover: #60a5fa;
+
     --success-bg: #12351f;
     --success-fg: #ededed;
 
@@ -64,6 +85,11 @@
 
     --success-text: #63d28b;
     --danger-text: #ff6b6b;
+
+    --pontos-5: #3bdc6f;
+    --pontos-4: #ffd166;
+    --pontos-3: #4dabf7;
+    --pontos-0: #ff6b6b;
   }
 }
 

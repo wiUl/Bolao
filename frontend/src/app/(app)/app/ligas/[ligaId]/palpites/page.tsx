@@ -622,9 +622,23 @@ export default function PalpitesRodadaPage() {
                     </div>
                   </div>
 
-                  {meu && meu.pontos != null ? (
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>
-                      Pontos: <span style={{ color: "#2ca02c" }}>{meu.pontos}</span>
+                  {meu?.pontos != null ? (
+                    <div style={{ fontSize: "clamp(12px, 1.2vw, 14px)", fontWeight: 600 }}>
+                      Pontos:{" "}
+                      <span
+                        style={{
+                          color:
+                            meu.pontos === 5
+                              ? "var(--pontos-5)"
+                              : meu.pontos === 4
+                              ? "var(--pontos-4)"
+                              : meu.pontos === 3
+                              ? "var(--pontos-3)"
+                              : "var(--pontos-0)",
+                        }}
+                      >
+                        {meu.pontos}
+                      </span>
                     </div>
                   ) : null}
                 </div>

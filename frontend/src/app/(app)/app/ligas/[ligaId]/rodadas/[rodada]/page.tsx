@@ -285,19 +285,46 @@ export default function RodadaLigaPage() {
                   </div>
 
                   {meu ? (
-                    <div style={{ fontSize: 14 }}>
-                      Meu palpite:{" "}
-                      <strong>
-                        {meu.palpite_casa ?? "—"} x {meu.palpite_fora ?? "—"}
-                      </strong>
-                      {meu.pontos != null ? (
-                        <span style={{ marginLeft: 8 }}>
-                          (pontos: <strong>{meu.pontos}</strong>)
-                        </span>
-                      ) : null}
+                    <div style={{ fontSize: "clamp(13px, 1.2vw, 14px)", lineHeight: 1.4 }}>
+                      
+                      {/* Linha 1 — Meu palpite */}
+                      <div>
+                        Meu palpite:{" "}
+                        <strong>
+                          {meu.palpite_casa ?? "—"} x {meu.palpite_fora ?? "—"}
+                        </strong>
+                      </div>
+
+                      {/* Linha 2 — Pontos */}
+                      {meu.pontos != null && (
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontWeight: 600,
+                            color:
+                              meu.pontos === 5
+                                ? "var(--pontos-5)"
+                                : meu.pontos === 4
+                                ? "var(--pontos-4)"
+                                : meu.pontos === 3
+                                ? "var(--pontos-3)"
+                                : "var(--pontos-0)",
+                          }}
+                        >
+                          Pontos: {meu.pontos}
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div style={{ fontSize: 14, opacity: 0.8 }}>Você ainda não palpitou</div>
+                    <div
+                      style={{
+                        fontSize: "clamp(13px, 1.2vw, 14px)",
+                        opacity: 0.8,
+                        color: "var(--disabled-text)",
+                      }}
+                    >
+                      Você ainda não palpitou
+                    </div>
                   )}
                 </div>
 

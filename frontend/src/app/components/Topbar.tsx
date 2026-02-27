@@ -10,13 +10,24 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
+    <header className="sticky top-0 z-50 border-b"
+      style={{
+        background: "var(--topbar-bg)",
+        borderColor: "var(--topbar-border)",
+        color: "var(--topbar-text)",
+      }}
+    >
       <div className="px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link 
             href={homeHref} 
-            className="flex items-center gap-2 text-gray-900 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-2 transition-colors"
+            style={{
+              color: "var(--topbar-text)",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--topbar-link-hover)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--topbar-text)")}
           >
              <img 
                 src="/favicon.ico" 
@@ -29,7 +40,7 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-4">
             {user?.nome && (
-              <span className="text-sm text-gray-700 font-medium">
+              <span className="text-sm font-medium" style={{ color: "var(--topbar-muted-text)" }}>
                 👤 {user.nome}
               </span>
             )}
@@ -47,7 +58,12 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            className="md:hidden p-2 rounded-lg transition-colors"
+            style={{
+              color: "var(--topbar-muted-text)",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--topbar-hover-bg)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
             aria-label="Menu"
           >
             {mobileMenuOpen ? (
@@ -66,9 +82,19 @@ export function Topbar({ homeHref = "/app" }: { homeHref?: string }) {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-2 space-y-3 border-t border-gray-200 pt-4">
+          <div
+            className="md:hidden mt-4 pb-2 space-y-3 border-t pt-4"
+            style={{ borderColor: "var(--topbar-border)" }}
+          >
             {user?.nome && (
-              <div className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 bg-gray-50 rounded-lg">
+              <div
+                className="flex items-center gap-2 px-2 py-2 text-sm rounded-lg"
+                style={{
+                  color: "var(--topbar-muted-text)",
+                  background: "var(--topbar-hover-bg)",
+                  border: "1px solid var(--topbar-border)",
+                }}
+>
                 <span className="text-lg">👤</span>
                 <span className="font-medium">{user.nome}</span>
               </div>
