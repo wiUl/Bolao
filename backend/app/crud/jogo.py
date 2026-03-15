@@ -1,5 +1,6 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 from app.models.jogo import Jogo
 from app.schemas.jogo import JogoCreate, JogoUpdate, JogoResultadoUpdate
@@ -108,3 +109,27 @@ def atualizar_resultado(db: Session, jogo: Jogo, body: JogoResultadoUpdate) -> J
 def deletar_jogo(db: Session, jogo: Jogo) -> None:
     db.delete(jogo)
     db.commit()
+
+
+def buscar_rodada_atual(db: Session, temporada_id: int) -> int:
+    """
+    Retorna o número da rodada cujo jogo tem data_hora mais próxima de agora
+    (considera passado e futuro — menor distância absoluta vence).
+    Retorna 1 como fallback se não houver jogos com data_hora definida.
+    """
+    jogo = (
+        db.query(Jogo)
+        .filter(
+            Jogo.temporada_id == temporada_id,
+            Jogo.data_hora.isnot(None),
+        )
+        .order_by(
+            func.abs(
+                func.extract("epoch", Jogo.data_hora)
+                - func.extract("epoch", func.now())
+            )
+        )
+        .first()
+    )
+ 
+    return jogo.rodada if jogo is not None else 1

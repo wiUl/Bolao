@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.permissions import require_admin
 from app.schemas.jogo import JogoCreate, JogoUpdate, JogoResultadoUpdate, JogoResponse
-from app.crud.jogo import criar_jogo, listar_jogos, buscar_jogo, atualizar_jogo, atualizar_resultado, deletar_jogo
+from app.crud.jogo import criar_jogo, listar_jogos, buscar_jogo, atualizar_jogo, atualizar_resultado, deletar_jogo, buscar_rodada_atual
 
 from app.models.temporada import Temporada
 from app.models.time import Time
@@ -74,6 +74,14 @@ def atualiza_resultado(
     if not jogo:
         raise HTTPException(404, detail="Jogo não encontrado.")
     return atualizar_resultado(db, jogo, body)
+
+@router.get("/rodada-atual")
+def rodada_atual(
+    temporada_id: int,
+    db: Session = Depends(get_db),
+    usuario_logado=Depends(get_current_user),
+):
+    return {"rodada": buscar_rodada_atual(db, temporada_id)}
 
 @router.delete("/{jogo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def exclui_jogo(

@@ -17,6 +17,7 @@ import type { Jogo } from "@/app/types/jogo";
 import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
 import { formatDateTimeSP } from "@/app/utils/datetime";
 import { RodadaSelector } from "@/app/components/RodadaSelector";
+import { useRodadaAtual } from "@/app/hooks/useRodadaAtual";
 
 type FormState = {
   palpite_casa: string;
@@ -52,6 +53,7 @@ export default function PalpitesRodadaPage() {
 
   const [liga, setLiga] = useState<Liga | null>(null);
   const [rodada, setRodada] = useState<number>(1);
+  const rodadaAtual = useRodadaAtual(liga?.temporada_id);
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -132,6 +134,15 @@ export default function PalpitesRodadaPage() {
       alive = false;
     };
   }, [ligaId]);
+
+  // Atualiza rodada para a rodada atual quando disponível (só na primeira carga)
+  const [rodadaInicializada, setRodadaInicializada] = useState(false);
+  useEffect(() => {
+    if (rodadaAtual !== null && !rodadaInicializada) {
+      setRodada(rodadaAtual);
+      setRodadaInicializada(true);
+    }
+  }, [rodadaAtual, rodadaInicializada]);
 
   // 2) Carrega jogos + palpites
   useEffect(() => {

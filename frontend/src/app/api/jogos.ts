@@ -120,3 +120,14 @@ export async function atualizarResultadoJogo(
   );
   return res.data;
 }
+
+/**
+ * GET /jogos/rodada-atual?temporada_id=X
+ * Retorna a rodada com jogos mais próximos de hoje.
+ */
+export async function getRodadaAtual(temporadaId: number): Promise<number> {
+  const res = await api.get<{ rodada: number }>("/jogos/rodada-atual", {
+    params: { temporada_id: temporadaId },
+  });
+  return res.data.rodada;
+}

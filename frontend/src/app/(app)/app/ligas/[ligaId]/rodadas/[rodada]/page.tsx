@@ -18,6 +18,7 @@ import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
 import type { PalpiteLigaJogoItem } from "@/app/types/palpiteLigaJogo";
 
 import { formatDateTimeSP } from "@/app/utils/datetime";
+import { useRodadaAtual } from "@/app/hooks/useRodadaAtual";
 import { RodadaSelector } from "@/app/components/RodadaSelector";
 
 
@@ -29,6 +30,7 @@ export default function RodadaLigaPage() {
 
   
   const [liga, setLiga] = useState<Liga | null>(null);
+  const rodadaAtual = useRodadaAtual(liga?.temporada_id);
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);

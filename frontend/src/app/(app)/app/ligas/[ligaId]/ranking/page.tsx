@@ -10,6 +10,7 @@ import { getRankingGeral, getRankingPorRodada } from "@/app/api/ranking";
 import type { Liga } from "@/app/types/liga";
 import type { RankingGeralItem, RankingRodadaItem } from "@/app/types/ranking";
 import { RodadaSelector } from "@/app/components/RodadaSelector";
+import { useRodadaAtual } from "@/app/hooks/useRodadaAtual";
 
 type Tab = "geral" | "rodada";
 
@@ -21,6 +22,8 @@ export default function RankingPage() {
 
   const [tab, setTab] = useState<Tab>("geral");
   const [rodada, setRodada] = useState<number>(1);
+  const rodadaAtual = useRodadaAtual(liga?.temporada_id);
+  const [rodadaInicializada, setRodadaInicializada] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
