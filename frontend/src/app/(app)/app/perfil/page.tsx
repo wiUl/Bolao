@@ -349,7 +349,7 @@ export default function PerfilPage() {
 
       {/* ── Zona de perigo ── */}
       <section style={{ ...sectionStyle, borderColor: "#f3c2c2" }}>
-        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Zona de perigo</h2>
+        <h2 style={{ marginTop: 0, fontWeight: 600 }}>Excluir</h2>
         <p style={{ marginTop: 0 }}>Excluir sua conta é uma ação <strong>irreversível</strong>.</p>
 
         {!deleteOpen ? (
