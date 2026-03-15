@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { getToken } from "firebase/messaging";
 import { getMessagingIfSupported } from "@/app/lib/firebase";
-import { registrarPushToken } from "@/app/api/push";
+import { registrarPushToken, reportarErroPush } from "@/app/api/push";
 
 
 
@@ -47,9 +47,22 @@ export function EnablePushButton() {
       }
 
       const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY!;
-      const token = await getToken(messaging, { vapidKey });
+      let token: string;
+      try {
+        token = await getToken(messaging, { vapidKey });
+      } catch (e) {
+        await reportarErroPush("getToken", e, {
+          userAgent: navigator.userAgent,
+          permissao: Notification.permission,
+        });
+        showMsg("Não foi possível obter token do FCM.", 4000);
+        return;
+      }
 
       if (!token) {
+        await reportarErroPush("getToken", "token vazio retornado pelo FCM", {
+          userAgent: navigator.userAgent,
+        });
         showMsg("Não foi possível obter token do FCM.", 4000);
         return;
       }
@@ -59,11 +72,24 @@ export function EnablePushButton() {
         return;
       }
 
-      await registrarPushToken(token);
+      try {
+        await registrarPushToken(token);
+      } catch (e) {
+        await reportarErroPush("registrarToken", e, {
+          userAgent: navigator.userAgent,
+        });
+        showMsg("Erro ao registrar token no servidor.", 4000);
+        return;
+      }
+      setEnabled(true);
       showMsg("Notificações ativadas ✅", 3000);
-    } catch (e: any) {
-      console.error("ENABLE PUSH ERROR:",e);
-      showMsg("Erro ao ativar notificações.", 4000);  
+    } catch (e: unknown) {
+      await reportarErroPush("handleEnable_catch_inesperado", e, {
+        userAgent: navigator.userAgent,
+        permissao: typeof Notification !== "undefined" ? Notification.permission : "desconhecido",
+      });
+      const msg = e instanceof Error ? e.message : String(e);
+      showMsg(`Erro ao ativar notificações: ${msg}`, 5000);
     } finally {
       setLoading(false);
     }
@@ -106,5 +132,3 @@ function isStandalone(): boolean {
   const mql = typeof window !== "undefined" && window.matchMedia?.("(display-mode: standalone)").matches;
   return Boolean(navStandalone || mql);
 }
-
-
