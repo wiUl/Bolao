@@ -44,7 +44,7 @@ export default function AppHomePage() {
           antes do apito inicial — depois que o jogo começa os palpites ficam bloqueados.
           Ao final de cada partida os pontos são calculados automaticamente.
         </p>
-
+        <br></br><br></br>
         <h3 style={{ fontWeight: 600, marginBottom: 8 }}>Tabela de pontuação</h3>
 
         <div style={{ overflowX: "auto" }}>
@@ -102,7 +102,7 @@ export default function AppHomePage() {
         </div>
 
         <h3 style={{ fontWeight: 600, marginTop: 20, marginBottom: 8 }}>Regras gerais</h3>
-        <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
+        <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8, listStyleType: "disc", listStylePosition: "outside" }}>
           <li>Palpites só podem ser enviados ou alterados <strong>antes do início</strong> do jogo.</li>
           <li>Cada membro da liga envia um palpite por jogo — o último enviado antes do bloqueio vale.</li>
           <li>O ranking é calculado pela soma de pontos acumulados na temporada.</li>
