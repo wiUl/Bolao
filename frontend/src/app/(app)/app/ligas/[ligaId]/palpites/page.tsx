@@ -16,6 +16,7 @@ import type { Liga } from "@/app/types/liga";
 import type { Jogo } from "@/app/types/jogo";
 import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
 import { formatDateTimeSP } from "@/app/utils/datetime";
+import { RodadaSelector } from "@/app/components/RodadaSelector";
 
 type FormState = {
   palpite_casa: string;
@@ -524,76 +525,37 @@ export default function PalpitesRodadaPage() {
       {/* Seletor de rodada */}
       <section style={sectionStyle}>
         <h2 style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Rodada</h2>
-
-        {/* Linha única com todos os botões alinhados */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "space-between" }}>
-          {/* Navegação de rodada à esquerda */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              style={secondaryBtnStyle}
-              onClick={() => setRodada((r) => Math.max(1, r - 1))}
-              disabled={rodada <= 1 || loading}
-            >
-              ← Anterior
-            </button>
-
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span>Número:</span>
-              <input
-                type="number"
-                value={rodada}
-                onChange={(e) => setRodada(Math.max(1, Number(e.target.value)))}
-                min={1}
-                style={{ ...inputStyle, width: 100 }}
-                disabled={loading}
-              />
-            </label>
-
-            <button type="button" style={secondaryBtnStyle} onClick={() => setRodada((r) => r + 1)} disabled={loading}>
-              Próxima →
-            </button>
-          </div>
-
-          {/* Botões de ação à direita */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={handleSalvarTodos}
-              disabled={savingAll || removingAll || loading || palpitesPreenchidos === 0}
-              style={saveAllButtonStyle(savingAll || removingAll)}
-              title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
-            >
-              {savingAll ? (
-                <>
-                  💾 Salvando {saveProgress.current}/{saveProgress.total}...
-                </>
-              ) : (
-                <>
-                  💾 Salvar Todos ({palpitesPreenchidos})
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleRemoverTodos}
-              disabled={savingAll || removingAll || loading || palpitesSalvos === 0}
-              style={removeAllButtonStyle(removingAll || savingAll)}
-              title={palpitesSalvos === 0 ? "Não há palpites para remover" : `Remover ${palpitesSalvos} palpite(s)`}
-            >
-              {removingAll ? (
-                <>
-                  🗑️ Removendo {removeProgress.current}/{removeProgress.total}...
-                </>
-              ) : (
-                <>
-                  🗑️ Remover Todos ({palpitesSalvos})
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        <RodadaSelector
+          rodada={rodada}
+          onChange={setRodada}
+          disabled={loading}
+          actions={
+            <>
+              <button
+                type="button"
+                onClick={handleSalvarTodos}
+                disabled={savingAll || removingAll || loading || palpitesPreenchidos === 0}
+                style={saveAllButtonStyle(savingAll || removingAll)}
+                title={palpitesPreenchidos === 0 ? "Preencha ao menos um palpite" : `Salvar ${palpitesPreenchidos} palpite(s)`}
+              >
+                {savingAll
+                  ? `💾 Salvando ${saveProgress.current}/${saveProgress.total}...`
+                  : `💾 Salvar Todos (${palpitesPreenchidos})`}
+              </button>
+              <button
+                type="button"
+                onClick={handleRemoverTodos}
+                disabled={savingAll || removingAll || loading || palpitesSalvos === 0}
+                style={removeAllButtonStyle(removingAll || savingAll)}
+                title={palpitesSalvos === 0 ? "Não há palpites para remover" : `Remover ${palpitesSalvos} palpite(s)`}
+              >
+                {removingAll
+                  ? `🗑️ Removendo ${removeProgress.current}/${removeProgress.total}...`
+                  : `🗑️ Remover Todos (${palpitesSalvos})`}
+              </button>
+            </>
+          }
+        />
       </section>
 
       {/* Lista de jogos */}

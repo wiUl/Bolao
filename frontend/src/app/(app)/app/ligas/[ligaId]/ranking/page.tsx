@@ -9,6 +9,7 @@ import { getRankingGeral, getRankingPorRodada } from "@/app/api/ranking";
 
 import type { Liga } from "@/app/types/liga";
 import type { RankingGeralItem, RankingRodadaItem } from "@/app/types/ranking";
+import { RodadaSelector } from "@/app/components/RodadaSelector";
 
 type Tab = "geral" | "rodada";
 
@@ -163,36 +164,8 @@ export default function RankingPage() {
         </div>
 
         {tab === "rodada" ? (
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              style={secondaryBtnStyle}
-              onClick={() => setRodada((r) => Math.max(1, r - 1))}
-              disabled={rodada <= 1 || loading}
-            >
-              ← Anterior
-            </button>
-
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span>Rodada:</span>
-              <input
-                type="number"
-                value={rodada}
-                onChange={(e) => setRodada(Math.max(1, Number(e.target.value)))}
-                min={1}
-                style={{ ...inputStyle, width: 120 }}
-                disabled={loading}
-              />
-            </label>
-
-            <button
-              type="button"
-              style={secondaryBtnStyle}
-              onClick={() => setRodada((r) => r + 1)}
-              disabled={loading}
-            >
-              Próxima →
-            </button>
+          <div style={{ marginTop: 12 }}>
+            <RodadaSelector rodada={rodada} onChange={setRodada} disabled={loading} />
           </div>
         ) : null}
       </section>

@@ -18,6 +18,7 @@ import type { MeuPalpiteRodadaItem } from "@/app/types/palpite";
 import type { PalpiteLigaJogoItem } from "@/app/types/palpiteLigaJogo";
 
 import { formatDateTimeSP } from "@/app/utils/datetime";
+import { RodadaSelector } from "@/app/components/RodadaSelector";
 
 
 export default function RodadaLigaPage() {
@@ -27,9 +28,6 @@ export default function RodadaLigaPage() {
   const router = useRouter();
 
   
-  const [rodadaInput, setRodadaInput] = useState<number>(rodada);
-
-
   const [liga, setLiga] = useState<Liga | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -131,10 +129,6 @@ export default function RodadaLigaPage() {
     };
   }, [liga, rodada]);
 
-  useEffect(() => {
-  setRodadaInput(rodada);
-  }, [rodada]);
-
 
   async function togglePalpites(jogoId: number) {
     setErr(null);
@@ -176,48 +170,11 @@ export default function RodadaLigaPage() {
         >
           <div>
             <h1 style={{ marginTop: 0, marginBottom: 6, fontWeight: 600 }}>Rodada {rodada}</h1>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                style={secondaryBtnStyle}
-                onClick={() => irParaRodada(rodada - 1)}
-                disabled={loading || rodada <= 1}
-              >
-                ← Anterior
-              </button>
-
-              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span>Número:</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={rodadaInput}
-                  onChange={(e) => setRodadaInput(Math.max(1, Number(e.target.value)))}
-                  style={{ ...inputStyle, width: 110 }}
-                  disabled={loading}
-                />
-              </label>
-
-              <button
-                type="button"
-                style={secondaryBtnStyle}
-                onClick={() => irParaRodada(rodadaInput)}
-                disabled={loading}
-                title="Ir para a rodada informada"
-              >
-                Ir
-              </button>
-
-              <button
-                type="button"
-                style={secondaryBtnStyle}
-                onClick={() => irParaRodada(rodada + 1)}
-                disabled={loading}
-              >
-                Próxima →
-              </button>
-            </div>
+            <RodadaSelector
+              rodada={rodada}
+              onChange={irParaRodada}
+              disabled={loading}
+            />
           </div>
 
           <Link href={`/app/ligas/${ligaId}`} style={{ textDecoration: "none", fontWeight: 600 }}>
