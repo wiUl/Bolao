@@ -2,9 +2,11 @@
 
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { api } from "@/app/api/clients";
@@ -33,30 +35,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Ref para o logout — permite que o interceptor chame sempre a versão atual
+  // sem criar dependência circular no useEffect de inicialização.
+  const logoutRef = useRef<() => void>(() => {});
+
+  const logout = useCallback((): void => {
+    clearToken();
+    setTokenState(null);
+    setUser(null);
+    router.replace("/login");
+  }, [router]);
+
+  // Mantém a ref sempre atualizada
+  useEffect(() => {
+    logoutRef.current = logout;
+  }, [logout]);
+
   /**
-   * 1️⃣ Inicialização do app
-   * - configura interceptors
-   * - carrega token salvo
-   * - se existir token, carrega o usuário
+   * 1️⃣ Inicialização — configura interceptors passando logout via ref
    */
   useEffect(() => {
-    setupInterceptors();
+    setupInterceptors(() => logoutRef.current());
 
     const token = getToken();
     if (token) {
       setTokenState(token);
-      loadUser(); // 🔑 carrega /usuarios/me
-
+      loadUser();
     } else {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
    * 2️⃣ Login
-   * - chama /auth/login
-   * - salva token
-   * - carrega usuário em seguida
    */
   async function login(data: LoginRequest): Promise<void> {
     const form = new URLSearchParams();
@@ -75,20 +87,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(accessToken);
     setTokenState(accessToken);
 
-    await loadUser(); // 🔑 AQUI o usuário é carregado
+    await loadUser();
   }
 
   /**
    * 3️⃣ Carrega dados do usuário autenticado
-   * - endpoint protegido
-   * - depende do token já estar configurado
    */
   async function loadUser() {
     try {
       const res = await api.get<User>("/usuarios/me");
       setUser(res.data);
     } catch {
-      // token inválido ou expirado
+      // token inválido ou expirado — o interceptor já fez clearToken,
+      // mas garantimos a limpeza do estado aqui também
       clearToken();
       setTokenState(null);
       setUser(null);
@@ -103,30 +114,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   /**
-   * 4️⃣ Logout
+   * 4️⃣ Valor exposto pelo contexto
    */
-  function logout(): void {
-    clearToken();
-    setTokenState(null);
-    setUser(null);
+  const value = useMemo<AuthContextValue>(
+    () => ({ isAuthenticated: !!tokenState, user, login, logout, reloadUser }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tokenState, user, logout]
+  );
 
-    router.replace("/login")
-  }
-
-  /**
-   * 5️⃣ Valor exposto pelo contexto
-   */
-  const value = useMemo<AuthContextValue>(() => {
-    return {
-      isAuthenticated: !!tokenState,
-      user,
-      login,
-      logout,
-      reloadUser,
-    };
-  }, [tokenState, user]);
-
-  // Evita renderizar o app antes de saber se está autenticado
   if (loading) return null;
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

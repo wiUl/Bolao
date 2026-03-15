@@ -1,7 +1,7 @@
 import { api } from "@/app/api/clients";
 import { getToken, clearToken } from "@/app/auth/tokenStorage";
 
-export function setupInterceptors(): void {
+export function setupInterceptors(onUnauthorized?: () => void): void {
   api.interceptors.request.use((config) => {
     const token = getToken();
 
@@ -18,6 +18,7 @@ export function setupInterceptors(): void {
     (error) => {
       if (error?.response?.status === 401) {
         clearToken();
+        onUnauthorized?.();
       }
       return Promise.reject(error);
     }
