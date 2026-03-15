@@ -17,7 +17,7 @@ interface RodadaSelectorProps {
  * Seletor de rodada padronizado para o FutBolão.
  *
  * - Input interno usa string para não travar no mobile ao apagar o número.
- * - O valor só é confirmado em blur, Enter ou clique nos botões prev/next.
+ * - O valor só é confirmado em blur, Enter ou clique nos botões prev/next/go.
  * - O slot `actions` permite adicionar botões extras (ex: Salvar/Remover Todos).
  */
 export function RodadaSelector({ rodada, onChange, disabled = false, actions }: RodadaSelectorProps) {
@@ -82,6 +82,16 @@ export function RodadaSelector({ rodada, onChange, disabled = false, actions }: 
             aria-label="Número da rodada"
           />
         </div>
+
+        <button
+          type="button"
+          style={btnStyle(disabled || draft === String(rodada))}
+          onClick={() => confirmar(draft)}
+          disabled={disabled || draft === String(rodada)}
+          aria-label="Ir para a rodada digitada"
+        >
+          Ir
+        </button>
 
         <button
           type="button"
