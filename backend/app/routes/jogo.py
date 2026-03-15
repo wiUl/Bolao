@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -44,6 +43,14 @@ def lista_jogos(
 ):
     return listar_jogos(db, temporada_id=temporada_id, rodada=rodada)
 
+@router.get("/rodada-atual")
+def rodada_atual(
+    temporada_id: int,
+    db: Session = Depends(get_db),
+    usuario_logado=Depends(get_current_user),
+):
+    return {"rodada": buscar_rodada_atual(db, temporada_id)}
+
 @router.get("/{jogo_id}", response_model=JogoResponse)
 def busca_jogo(jogo_id: int, db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
     jogo = buscar_jogo(db, jogo_id)
@@ -75,13 +82,6 @@ def atualiza_resultado(
         raise HTTPException(404, detail="Jogo não encontrado.")
     return atualizar_resultado(db, jogo, body)
 
-@router.get("/rodada-atual")
-def rodada_atual(
-    temporada_id: int,
-    db: Session = Depends(get_db),
-    usuario_logado=Depends(get_current_user),
-):
-    return {"rodada": buscar_rodada_atual(db, temporada_id)}
 
 @router.delete("/{jogo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def exclui_jogo(
@@ -94,5 +94,3 @@ def exclui_jogo(
         raise HTTPException(404, detail="Jogo não encontrado.")
     deletar_jogo(db, jogo)
     return
-
-
