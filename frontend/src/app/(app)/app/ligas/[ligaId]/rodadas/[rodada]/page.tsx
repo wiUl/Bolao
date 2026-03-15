@@ -32,6 +32,16 @@ export default function RodadaLigaPage() {
   const [liga, setLiga] = useState<Liga | null>(null);
   const rodadaAtual = useRodadaAtual(liga?.temporada_id);
 
+  // Redireciona para a rodada atual se entramos pela rodada 1 (padrão)
+  const [redirecionou, setRedirecionou] = useState(false);
+  useEffect(() => {
+    if (rodadaAtual !== null && rodada === 1 && !redirecionou) {
+      setRedirecionou(true);
+      if (rodadaAtual !== 1) irParaRodada(rodadaAtual);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rodadaAtual, rodada, redirecionou]);
+
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 

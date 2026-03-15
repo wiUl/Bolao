@@ -25,6 +25,14 @@ export default function RankingPage() {
   const rodadaAtual = useRodadaAtual(liga?.temporada_id);
   const [rodadaInicializada, setRodadaInicializada] = useState(false);
 
+  // Atualiza para a rodada atual na primeira carga
+  useEffect(() => {
+    if (rodadaAtual !== null && !rodadaInicializada) {
+      setRodada(rodadaAtual);
+      setRodadaInicializada(true);
+    }
+  }, [rodadaAtual, rodadaInicializada]);
+
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
