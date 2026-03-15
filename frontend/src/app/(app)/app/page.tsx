@@ -61,31 +61,31 @@ export default function AppHomePage() {
                 {
                   resultado: "Placar exato",
                   pontos: 5,
-                  exemplo: "Palpite 2×1 · Resultado 2×1",
+                  exemplo: "Palpite 2x1 · Resultado 2x1",
                   destaque: true,
                 },
                 {
                   resultado: "Diferença de gols correta (sem empate)",
                   pontos: 4,
-                  exemplo: "Palpite 3×1 · Resultado 2×0 (diferença +2 em ambos)",
+                  exemplo: "Palpite 3x1 · Resultado 2x0 (diferença +2 em ambos)",
                   destaque: false,
                 },
                 {
                   resultado: "Acertou o vencedor (sem empate)",
                   pontos: 3,
-                  exemplo: "Palpite 2×0 · Resultado 1×0",
+                  exemplo: "Palpite 2x0 · Resultado 1x0",
                   destaque: false,
                 },
                 {
                   resultado: "Acertou o empate",
                   pontos: 3,
-                  exemplo: "Palpite 1×1 · Resultado 0×0",
+                  exemplo: "Palpite 1x1 · Resultado 0x0",
                   destaque: false,
                 },
                 {
                   resultado: "Errou o resultado",
                   pontos: 0,
-                  exemplo: "Palpite 2×0 · Resultado 0×1",
+                  exemplo: "Palpite 2x0 · Resultado 0x1",
                   destaque: false,
                 },
               ].map((row, i) => (
@@ -191,8 +191,8 @@ const trEvenStyle: React.CSSProperties = {
 function badgeStyle(pontos: number): React.CSSProperties {
   const colors: Record<number, { bg: string; color: string; border: string }> = {
     5: { bg: "#e8f5e9", color: "#2e7d32", border: "#b7e3c5" },
-    4: { bg: "#e3f0fb", color: "#1565c0", border: "#aed0f0" },
-    3: { bg: "#fff8e1", color: "#e65100", border: "#ffe082" },
+    4: { bg: "#fff8e1", color: "#e65100", border: "#ffe082" },
+    3: { bg: "#e3f0fb", color: "#1565c0", border: "#aed0f0" },
     0: { bg: "#fce8e8", color: "#b71c1c", border: "#f3c2c2" },
   };
   const c = colors[pontos] ?? colors[0];
