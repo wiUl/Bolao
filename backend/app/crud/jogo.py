@@ -1,6 +1,6 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session, selectinload
 from app.models.jogo import Jogo
 from app.schemas.jogo import JogoCreate, JogoUpdate, JogoResultadoUpdate
