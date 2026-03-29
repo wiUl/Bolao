@@ -133,3 +133,53 @@ def buscar_rodada_atual(db: Session, temporada_id: int) -> int:
     )
  
     return jogo.rodada if jogo is not None else 1
+
+
+def buscar_info_rodadas(db: Session, temporada_id: int) -> dict:
+    """
+    Retorna em uma única passagem pelo banco:
+    - ultima_existente : maior número de rodada que tem ao menos 1 jogo cadastrado
+    - ultima_finalizada: maior rodada onde TODOS os jogos têm status 'finalizado'
+                         (ignora rodadas com jogos adiados/pendentes no meio do campeonato)
+    - rodada_atual     : rodada com jogo de data_hora mais próxima de agora
+ 
+    Queries independentes para que um jogo adiado em uma rodada intermediária
+    não bloqueie o reconhecimento das rodadas posteriores já finalizadas.
+    """
+ 
+    # 1. Maior rodada com ao menos 1 jogo cadastrado
+    ultima_existente: int = (
+        db.query(func.max(Jogo.rodada))
+        .filter(Jogo.temporada_id == temporada_id)
+        .scalar()
+    ) or 0
+ 
+    # 2. Maior rodada em que TODOS os jogos estão finalizados.
+    #    Subquery: rodadas onde total de jogos == total de jogos finalizados.
+    rodadas_completas_sq = (
+        db.query(Jogo.rodada)
+        .filter(Jogo.temporada_id == temporada_id)
+        .group_by(Jogo.rodada)
+        .having(
+            func.count(Jogo.id)
+            == func.sum(case((Jogo.status == "finalizado", 1), else_=0))
+        )
+        .subquery()
+    )
+    ultima_finalizada: int = (
+        db.query(func.max(rodadas_completas_sq.c.rodada)).scalar()
+    ) or 0
+ 
+    # 3. Rodada atual (jogo com data_hora mais próxima de agora)
+    rodada_atual: int = buscar_rodada_atual(db, temporada_id)
+ 
+    # 4. Rodada padrão para o seletor: última totalmente finalizada,
+    #    ou a atual se ainda nenhuma foi finalizada.
+    default_rodada = ultima_finalizada if ultima_finalizada > 0 else max(rodada_atual, 1)
+ 
+    return {
+        "ultima_existente": ultima_existente,
+        "ultima_finalizada": ultima_finalizada,
+        "rodada_atual": rodada_atual,
+        "default_rodada": default_rodada,
+    }

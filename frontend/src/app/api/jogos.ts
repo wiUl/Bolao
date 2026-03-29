@@ -131,3 +131,25 @@ export async function getRodadaAtual(temporadaId: number): Promise<number> {
   });
   return res.data.rodada;
 }
+
+export type InfoRodadas = {
+  ultima_existente: number;
+  ultima_finalizada: number;
+  rodada_atual: number;
+  default_rodada: number;
+};
+
+/**
+ * GET /jogos/info-rodadas?temporada_id=X
+ * Retorna em uma única chamada:
+ *  - ultima_existente : maior rodada com ao menos 1 jogo cadastrado
+ *  - ultima_finalizada: maior rodada onde TODOS os jogos estão finalizados
+ *  - rodada_atual     : rodada com jogo mais próximo de agora
+ *  - default_rodada   : sugestão de rodada para o seletor (última finalizada ou atual)
+ */
+export async function getInfoRodadas(temporadaId: number): Promise<InfoRodadas> {
+  const res = await api.get<InfoRodadas>("/jogos/info-rodadas", {
+    params: { temporada_id: temporadaId },
+  });
+  return res.data;
+}

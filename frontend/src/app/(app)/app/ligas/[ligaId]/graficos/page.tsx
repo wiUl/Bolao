@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { listarMinhasLigas } from "@/app/api/ligas";
 import {getPontuacaoAcumuladaUsuario,getPontuacaoAcumuladaTodos} from "@/app/api/pontuacao";
 import type { SerieLigaResponse } from "@/app/api/pontuacao";
-import { listarJogos } from "@/app/api/jogos";
+import { getInfoRodadas } from "@/app/api/jogos";
 import { useAuth } from "@/app/auth/AuthContext";
 
 import { getRankingGeral } from "@/app/api/ranking";
@@ -126,13 +126,13 @@ export default function GraficosPage() {
       setLoading(true);
 
       try {
-        const info = await calcularInfoRodadasRapido(temporadaId);
+        const info = await getInfoRodadas(temporadaId);
         if (!mounted) return;
 
-        setRodadaMaxExistente(info.ultimaRodadaExistente);
-        setRodadaMaxFinalizada(info.ultimaRodadaFinalizada);
-        setRodadaAteUser(info.defaultRodada);
-        setRodadaAteLiga(info.defaultRodada);
+        setRodadaMaxExistente(info.ultima_existente);
+        setRodadaMaxFinalizada(info.ultima_finalizada);
+        setRodadaAteUser(info.default_rodada);
+        setRodadaAteLiga(info.default_rodada);
       } catch (e: any) {
         if (!mounted) return;
         setErr(extractApiErrorMessage(e));
@@ -662,80 +662,6 @@ const sectionStyle: React.CSSProperties = {
   padding: 16,
   marginTop: 18,
 };
-
-/**
- * Versão mais rápida do cálculo de rodadas:
- * - Faz requisições em paralelo com limite (batch)
- * - Continua parando quando uma rodada não existe
- *
- * OBS: O ideal é trocar isso por 1 endpoint no backend.
- */
-async function calcularInfoRodadasRapido(temporadaId: number) {
-  const LIMITE_MAX = 60; // segurança
-  const CONCURRENCY = 6;
-
-  // helper: busca uma rodada e diz se existe e se está finalizada
-  async function fetchRodada(rodada: number) {
-    const jogos = await listarJogos({ temporada_id: temporadaId, rodada });
-    const existe = Array.isArray(jogos) && jogos.length > 0;
-    const todosFinalizados =
-      existe && jogos.every((j: any) => j.status === "finalizado");
-    return { rodada, existe, todosFinalizados };
-  }
-
-  // roda em batches: [1..6], [7..12], ...
-  let ultimaRodadaExistente = 0;
-  let ultimaRodadaFinalizada = 0;
-
-  for (let start = 1; start <= LIMITE_MAX; start += CONCURRENCY) {
-    const batch = Array.from({ length: CONCURRENCY }, (_, i) => start + i).filter(
-      (r) => r <= LIMITE_MAX
-    );
-
-    const results = await Promise.all(batch.map(fetchRodada));
-
-    // processa em ordem
-    for (const r of results.sort((a, b) => a.rodada - b.rodada)) {
-      if (!r.existe) {
-        // parou: achou a primeira que não existe
-        const defaultRodada =
-          (ultimaRodadaFinalizada > 0 ? ultimaRodadaFinalizada : ultimaRodadaExistente) ||
-          1;
-
-        return {
-          ultimaRodadaExistente,
-          ultimaRodadaFinalizada,
-          defaultRodada,
-        };
-      }
-
-      ultimaRodadaExistente = r.rodada;
-      if (r.todosFinalizados) {
-        ultimaRodadaFinalizada = r.rodada;
-      } else {
-        // achou a primeira rodada existente que não está finalizada
-        const defaultRodada =
-          (ultimaRodadaFinalizada > 0 ? ultimaRodadaFinalizada : ultimaRodadaExistente) ||
-          1;
-
-        return {
-          ultimaRodadaExistente,
-          ultimaRodadaFinalizada,
-          defaultRodada,
-        };
-      }
-    }
-  }
-
-  const defaultRodada =
-    (ultimaRodadaFinalizada > 0 ? ultimaRodadaFinalizada : ultimaRodadaExistente) || 1;
-
-  return {
-    ultimaRodadaExistente,
-    ultimaRodadaFinalizada,
-    defaultRodada,
-  };
-}
 
 function firstName(full: string) {
   const s = (full || "").trim();

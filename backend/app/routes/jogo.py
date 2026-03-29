@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.permissions import require_admin
 from app.schemas.jogo import JogoCreate, JogoUpdate, JogoResultadoUpdate, JogoResponse
-from app.crud.jogo import criar_jogo, listar_jogos, buscar_jogo, atualizar_jogo, atualizar_resultado, deletar_jogo, buscar_rodada_atual
+from app.crud.jogo import criar_jogo, listar_jogos, buscar_jogo, atualizar_jogo, atualizar_resultado, deletar_jogo, buscar_rodada_atual, buscar_info_rodadas
 
 from app.models.temporada import Temporada
 from app.models.time import Time
@@ -50,6 +50,14 @@ def rodada_atual(
     usuario_logado=Depends(get_current_user),
 ):
     return {"rodada": buscar_rodada_atual(db, temporada_id)}
+
+@router.get("/info-rodadas")
+def info_rodadas(
+    temporada_id: int,
+    db: Session = Depends(get_db),
+    usuario_logado=Depends(get_current_user),
+):
+    return buscar_info_rodadas(db, temporada_id)
 
 @router.get("/{jogo_id}", response_model=JogoResponse)
 def busca_jogo(jogo_id: int, db: Session = Depends(get_db), usuario_logado = Depends(get_current_user)):
