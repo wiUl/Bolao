@@ -21,7 +21,8 @@ class JogoResultadoUpdate(BaseModel):
 class TimeResumo(BaseModel):
     id: int
     nome: str
-    sigla: str
+    sigla: str | None = None
+    escudo_url: str | None = None
 
     class Config:
         from_attributes = True

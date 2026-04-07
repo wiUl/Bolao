@@ -1,8 +1,8 @@
 export type Time = {
   id: number;
   nome: string;
-  sigla: string | null;
-  escudo_url: string | null;
+  sigla?: string | null;
+  escudo_url?: string | null;
 };
 
 export type TimeCreate = {
