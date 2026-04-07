@@ -679,7 +679,7 @@ function MobilePlacar(props: {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img
-              src={getEscudoSrc(j.time_casa.sigla)}
+              src={getEscudoSrcByTime(j.time_casa)}
               alt={`Escudo ${j.time_casa.nome}`}
               style={{ width: 28, height: 28, objectFit: "contain" }}
               onError={(e) => {
@@ -705,7 +705,7 @@ function MobilePlacar(props: {
           <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
             <strong>{j.time_fora.sigla}</strong>
             <img
-              src={getEscudoSrc(j.time_fora.sigla)}
+              src={getEscudoSrcByTime(j.time_fora)}
               alt={`Escudo ${j.time_fora.nome}`}
               style={{ width: 28, height: 28, objectFit: "contain" }}
               onError={(e) => {
@@ -770,7 +770,7 @@ function DesktopPlacar(props: {
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <strong style={{ width: 42 }}>{j.time_casa.sigla}</strong>
         <img
-          src={getEscudoSrc(j.time_casa.sigla)}
+          src={getEscudoSrcByTime(j.time_casa)}
           alt={`Escudo ${j.time_casa.nome}`}
           style={{ width: 28, height: 28, objectFit: "contain" }}
           onError={(e) => {
@@ -805,7 +805,7 @@ function DesktopPlacar(props: {
 
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <img
-          src={getEscudoSrc(j.time_fora.sigla)}
+          src={getEscudoSrcByTime(j.time_fora)}
           alt={`Escudo ${j.time_fora.nome}`}
           style={{ width: 28, height: 28, objectFit: "contain" }}
           onError={(e) => {
@@ -842,9 +842,11 @@ function DesktopPlacar(props: {
 
 /* ----------------------------- Utils + styles ----------------------------- */
 
-function getEscudoSrc(sigla: string | null | undefined): string {
-  if (!sigla) return "/escudos/default.png";
-  return `/escudos/${sigla.toUpperCase()}.png`;
+function getEscudoSrcByTime(time: { escudo_url?: string | null; sigla?: string | null }) {
+  // preferir o escudo_url do banco; fallback para pasta local (se você quiser manter)
+  if (time.escudo_url) return time.escudo_url;
+  if (time.sigla) return `/escudos/${time.sigla.toUpperCase()}.png`; // ajuste conforme seu padrão
+  return "/escudos/default.png";
 }
 
 function extractApiErrorMessage(e: any): string {

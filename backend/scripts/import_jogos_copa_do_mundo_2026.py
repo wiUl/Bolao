@@ -54,73 +54,73 @@ if DATABASE_URL.startswith("postgres://"):
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 
-# ─── Tradução: nome em inglês → (nome_ptbr, sigla_fifa) ──────────────────────
+# ─── Tradução: nome em inglês → (nome_ptbr, sigla_fifa, iso2) ─────────────────
 #
 # Inclui os 42 classificados confirmados + os 6 nomes de placeholder para as
 # vagas ainda em disputa nas repescagens (serão pulados na importação dos jogos,
 # mas estão aqui caso você queira criá-los manualmente depois).
 
-TRADUCAO_TIMES: dict[str, tuple[str, str]] = {
+TRADUCAO_TIMES: dict[str, tuple[str, str, str]] = {
     # Grupo A
-    "Mexico":              ("México",                       "MEX"),
-    "South Africa":        ("África do Sul",                "RSA"),
-    "South Korea":         ("Coreia do Sul",                "KOR"),
-    "Czech Republic":      ("República Tcheca",             "CZE"),
+    "Mexico":              ("México",                       "MEX", "mx"),
+    "South Africa":        ("África do Sul",                "RSA", "za"),
+    "South Korea":         ("Coreia do Sul",                "KOR", "kr"),
+    "Czech Republic":      ("República Tcheca",             "CZE", "cz"),
     # Grupo B
-    "Canada":              ("Canadá",                       "CAN"),
-    "Bosnia-Herzegovina":  ("Bósnia e Herzegovina",         "BIH"),
-    "Qatar":               ("Catar",                        "QAT"),
-    "Switzerland":         ("Suíça",                        "SUI"),
+    "Canada":              ("Canadá",                       "CAN", "ca"),
+    "Bosnia-Herzegovina":  ("Bósnia e Herzegovina",         "BIH", "ba"),
+    "Qatar":               ("Catar",                        "QAT", "qa"),
+    "Switzerland":         ("Suíça",                        "SUI", "ch"),
     # Grupo C
-    "Brazil":              ("Brasil",                       "BRA"),
-    "Morocco":             ("Marrocos",                     "MAR"),
-    "Haiti":               ("Haiti",                        "HAI"),
-    "Scotland":            ("Escócia",                      "SCO"),
+    "Brazil":              ("Brasil",                       "BRA", "br"),
+    "Morocco":             ("Marrocos",                     "MAR", "ma"),
+    "Haiti":               ("Haiti",                        "HAI", "ht"),
+    "Scotland":            ("Escócia",                      "SCO", "gb-sct"),
     # Grupo D
-    "USA":                 ("Estados Unidos",               "USA"),
-    "Paraguay":            ("Paraguai",                     "PAR"),
-    "Australia":           ("Austrália",                    "AUS"),
-    "Turkey":              ("Turquia",                      "TUR"),
+    "USA":                 ("Estados Unidos",               "USA", "us"),
+    "Paraguay":            ("Paraguai",                     "PAR", "py"),
+    "Australia":           ("Austrália",                    "AUS", "au"),
+    "Turkey":              ("Turquia",                      "TUR", "tr"),
     # Grupo E
-    "Germany":             ("Alemanha",                     "GER"),
-    "Curaçao":             ("Curaçao",                      "CUW"),
-    "Ivory Coast":         ("Costa do Marfim",              "CIV"),
-    "Ecuador":             ("Equador",                      "ECU"),
+    "Germany":             ("Alemanha",                     "GER", "de"),
+    "Curaçao":             ("Curaçao",                      "CUW", "cw"),
+    "Ivory Coast":         ("Costa do Marfim",              "CIV", "ci"),
+    "Ecuador":             ("Equador",                      "ECU", "ec"),
     # Grupo F
-    "Netherlands":         ("Holanda",                      "NED"),
-    "Japan":               ("Japão",                        "JPN"),
-    "Sweden":              ("Suécia",                       "SWE"),
-    "Tunisia":             ("Tunísia",                      "TUN"),
+    "Netherlands":         ("Holanda",                      "NED", "nl"),
+    "Japan":               ("Japão",                        "JPN", "jp"),
+    "Sweden":              ("Suécia",                       "SWE", "se"),
+    "Tunisia":             ("Tunísia",                      "TUN", "tn"),
     # Grupo G
-    "Belgium":             ("Bélgica",                      "BEL"),
-    "Egypt":               ("Egito",                        "EGY"),
-    "Iran":                ("Irã",                          "IRN"),
-    "New Zealand":         ("Nova Zelândia",                "NZL"),
+    "Belgium":             ("Bélgica",                      "BEL", "be"),
+    "Egypt":               ("Egito",                        "EGY", "eg"),
+    "Iran":                ("Irã",                          "IRN", "ir"),
+    "New Zealand":         ("Nova Zelândia",                "NZL", "nz"),
     # Grupo H
-    "Spain":               ("Espanha",                      "ESP"),
-    "Cape Verde":          ("Cabo Verde",                   "CPV"),
-    "Saudi Arabia":        ("Arábia Saudita",               "KSA"),
-    "Uruguay":             ("Uruguai",                      "URU"),
+    "Spain":               ("Espanha",                      "ESP", "es"),
+    "Cape Verde":          ("Cabo Verde",                   "CPV", "cv"),
+    "Saudi Arabia":        ("Arábia Saudita",               "KSA", "sa"),
+    "Uruguay":             ("Uruguai",                      "URU", "uy"),
     # Grupo I
-    "France":              ("França",                       "FRA"),
-    "Senegal":             ("Senegal",                      "SEN"),
-    "Norway":              ("Noruega",                      "NOR"),
-    "Iraq":                ("Iraque",                       "IRQ"),
+    "France":              ("França",                       "FRA", "fr"),
+    "Senegal":             ("Senegal",                      "SEN", "sn"),
+    "Norway":              ("Noruega",                      "NOR", "no"),
+    "Iraq":                ("Iraque",                       "IRQ", "iq"),
     # Grupo J
-    "Argentina":           ("Argentina",                    "ARG"),
-    "Algeria":             ("Argélia",                      "ALG"),
-    "Austria":             ("Áustria",                      "AUT"),
-    "Jordan":              ("Jordânia",                     "JOR"),
+    "Argentina":           ("Argentina",                    "ARG", "ar"),
+    "Algeria":             ("Argélia",                      "ALG", "dz"),
+    "Austria":             ("Áustria",                      "AUT", "at"),
+    "Jordan":              ("Jordânia",                     "JOR", "jo"),
     # Grupo K
-    "Portugal":            ("Portugal",                     "POR"),
-    "Uzbekistan":          ("Uzbequistão",                  "UZB"),
-    "Colombia":            ("Colômbia",                     "COL"),
-    "DR Congo":            ("Rep. Democrática do Congo",    "COD"),
+    "Portugal":            ("Portugal",                     "POR", "pt"),
+    "Uzbekistan":          ("Uzbequistão",                  "UZB", "uz"),
+    "Colombia":            ("Colômbia",                     "COL", "co"),
+    "DR Congo":            ("Rep. Democrática do Congo",    "COD", "cd"),
     # Grupo L
-    "England":             ("Inglaterra",                   "ENG"),
-    "Croatia":             ("Croácia",                      "CRO"),
-    "Ghana":               ("Gana",                         "GHA"),
-    "Panama":              ("Panamá",                       "PAN"),
+    "England":             ("Inglaterra",                   "ENG", "gb-eng"),
+    "Croatia":             ("Croácia",                      "CRO", "hr"),
+    "Ghana":               ("Gana",                         "GHA", "gh"),
+    "Panama":              ("Panamá",                       "PAN", "pa"),
 }
 
 # Nomes alternativos que o JSON pode usar para o mesmo time
@@ -243,16 +243,35 @@ def resolver_time(nome_original: str) -> str | None:
         return None
     return nome
 
+
+def montar_escudo_url(iso2: str) -> str:
+    """
+    Monta a URL da bandeira no FlagCDN.
+
+    Observação: para Inglaterra e Escócia, o FlagCDN usa códigos próprios
+    (gb-eng e gb-sct), então o campo `iso2` aqui representa o código aceito
+    pela CDN, não necessariamente um ISO 3166-1 alpha-2 puro.
+    """
+    return f"https://flagcdn.com/w80/{iso2.lower()}.png"
+
 def obter_ou_criar_time(session, nome_en: str) -> Time | None:
-    nome_ptbr, sigla = TRADUCAO_TIMES[nome_en]
+    nome_ptbr, sigla, iso2 = TRADUCAO_TIMES[nome_en]
+    escudo_url = montar_escudo_url(iso2)
+
     time = session.query(Time).filter(Time.sigla == sigla).first()
     if not time:
         time = session.query(Time).filter(Time.nome == nome_ptbr).first()
+
     if not time:
-        time = Time(nome=nome_ptbr, sigla=sigla)
+        time = Time(nome=nome_ptbr, sigla=sigla, escudo_url=escudo_url)
         session.add(time)
         session.flush()
-        print(f"    [+] Time criado: {nome_ptbr} ({sigla})")
+        print(f"    [+] Time criado: {nome_ptbr} ({sigla}) | escudo_url={escudo_url}")
+    elif getattr(time, "escudo_url", None) != escudo_url:
+        time.escudo_url = escudo_url
+        session.flush()
+        print(f"    [~] escudo_url atualizado: {nome_ptbr} ({sigla}) | {escudo_url}")
+
     return time
 
 # ─── Script principal ─────────────────────────────────────────────────────────
