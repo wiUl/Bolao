@@ -68,7 +68,7 @@ TRADUCAO_TIMES: dict[str, tuple[str, str, str]] = {
     "Czech Republic":      ("República Tcheca",             "CZE", "cz"),
     # Grupo B
     "Canada":              ("Canadá",                       "CAN", "ca"),
-    "Bosnia-Herzegovina":  ("Bósnia e Herzegovina",         "BIH", "ba"),
+    "Bosnia-Herzegovina":  ("Bosnia e Herzegovina",         "BIH", "ba"),
     "Qatar":               ("Catar",                        "QAT", "qa"),
     "Switzerland":         ("Suíça",                        "SUI", "ch"),
     # Grupo C
@@ -128,7 +128,7 @@ ALIASES: dict[str, str] = {
     # O JSON da openfootball usa esses nomes; mapeamos para a chave padrão acima
     "Côte d'Ivoire":                    "Ivory Coast",
     "Curacao":                          "Curaçao",
-    "Bosnia and Herzegovina":           "Bosnia-Herzegovina",
+    "Bosnia & Herzegovina":           "Bosnia-Herzegovina",
     "Czech Republic":                   "Czech Republic",
     # Placeholders das repescagens (serão resolvidos quando os times forem definidos)
     "UEFA Path A winner":               "__UEFA_A__",
