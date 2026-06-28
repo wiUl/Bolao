@@ -1,34 +1,30 @@
 """
-Script de importação da Copa do Mundo 2026 — fase de grupos.
+Script de importação da Copa do Mundo 2026 — fase de grupos + mata-mata.
 
-Fonte dos dados: https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json
-(domínio público, sem necessidade de API key)
+Fonte: https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json
+(domínio público, sem API key)
 
-O que o script faz:
-  1. Baixa o JSON oficial da openfootball
-  2. Cria a Competição "Copa do Mundo" e a Temporada 2026 (se não existirem)
-  3. Cria as 48 seleções como Times (se não existirem), com nome em pt-BR e sigla FIFA
-  4. Importa os 72 jogos da fase de grupos com:
-     - Rodada 1, 2 ou 3 (por rodada dentro do grupo, não pelo matchday global)
-     - data_hora convertida para UTC (os fusos do JSON variam por sede)
-     - Pula jogos cujos times ainda não foram definidos (repescagens pendentes)
+Rodadas:
+  1-3  → Fase de grupos (rodada dentro do grupo)
+  4    → 16 avos de final
+  5    → Oitavas de final
+  6    → Quartas de final
+  7    → Semifinais
+  8    → 3º lugar + Final
 
 Uso:
   cd backend
   python scripts/import_copa_mundo_2026.py
-
-  # Ou apontando para outro banco:
-  DATABASE_URL=postgresql://user:pass@host/db python scripts/import_copa_mundo_2026.py
 """
 
 import json
 import os
+import re
 import sys
 import urllib.request
-from datetime import datetime, timezone, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 
-# Adiciona o diretório pai ao path para importar os modelos
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dotenv import load_dotenv
@@ -38,264 +34,212 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.models.competicao import Competicao
+from app.models.jogo import Jogo
 from app.models.temporada import Temporada
 from app.models.time import Time
-from app.models.jogo import Jogo
-from app.database import Base
-
-# ─── Configuração do banco ────────────────────────────────────────────────────
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./bolao.db")
-
-# SQLAlchemy não aceita "postgres://" (somente "postgresql://")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 
-# ─── Tradução: nome em inglês → (nome_ptbr, sigla_fifa, iso2) ─────────────────
-#
-# Inclui os 42 classificados confirmados + os 6 nomes de placeholder para as
-# vagas ainda em disputa nas repescagens (serão pulados na importação dos jogos,
-# mas estão aqui caso você queira criá-los manualmente depois).
+# ── Tradução: nome EN → (nome pt-BR, sigla FIFA, código flagcdn) ──────────────
 
 TRADUCAO_TIMES: dict[str, tuple[str, str, str]] = {
-    # Grupo A
-    "Mexico":              ("México",                       "MEX", "mx"),
-    "South Africa":        ("África do Sul",                "RSA", "za"),
-    "South Korea":         ("Coreia do Sul",                "KOR", "kr"),
-    "Czech Republic":      ("República Tcheca",             "CZE", "cz"),
-    # Grupo B
-    "Canada":              ("Canadá",                       "CAN", "ca"),
-    "Bosnia-Herzegovina":  ("Bosnia e Herzegovina",         "BIH", "ba"),
-    "Qatar":               ("Catar",                        "QAT", "qa"),
-    "Switzerland":         ("Suíça",                        "SUI", "ch"),
-    # Grupo C
-    "Brazil":              ("Brasil",                       "BRA", "br"),
-    "Morocco":             ("Marrocos",                     "MAR", "ma"),
-    "Haiti":               ("Haiti",                        "HAI", "ht"),
-    "Scotland":            ("Escócia",                      "SCO", "gb-sct"),
-    # Grupo D
-    "USA":                 ("Estados Unidos",               "USA", "us"),
-    "Paraguay":            ("Paraguai",                     "PAR", "py"),
-    "Australia":           ("Austrália",                    "AUS", "au"),
-    "Turkey":              ("Turquia",                      "TUR", "tr"),
-    # Grupo E
-    "Germany":             ("Alemanha",                     "GER", "de"),
-    "Curaçao":             ("Curaçao",                      "CUW", "cw"),
-    "Ivory Coast":         ("Costa do Marfim",              "CIV", "ci"),
-    "Ecuador":             ("Equador",                      "ECU", "ec"),
-    # Grupo F
-    "Netherlands":         ("Holanda",                      "NED", "nl"),
-    "Japan":               ("Japão",                        "JPN", "jp"),
-    "Sweden":              ("Suécia",                       "SWE", "se"),
-    "Tunisia":             ("Tunísia",                      "TUN", "tn"),
-    # Grupo G
-    "Belgium":             ("Bélgica",                      "BEL", "be"),
-    "Egypt":               ("Egito",                        "EGY", "eg"),
-    "Iran":                ("Irã",                          "IRN", "ir"),
-    "New Zealand":         ("Nova Zelândia",                "NZL", "nz"),
-    # Grupo H
-    "Spain":               ("Espanha",                      "ESP", "es"),
-    "Cape Verde":          ("Cabo Verde",                   "CPV", "cv"),
-    "Saudi Arabia":        ("Arábia Saudita",               "KSA", "sa"),
-    "Uruguay":             ("Uruguai",                      "URU", "uy"),
-    # Grupo I
-    "France":              ("França",                       "FRA", "fr"),
-    "Senegal":             ("Senegal",                      "SEN", "sn"),
-    "Norway":              ("Noruega",                      "NOR", "no"),
-    "Iraq":                ("Iraque",                       "IRQ", "iq"),
-    # Grupo J
-    "Argentina":           ("Argentina",                    "ARG", "ar"),
-    "Algeria":             ("Argélia",                      "ALG", "dz"),
-    "Austria":             ("Áustria",                      "AUT", "at"),
-    "Jordan":              ("Jordânia",                     "JOR", "jo"),
-    # Grupo K
-    "Portugal":            ("Portugal",                     "POR", "pt"),
-    "Uzbekistan":          ("Uzbequistão",                  "UZB", "uz"),
-    "Colombia":            ("Colômbia",                     "COL", "co"),
-    "DR Congo":            ("Rep. Democrática do Congo",    "COD", "cd"),
-    # Grupo L
-    "England":             ("Inglaterra",                   "ENG", "gb-eng"),
-    "Croatia":             ("Croácia",                      "CRO", "hr"),
-    "Ghana":               ("Gana",                         "GHA", "gh"),
-    "Panama":              ("Panamá",                       "PAN", "pa"),
+    "Mexico":             ("México",                    "MEX", "mx"),
+    "South Africa":       ("África do Sul",             "RSA", "za"),
+    "South Korea":        ("Coreia do Sul",              "KOR", "kr"),
+    "Czech Republic":     ("República Tcheca",           "CZE", "cz"),
+    "Canada":             ("Canadá",                    "CAN", "ca"),
+    "Bosnia-Herzegovina": ("Bósnia e Herzegovina",      "BIH", "ba"),
+    "Qatar":              ("Catar",                     "QAT", "qa"),
+    "Switzerland":        ("Suíça",                     "SUI", "ch"),
+    "Brazil":             ("Brasil",                    "BRA", "br"),
+    "Morocco":            ("Marrocos",                  "MAR", "ma"),
+    "Haiti":              ("Haiti",                     "HAI", "ht"),
+    "Scotland":           ("Escócia",                   "SCO", "gb-sct"),
+    "USA":                ("Estados Unidos",            "USA", "us"),
+    "Paraguay":           ("Paraguai",                  "PAR", "py"),
+    "Australia":          ("Austrália",                 "AUS", "au"),
+    "Turkey":             ("Turquia",                   "TUR", "tr"),
+    "Germany":            ("Alemanha",                  "GER", "de"),
+    "Curaçao":            ("Curaçao",                   "CUW", "cw"),
+    "Ivory Coast":        ("Costa do Marfim",           "CIV", "ci"),
+    "Ecuador":            ("Equador",                   "ECU", "ec"),
+    "Netherlands":        ("Holanda",                   "NED", "nl"),
+    "Japan":              ("Japão",                     "JPN", "jp"),
+    "Sweden":             ("Suécia",                    "SWE", "se"),
+    "Tunisia":            ("Tunísia",                   "TUN", "tn"),
+    "Belgium":            ("Bélgica",                   "BEL", "be"),
+    "Egypt":              ("Egito",                     "EGY", "eg"),
+    "Iran":               ("Irã",                       "IRN", "ir"),
+    "New Zealand":        ("Nova Zelândia",             "NZL", "nz"),
+    "Spain":              ("Espanha",                   "ESP", "es"),
+    "Cape Verde":         ("Cabo Verde",                "CPV", "cv"),
+    "Saudi Arabia":       ("Arábia Saudita",            "KSA", "sa"),
+    "Uruguay":            ("Uruguai",                   "URU", "uy"),
+    "France":             ("França",                    "FRA", "fr"),
+    "Senegal":            ("Senegal",                   "SEN", "sn"),
+    "Norway":             ("Noruega",                   "NOR", "no"),
+    "Iraq":               ("Iraque",                    "IRQ", "iq"),
+    "Argentina":          ("Argentina",                 "ARG", "ar"),
+    "Algeria":            ("Argélia",                   "ALG", "dz"),
+    "Austria":            ("Áustria",                   "AUT", "at"),
+    "Jordan":             ("Jordânia",                  "JOR", "jo"),
+    "Portugal":           ("Portugal",                  "POR", "pt"),
+    "Uzbekistan":         ("Uzbequistão",               "UZB", "uz"),
+    "Colombia":           ("Colômbia",                  "COL", "co"),
+    "DR Congo":           ("Rep. Democrática do Congo", "COD", "cd"),
+    "England":            ("Inglaterra",                "ENG", "gb-eng"),
+    "Croatia":            ("Croácia",                   "CRO", "hr"),
+    "Ghana":              ("Gana",                      "GHA", "gh"),
+    "Panama":             ("Panamá",                    "PAN", "pa"),
 }
 
-# Nomes alternativos que o JSON pode usar para o mesmo time
 ALIASES: dict[str, str] = {
-    # O JSON da openfootball usa esses nomes; mapeamos para a chave padrão acima
-    "Côte d'Ivoire":                    "Ivory Coast",
-    "Curacao":                          "Curaçao",
-    "Bosnia & Herzegovina":           "Bosnia-Herzegovina",
-    "Czech Republic":                   "Czech Republic",
-    # Placeholders das repescagens (serão resolvidos quando os times forem definidos)
-    "UEFA Path A winner":               "__UEFA_A__",
-    "UEFA Path B winner":               "__UEFA_B__",
-    "UEFA Path C winner":               "__UEFA_C__",
-    "UEFA Path D winner":               "__UEFA_D__",
-    "IC Path 1 winner":                 "__IC_1__",
-    "IC Path 2 winner":                 "__IC_2__",
+    "Côte d'Ivoire":          "Ivory Coast",
+    "Curacao":                "Curaçao",
+    "Bosnia & Herzegovina":   "Bosnia-Herzegovina",
+    "Bosnia and Herzegovina": "Bosnia-Herzegovina",
+    "UEFA Path A winner":     "__UEFA_A__",
+    "UEFA Path B winner":     "__UEFA_B__",
+    "UEFA Path C winner":     "__UEFA_C__",
+    "UEFA Path D winner":     "__UEFA_D__",
+    "IC Path 1 winner":       "__IC_1__",
+    "IC Path 2 winner":       "__IC_2__",
 }
 
-# Resolução dos placeholders (atualize quando as repescagens forem definidas)
-# Com base nos resultados já conhecidos:
 PLACEHOLDER_RESOLVIDO: dict[str, str] = {
-    "__UEFA_A__": "Bosnia-Herzegovina",   # Grupo B
-    "__UEFA_B__": "Sweden",               # Grupo F
-    "__UEFA_C__": "Turkey",               # Grupo D
-    "__UEFA_D__": "Czech Republic",       # Grupo A
-    "__IC_1__":   "DR Congo",             # Grupo K
-    "__IC_2__":   "Iraq",                 # Grupo I
+    "__UEFA_A__": "Bosnia-Herzegovina",
+    "__UEFA_B__": "Sweden",
+    "__UEFA_C__": "Turkey",
+    "__UEFA_D__": "Czech Republic",
+    "__IC_1__":   "DR Congo",
+    "__IC_2__":   "Iraq",
 }
-
-# ─── Mapeamento de fuso horário do JSON ──────────────────────────────────────
-# O JSON usa "HH:MM UTC±N" — extraímos o offset para converter para UTC
-
-def parse_data_hora_utc(date_str: str, time_str: str) -> datetime:
-    """Converte "2026-06-11" + "13:00 UTC-6" para datetime UTC."""
-    # time_str pode ser "13:00 UTC-6" ou "13:00 UTC+3" ou "13:00 UTC-4"
-    partes = time_str.strip().split()
-    hora = partes[0]                  # "13:00"
-    tz_str = partes[1] if len(partes) > 1 else "UTC+0"  # "UTC-6"
-
-    # Extrai o offset numérico
-    tz_str = tz_str.replace("UTC", "")
-    if tz_str == "" or tz_str == "+0" or tz_str == "0":
-        offset_h = 0
-    elif tz_str.startswith("+"):
-        offset_h = int(tz_str[1:])
-    else:
-        offset_h = int(tz_str)        # já inclui o sinal negativo
-
-    h, m = map(int, hora.split(":"))
-    dt_local = datetime.strptime(f"{date_str} {hora}", "%Y-%m-%d %H:%M")
-    offset = timedelta(hours=offset_h)
-    # local = utc + offset  →  utc = local - offset
-    dt_utc = (dt_local - offset).replace(tzinfo=timezone.utc)
-    return dt_utc
-
-# ─── Lógica de rodada ─────────────────────────────────────────────────────────
-#
-# A Copa tem 17 "Matchdays" globais, mas cada grupo joga em apenas 3 deles.
-# Para o bolão, queremos:
-#   Rodada 1 = 1ª rodada de cada grupo  (todos os 24 jogos da 1ª rodada)
-#   Rodada 2 = 2ª rodada de cada grupo  (24 jogos)
-#   Rodada 3 = 3ª rodada de cada grupo  (24 jogos, simultâneos por grupo)
-#   Rodada 4 = 16 avos de final
-#   Rodada 5 = Oitavas
-#   Rodada 6 = Quartas
-#   Rodada 7 = Semifinais
-#   Rodada 8 = 3º lugar + Final
-#
-# Estratégia: para cada grupo, ordena os jogos por data e atribui
-# rodada 1 aos 2 primeiros, rodada 2 aos 2 do meio, rodada 3 aos 2 últimos.
 
 FASE_PARA_RODADA: dict[str, int] = {
-    "Round of 32":    4,
-    "Round of 16":    5,
-    "Quarter-final":  6,
-    "Semi-final":     7,
-    "Third-place":    8,
-    "Final":          8,
+    "Round of 32":          4,
+    "Round of 16":          5,
+    "Quarter-final":        6,
+    "Semi-final":           7,
+    "Match for third place": 8,
+    "Third-place":          8,
+    "Final":                8,
 }
 
-def calcular_rodada_grupo(matches_por_grupo: dict) -> dict[tuple, int]:
-    """
-    Retorna um dict: (date, team1, team2) -> rodada (1, 2 ou 3)
-    para todos os jogos da fase de grupos.
-    """
-    resultado = {}
-    for grupo, jogos in matches_por_grupo.items():
-        # Ordena por data para determinar a ordem dentro do grupo
-        jogos_ordenados = sorted(jogos, key=lambda j: j["date"])
-        for idx, jogo in enumerate(jogos_ordenados):
-            rodada = (idx // 2) + 1   # 0,1 → 1 | 2,3 → 2 | 4,5 → 3
-            chave = (jogo["date"], jogo["team1_orig"], jogo["team2_orig"])
-            resultado[chave] = rodada
-    return resultado
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-# ─── Download do JSON ─────────────────────────────────────────────────────────
+def parse_data_hora_utc(date_str: str, time_str: str) -> datetime:
+    partes = time_str.strip().split()
+    hora = partes[0]
+    tz_str = partes[1].replace("UTC", "") if len(partes) > 1 else "+0"
+    offset_h = 0 if tz_str in ("", "+0", "0") else int(tz_str)
+    dt_local = datetime.strptime(f"{date_str} {hora}", "%Y-%m-%d %H:%M")
+    return (dt_local - timedelta(hours=offset_h)).replace(tzinfo=timezone.utc)
 
-URL_JSON = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json"
-
-def baixar_json() -> dict:
-    print(f"Baixando dados de {URL_JSON} ...")
-    req = urllib.request.Request(URL_JSON, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        dados = json.loads(resp.read().decode("utf-8"))
-    print(f"  {len(dados['matches'])} partidas encontradas.")
-    return dados
-
-# ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def resolver_time(nome_original: str) -> str | None:
-    """
-    Resolve o nome do time (com aliases e placeholders) para a chave
-    em TRADUCAO_TIMES. Retorna None se for um placeholder não resolvido.
-    """
+    """Resolve nome EN (com aliases/placeholders) para chave em TRADUCAO_TIMES."""
     nome = ALIASES.get(nome_original, nome_original)
     nome = PLACEHOLDER_RESOLVIDO.get(nome, nome)
     if nome.startswith("__"):
-        return None   # placeholder ainda não resolvido
-    if nome not in TRADUCAO_TIMES:
         return None
-    return nome
+    return nome if nome in TRADUCAO_TIMES else None
 
 
-def montar_escudo_url(iso2: str) -> str:
+def nome_placeholder(codigo: str) -> tuple[str, str]:
     """
-    Monta a URL da bandeira no FlagCDN.
-
-    Observação: para Inglaterra e Escócia, o FlagCDN usa códigos próprios
-    (gb-eng e gb-sct), então o campo `iso2` aqui representa o código aceito
-    pela CDN, não necessariamente um ISO 3166-1 alpha-2 puro.
+    Converte código de placeholder do mata-mata em (nome pt-BR, sigla).
+    Ex: "W74" → ("Vencedor Jogo 74", "W74")
+        "L101" → ("Perdedor Jogo 101", "L101")
     """
-    return f"https://flagcdn.com/w80/{iso2.lower()}.png"
+    m = re.match(r"^([WL])(\d+)$", codigo)
+    if m:
+        tipo = "Vencedor" if m.group(1) == "W" else "Perdedor"
+        return (f"{tipo} Jogo {m.group(2)}", codigo)
+    return (f"A definir ({codigo})", codigo)
 
-def obter_ou_criar_time(session, nome_en: str) -> Time | None:
-    nome_ptbr, sigla, iso2 = TRADUCAO_TIMES[nome_en]
-    escudo_url = montar_escudo_url(iso2)
 
-    time = session.query(Time).filter(Time.sigla == sigla).first()
+def obter_ou_criar_time_placeholder(session, codigo: str) -> Time:
+    """Cria ou recupera um time placeholder para jogos do mata-mata."""
+    time = session.query(Time).filter(Time.sigla == codigo).first()
     if not time:
-        time = session.query(Time).filter(Time.nome == nome_ptbr).first()
+        nome, sigla = nome_placeholder(codigo)
+        time = Time(nome=nome, sigla=sigla, escudo_url=None)
+        session.add(time)
+        session.flush()
+        print(f"    [+] Placeholder criado: {nome} ({sigla})")
+    return time
 
+
+def obter_ou_criar_time(session, nome_en: str) -> Time:
+    nome_ptbr, sigla, iso2 = TRADUCAO_TIMES[nome_en]
+    escudo_url = f"https://flagcdn.com/w80/{iso2.lower()}.png"
+
+    time = (
+        session.query(Time).filter(Time.sigla == sigla).first()
+        or session.query(Time).filter(Time.nome == nome_ptbr).first()
+    )
     if not time:
         time = Time(nome=nome_ptbr, sigla=sigla, escudo_url=escudo_url)
         session.add(time)
         session.flush()
-        print(f"    [+] Time criado: {nome_ptbr} ({sigla}) | escudo_url={escudo_url}")
+        print(f"    [+] Time criado: {nome_ptbr} ({sigla})")
     elif getattr(time, "escudo_url", None) != escudo_url:
         time.escudo_url = escudo_url
         session.flush()
-        print(f"    [~] escudo_url atualizado: {nome_ptbr} ({sigla}) | {escudo_url}")
-
+        print(f"    [~] escudo_url atualizado: {nome_ptbr} ({sigla})")
     return time
 
-# ─── Script principal ─────────────────────────────────────────────────────────
+
+def obter_ou_criar_time_por_nome_json(session, nome_json: str) -> Time | None:
+    """
+    Resolve qualquer nome que venha do JSON:
+    - Times reais → TRADUCAO_TIMES via ALIASES/PLACEHOLDER_RESOLVIDO
+    - Placeholders do mata-mata (W74, L101) → times placeholder
+    - Nomes desconhecidos → None (jogo pulado)
+    """
+    # Tenta resolver como time real primeiro
+    nome_en = resolver_time(nome_json)
+    if nome_en:
+        return obter_ou_criar_time(session, nome_en)
+
+    # Placeholder do mata-mata: W{N} ou L{N}
+    if re.match(r"^[WL]\d+$", nome_json):
+        return obter_ou_criar_time_placeholder(session, nome_json)
+
+    return None
+
+
+def calcular_rodada_grupo(matches_por_grupo: dict) -> dict[tuple, int]:
+    resultado = {}
+    for grupo, jogos in matches_por_grupo.items():
+        for idx, jogo in enumerate(sorted(jogos, key=lambda j: j["date"])):
+            rodada = (idx // 2) + 1
+            resultado[(jogo["date"], jogo["team1_orig"], jogo["team2_orig"])] = rodada
+    return resultado
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+URL_JSON = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json"
+
 
 def main():
     session = Session()
-
     try:
         # 1. Competição e temporada
         print("\n=== Competição e temporada ===")
-        competicao = session.query(Competicao).filter(
-            Competicao.nome == "Copa do Mundo"
-        ).first()
+        competicao = session.query(Competicao).filter(Competicao.nome == "Copa do Mundo").first()
         if not competicao:
-            competicao = Competicao(
-                nome="Copa do Mundo",
-                pais="Internacional",
-                tipo="selecoes",
-            )
+            competicao = Competicao(nome="Copa do Mundo", pais="Internacional", tipo="selecoes")
             session.add(competicao)
             session.flush()
-            print(f"  [+] Competição criada: {competicao.nome}")
+            print(f"  [+] Criada: {competicao.nome}")
         else:
-            print(f"  [=] Competição existente: {competicao.nome}")
+            print(f"  [=] Existente: {competicao.nome}")
 
         temporada = session.query(Temporada).filter(
             Temporada.competicao_id == competicao.id,
@@ -311,105 +255,115 @@ def main():
             )
             session.add(temporada)
             session.flush()
-            print(f"  [+] Temporada criada: 2026 (id={temporada.id})")
+            print(f"  [+] Temporada 2026 criada (id={temporada.id})")
         else:
-            print(f"  [=] Temporada existente: 2026 (id={temporada.id})")
+            print(f"  [=] Temporada 2026 existente (id={temporada.id})")
 
-        # 2. Baixa e processa o JSON
-        dados = baixar_json()
+        # 2. Baixar JSON
+        print(f"\nBaixando {URL_JSON} ...")
+        req = urllib.request.Request(URL_JSON, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            dados = json.loads(resp.read().decode("utf-8"))
+        print(f"  {len(dados['matches'])} partidas encontradas.")
 
-        # 3. Separar jogos por grupo e calcular rodadas
+        # 3. Separar fase de grupos e mata-mata
         matches_por_grupo: dict[str, list] = defaultdict(list)
-        fases_especiais = []
+        fases_eliminatorias: list = []
 
         for m in dados["matches"]:
-            round_name = m["round"]
-            group = m.get("group", "")
-
-            if group:
-                # Fase de grupos
-                t1_orig = m["team1"]
-                t2_orig = m["team2"]
-                matches_por_grupo[group].append({
+            if m.get("group"):
+                matches_por_grupo[m["group"]].append({
                     "date":       m["date"],
                     "time_str":   m.get("time", "12:00 UTC+0"),
-                    "team1_orig": t1_orig,
-                    "team2_orig": t2_orig,
-                    "group":      group,
-                    "ground":     m.get("ground", ""),
+                    "team1_orig": m["team1"],
+                    "team2_orig": m["team2"],
+                    "group":      m["group"],
                 })
             else:
-                fases_especiais.append(m)
+                fases_eliminatorias.append(m)
 
         mapa_rodadas = calcular_rodada_grupo(matches_por_grupo)
 
-        # 4. Criar times (apenas os confirmados)
+        # 4. Criar todas as seleções confirmadas
         print("\n=== Criando seleções ===")
         for nome_en in TRADUCAO_TIMES:
             obter_ou_criar_time(session, nome_en)
         session.flush()
 
-        # 5. Importar jogos da fase de grupos
-        print("\n=== Importando jogos da fase de grupos ===")
-        criados = 0
-        pulados_placeholder = 0
-        pulados_existentes = 0
+        criados = pulados_placeholder = pulados_existentes = 0
 
+        # 5. Fase de grupos
+        print("\n=== Fase de grupos ===")
         for grupo, jogos in sorted(matches_por_grupo.items()):
-            for jogo_data in jogos:
-                t1_orig = jogo_data["team1_orig"]
-                t2_orig = jogo_data["team2_orig"]
+            for jd in jogos:
+                t1_en = resolver_time(jd["team1_orig"])
+                t2_en = resolver_time(jd["team2_orig"])
 
-                # Resolve nomes
-                t1_en = resolver_time(t1_orig)
-                t2_en = resolver_time(t2_orig)
-
-                if t1_en is None or t2_en is None:
-                    print(f"  [~] Pulando (placeholder): {t1_orig} x {t2_orig} ({grupo})")
+                if not t1_en or not t2_en:
+                    print(f"  [~] Pulando placeholder: {jd['team1_orig']} x {jd['team2_orig']} ({grupo})")
                     pulados_placeholder += 1
                     continue
 
-                time_casa = obter_ou_criar_time(session, t1_en)
-                time_fora = obter_ou_criar_time(session, t2_en)
+                tc = obter_ou_criar_time(session, t1_en)
+                tf = obter_ou_criar_time(session, t2_en)
+                rodada = mapa_rodadas[(jd["date"], jd["team1_orig"], jd["team2_orig"])]
+                data_hora = parse_data_hora_utc(jd["date"], jd["time_str"])
 
-                chave = (jogo_data["date"], t1_orig, t2_orig)
-                rodada = mapa_rodadas[chave]
-
-                data_hora = parse_data_hora_utc(jogo_data["date"], jogo_data["time_str"])
-
-                # Verifica se já existe
-                existente = session.query(Jogo).filter(
+                if session.query(Jogo).filter(
                     Jogo.temporada_id == temporada.id,
-                    Jogo.time_casa_id == time_casa.id,
-                    Jogo.time_fora_id == time_fora.id,
-                ).first()
-
-                if existente:
+                    Jogo.time_casa_id == tc.id,
+                    Jogo.time_fora_id == tf.id,
+                ).first():
                     pulados_existentes += 1
                     continue
 
-                jogo = Jogo(
+                session.add(Jogo(
                     temporada_id=temporada.id,
                     rodada=rodada,
-                    time_casa_id=time_casa.id,
-                    time_fora_id=time_fora.id,
+                    time_casa_id=tc.id,
+                    time_fora_id=tf.id,
                     data_hora=data_hora,
                     status="agendado",
-                )
-                session.add(jogo)
+                ))
                 criados += 1
+                print(f"  [+] Rodada {rodada} | {grupo} | {TRADUCAO_TIMES[t1_en][0]} x {TRADUCAO_TIMES[t2_en][0]} | {data_hora.strftime('%d/%m %H:%M')} UTC")
 
-                nome_casa = TRADUCAO_TIMES[t1_en][0]
-                nome_fora = TRADUCAO_TIMES[t2_en][0]
-                print(f"  [+] Rodada {rodada} | {grupo} | "
-                      f"{nome_casa} x {nome_fora} | "
-                      f"{data_hora.strftime('%d/%m/%Y %H:%M')} UTC")
+        # 6. Mata-mata
+        print("\n=== Mata-mata ===")
+        for m in fases_eliminatorias:
+            rodada = FASE_PARA_RODADA.get(m["round"])
+            if rodada is None:
+                continue
 
-        # 6. Importar fases eliminatórias (apenas estrutura, sem times definidos)
-        print("\n=== Fases eliminatórias ===")
-        print("  (Jogos do mata-mata não são importados agora — times ainda não definidos)")
-        print(f"  Total de partidas eliminatórias no JSON: {len(fases_especiais)}")
-        print("  Execute este script novamente após o fim da fase de grupos para importá-los.")
+            t1_en = resolver_time(m["team1"])
+            t2_en = resolver_time(m["team2"])
+
+            # Pula se qualquer time ainda não estiver definido (W74, L101 etc.)
+            if not t1_en or not t2_en:
+                continue
+
+            tc = obter_ou_criar_time(session, t1_en)
+            tf = obter_ou_criar_time(session, t2_en)
+            data_hora = parse_data_hora_utc(m["date"], m.get("time", "12:00 UTC+0"))
+
+            if session.query(Jogo).filter(
+                Jogo.temporada_id == temporada.id,
+                Jogo.time_casa_id == tc.id,
+                Jogo.time_fora_id == tf.id,
+            ).first():
+                pulados_existentes += 1
+                continue
+
+            session.add(Jogo(
+                temporada_id=temporada.id,
+                rodada=rodada,
+                time_casa_id=tc.id,
+                time_fora_id=tf.id,
+                data_hora=data_hora,
+                status="agendado",
+            ))
+            criados += 1
+            print(f"  [+] Rodada {rodada} | {m['round']} | {tc.nome} x {tf.nome}")
 
         session.commit()
 
@@ -418,13 +372,12 @@ def main():
         print(f"  Pulados (placeholder): {pulados_placeholder}")
         print(f"  Pulados (já existiam): {pulados_existentes}")
         print(f"  Temporada ID:          {temporada.id}")
-        print("\nImportação concluída com sucesso!")
+        print("\nImportação concluída!")
 
     except Exception as e:
         session.rollback()
         print(f"\nERRO: {e}")
-        import traceback
-        traceback.print_exc()
+        import traceback; traceback.print_exc()
         sys.exit(1)
     finally:
         session.close()
