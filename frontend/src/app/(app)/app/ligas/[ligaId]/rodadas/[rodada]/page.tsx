@@ -32,15 +32,28 @@ export default function RodadaLigaPage() {
   const [liga, setLiga] = useState<Liga | null>(null);
   const rodadaAtual = useRodadaAtual(liga?.temporada_id);
 
-  // Redireciona para a rodada atual se entramos pela rodada 1 (padrão)
+  // Redireciona para a rodada atual apenas na primeira visita da aba.
+  // Se o usuário navegou intencionalmente para a rodada 1, não redireciona.
   const [redirecionou, setRedirecionou] = useState(false);
   useEffect(() => {
-    if (rodadaAtual !== null && rodada === 1 && !redirecionou) {
-      setRedirecionou(true);
-      if (rodadaAtual !== 1) irParaRodada(rodadaAtual);
+    if (rodadaAtual === null || redirecionou) return;
+
+    setRedirecionou(true);
+
+    // sessionStorage persiste enquanto a aba estiver aberta.
+    // Na primeira visita à página desta liga, redireciona para a rodada atual.
+    // Nas visitas seguintes (usuário navegando entre rodadas), não interfere.
+    const chave = `rodada_visitada_liga_${ligaId}`;
+    const jaVisitou = sessionStorage.getItem(chave);
+
+    if (!jaVisitou) {
+      sessionStorage.setItem(chave, "1");
+      if (rodada === 1 && rodadaAtual !== 1) {
+        irParaRodada(rodadaAtual);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rodadaAtual, rodada, redirecionou]);
+  }, [rodadaAtual]);
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
