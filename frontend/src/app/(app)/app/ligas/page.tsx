@@ -382,7 +382,7 @@ export default function LigasPage() {
         {!loading && ligasFiltradas.length > 0 ? (
           <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
             {ligasFiltradas.map((liga) => {
-              const encerrada = liga.temporada_status === "encerrada";
+              const encerrada = liga.temporada_status === "finalizada";
               return (
                 <Link
                   key={liga.id}
