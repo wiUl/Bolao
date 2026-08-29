@@ -522,9 +522,9 @@ const badgeAtivaStyle: React.CSSProperties = {
   fontWeight: 600,
   padding: "2px 10px",
   borderRadius: 20,
-  background: "#e8f5e9",
-  color: "#2e7d32",
-  border: "1px solid #b7e3c5",
+  background: "color-mix(in srgb, #22c55e 15%, transparent)",
+  color: "#16a34a",
+  border: "1px solid color-mix(in srgb, #22c55e 35%, transparent)",
   whiteSpace: "nowrap",
 };
 
@@ -533,8 +533,8 @@ const badgeEncerradaStyle: React.CSSProperties = {
   fontWeight: 600,
   padding: "2px 10px",
   borderRadius: 20,
-  background: "#f5f5f5",
-  color: "#757575",
-  border: "1px solid #ddd",
+  background: "color-mix(in srgb, #ef4444 15%, transparent)",
+  color: "#dc2626",
+  border: "1px solid color-mix(in srgb, #ef4444 35%, transparent)",
   whiteSpace: "nowrap",
 };
