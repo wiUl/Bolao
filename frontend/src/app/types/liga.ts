@@ -4,7 +4,10 @@ export type Liga = {
   temporada_id: number;
   codigo_convite: string;
   id_dono: number;
-  data_criacao: string; // vem como ISO (datetime)
+  data_criacao: string;
+  temporada_ano?: number | null;
+  competicao_nome?: string | null;
+  temporada_status?: string | null;
 };
 
 export type LigaCreateRequest = {

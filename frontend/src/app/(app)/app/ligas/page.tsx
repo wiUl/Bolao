@@ -26,8 +26,25 @@ export default function LigasPage() {
     return [...temporadas].sort((a, b) => b.ano - a.ano);
   }, [temporadas]);
 
-  // filtro opcional (reusa seu endpoint que aceita temporada_id opcional)
-  const [temporadaFiltro, setTemporadaFiltro] = useState<number | "">("");
+  // filtro por status da temporada (feito no cliente)
+  const [filtroStatus, setFiltroStatus] = useState<"" | "ativa" | "encerrada">("");
+
+  const ligasFiltradas = useMemo(() => {
+    let resultado = [...ligas];
+    if (filtroStatus === "ativa") {
+      resultado = resultado.filter((l) => l.temporada_status !== "encerrada");
+    } else if (filtroStatus === "encerrada") {
+      resultado = resultado.filter((l) => l.temporada_status === "encerrada");
+    }
+    // ativas primeiro, depois encerradas; dentro de cada grupo por criação desc
+    resultado.sort((a, b) => {
+      const aEnc = a.temporada_status === "encerrada" ? 1 : 0;
+      const bEnc = b.temporada_status === "encerrada" ? 1 : 0;
+      if (aEnc !== bEnc) return aEnc - bEnc;
+      return new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime();
+    });
+    return resultado;
+  }, [ligas, filtroStatus]);
 
   // form criar liga
   const [nomeLiga, setNomeLiga] = useState("");
@@ -122,7 +139,7 @@ export default function LigasPage() {
     try {
       const [temps, minhas] = await Promise.all([
         listarTemporadas(),
-        listarMinhasLigas(temporadaFiltro === "" ? undefined : temporadaFiltro),
+        listarMinhasLigas(),
       ]);
 
       setTemporadas(temps);
@@ -137,7 +154,7 @@ export default function LigasPage() {
   useEffect(() => {
     carregarTudo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [temporadaFiltro]);
+  }, []);
 
   async function handleCriarLiga() {
     setErr(null);
@@ -337,54 +354,64 @@ export default function LigasPage() {
           <h2 style={{ marginTop: 0, fontWeight: 600 }}>Suas ligas</h2>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 14 }}>Filtrar por temporada:</span>
+            <span style={{ fontSize: 14 }}>Filtrar:</span>
             <select
-              value={temporadaFiltro}
-              onChange={(e) =>
-                setTemporadaFiltro(e.target.value ? Number(e.target.value) : "")
-              }
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value as "" | "ativa" | "encerrada")}
               style={{ ...inputStyle, padding: "8px 10px" }}
             >
               <option value="">Todas</option>
-              {temporadasOrdenadas.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.ano}
-                </option>
-              ))}
+              <option value="ativa">Ativas</option>
+              <option value="encerrada">Encerradas</option>
             </select>
           </div>
         </div>
 
         {loading ? <p>Carregando...</p> : null}
 
-        {!loading && ligas.length === 0 ? (
-          <p>Você ainda não participa de nenhuma liga.</p>
+        {!loading && ligasFiltradas.length === 0 ? (
+          <p>
+            {filtroStatus === "ativa"
+              ? "Nenhuma liga ativa encontrada."
+              : filtroStatus === "encerrada"
+              ? "Nenhuma liga encerrada encontrada."
+              : "Você ainda não participa de nenhuma liga."}
+          </p>
         ) : null}
 
-        {!loading && ligas.length > 0 ? (
+        {!loading && ligasFiltradas.length > 0 ? (
           <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-            {ligas.map((liga) => (
-              <Link
-                key={liga.id}
-                href={`/app/ligas/${liga.id}`}
-                style={{
-                  ...cardStyle,
-                  textDecoration: "none",
-                  color: "inherit",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <strong>{liga.nome}</strong>
-                  <span style={{ fontSize: 14, opacity: 0.8 }}>
-                    Temporada #{liga.temporada_id}
-                  </span>
-                </div>
+            {ligasFiltradas.map((liga) => {
+              const encerrada = liga.temporada_status === "encerrada";
+              return (
+                <Link
+                  key={liga.id}
+                  href={`/app/ligas/${liga.id}`}
+                  style={{
+                    ...cardStyle,
+                    textDecoration: "none",
+                    color: "inherit",
+                    opacity: encerrada ? 0.75 : 1,
+                    borderColor: encerrada ? "#ddd" : "#b7e3c5",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <strong style={{ fontSize: 15 }}>{liga.nome}</strong>
+                    <span style={encerrada ? badgeEncerradaStyle : badgeAtivaStyle}>
+                      {encerrada ? "Encerrada" : "Ativa"}
+                    </span>
+                  </div>
 
-                <span style={{ fontSize: 14, opacity: 0.85 }}>
-                  Código de convite: <code>{liga.codigo_convite}</code>
-                </span>
-              </Link>
-            ))}
+                  <span style={{ fontSize: 13, opacity: 0.75 }}>
+                    {liga.competicao_nome ?? "Competição"} · {liga.temporada_ano ?? liga.temporada_id}
+                  </span>
+
+                  <span style={{ fontSize: 13, opacity: 0.7 }}>
+                    Código de convite: <code>{liga.codigo_convite}</code>
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         ) : null}
       </section>
@@ -490,4 +517,24 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
   };
 }
 
+const badgeAtivaStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  padding: "2px 10px",
+  borderRadius: 20,
+  background: "#e8f5e9",
+  color: "#2e7d32",
+  border: "1px solid #b7e3c5",
+  whiteSpace: "nowrap",
+};
 
+const badgeEncerradaStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  padding: "2px 10px",
+  borderRadius: 20,
+  background: "#f5f5f5",
+  color: "#757575",
+  border: "1px solid #ddd",
+  whiteSpace: "nowrap",
+};
