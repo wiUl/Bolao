@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 
 from app.models.liga import Liga
@@ -75,12 +75,35 @@ def entrar_liga(db: Session, usuario_id: int, codigo_convite: str) -> Liga:
     return liga, "entrou"
 
 def listar_ligas_do_usuario(db: Session, usuario_id: int, temporada_id: int | None = None):
-    lista_ligas = db.query(Liga).join(LigaMembro, LigaMembro.liga_id == Liga.id).filter(LigaMembro.usuario_id == usuario_id)
+    query = (
+        db.query(Liga)
+        .join(LigaMembro, LigaMembro.liga_id == Liga.id)
+        .filter(LigaMembro.usuario_id == usuario_id)
+        .options(
+            joinedload(Liga.temporada).joinedload("competicao")
+        )
+    )
 
     if temporada_id is not None:
-        lista_ligas = lista_ligas.filter(Liga.temporada_id == temporada_id)
+        query = query.filter(Liga.temporada_id == temporada_id)
 
-    return lista_ligas.order_by(Liga.data_criacao.desc()).all()
+    ligas = query.order_by(Liga.data_criacao.desc()).all()
+
+    # Anexa campos extras ao objeto para o schema conseguir serializar
+    for liga in ligas:
+        if liga.temporada:
+            liga.temporada_ano = liga.temporada.ano
+            liga.temporada_status = liga.temporada.status
+            if liga.temporada.competicao:
+                liga.competicao_nome = liga.temporada.competicao.nome
+            else:
+                liga.competicao_nome = None
+        else:
+            liga.temporada_ano = None
+            liga.temporada_status = None
+            liga.competicao_nome = None
+
+    return ligas
 
 def buscar_liga_por_id(db: Session, liga_id:int) -> Liga | None:
     return db.query(Liga).filter(Liga.id == liga_id).first()

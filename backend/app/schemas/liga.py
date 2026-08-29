@@ -17,6 +17,9 @@ class LigaResponse(BaseModel):
     codigo_convite: str
     id_dono: int
     data_criacao: datetime
+    temporada_ano: Optional[int] = None
+    competicao_nome: Optional[str] = None
+    temporada_status: Optional[str] = None
 
     class Config:
         from_attributes = True
