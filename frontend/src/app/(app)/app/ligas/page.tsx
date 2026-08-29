@@ -32,14 +32,14 @@ export default function LigasPage() {
   const ligasFiltradas = useMemo(() => {
     let resultado = [...ligas];
     if (filtroStatus === "ativa") {
-      resultado = resultado.filter((l) => l.temporada_status !== "encerrada");
+      resultado = resultado.filter((l) => l.temporada_status !== "finalizada");
     } else if (filtroStatus === "encerrada") {
-      resultado = resultado.filter((l) => l.temporada_status === "encerrada");
+      resultado = resultado.filter((l) => l.temporada_status === "finalizada");
     }
     // ativas primeiro, depois encerradas; dentro de cada grupo por criação desc
     resultado.sort((a, b) => {
-      const aEnc = a.temporada_status === "encerrada" ? 1 : 0;
-      const bEnc = b.temporada_status === "encerrada" ? 1 : 0;
+      const aEnc = a.temporada_status === "finalizada" ? 1 : 0;
+      const bEnc = b.temporada_status === "finalizada" ? 1 : 0;
       if (aEnc !== bEnc) return aEnc - bEnc;
       return new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime();
     });
