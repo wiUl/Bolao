@@ -16,9 +16,6 @@ import type { LoginRequest } from "@/app/types/auth";
 import type { User } from "@/app/types/user";
 import { useRouter } from "next/navigation";
 
-/**
- * O que o AuthContext disponibiliza para o app inteiro
- */
 type AuthContextValue = {
   isAuthenticated: boolean;
   user: User | null;
@@ -29,37 +26,84 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/**
+ * Lê o campo `exp` (Unix timestamp em segundos) do payload do JWT
+ * sem precisar de nenhuma chamada ao servidor.
+ * Retorna null se o token for inválido ou não tiver `exp`.
+ */
+function getTokenExpiry(token: string): number | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof decoded.exp === "number" ? decoded.exp : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokenState, setTokenState] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Ref para o logout — permite que o interceptor chame sempre a versão atual
-  // sem criar dependência circular no useEffect de inicialização.
   const logoutRef = useRef<() => void>(() => {});
+  // Guarda o id do setTimeout para poder cancelá-lo quando necessário
+  const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logout = useCallback((): void => {
     clearToken();
     setTokenState(null);
     setUser(null);
+    // Cancela o timer pendente para não disparar duas vezes
+    if (expiryTimerRef.current) {
+      clearTimeout(expiryTimerRef.current);
+      expiryTimerRef.current = null;
+    }
     router.replace("/login");
   }, [router]);
 
-  // Mantém a ref sempre atualizada
   useEffect(() => {
     logoutRef.current = logout;
   }, [logout]);
 
   /**
-   * 1️⃣ Inicialização — configura interceptors passando logout via ref
+   * Agenda o logout automático para quando o token expirar.
+   * Chamado sempre que um novo token é recebido.
    */
+  function agendarLogoutAutomatico(token: string): void {
+    if (expiryTimerRef.current) {
+      clearTimeout(expiryTimerRef.current);
+      expiryTimerRef.current = null;
+    }
+
+    const exp = getTokenExpiry(token);
+    if (exp === null) return;
+
+    const agora = Math.floor(Date.now() / 1000);
+    const segundosRestantes = exp - agora;
+
+    if (segundosRestantes <= 0) {
+      // Já expirou — desloga imediatamente
+      logoutRef.current();
+      return;
+    }
+
+    // Agenda o logout para daqui `segundosRestantes` segundos
+    // (máximo de ~24,8 dias para não estourar o limite do setTimeout)
+    const ms = Math.min(segundosRestantes * 1000, 2_147_483_647);
+    expiryTimerRef.current = setTimeout(() => {
+      logoutRef.current();
+    }, ms);
+  }
+
   useEffect(() => {
     setupInterceptors(() => logoutRef.current());
 
     const token = getToken();
     if (token) {
       setTokenState(token);
+      agendarLogoutAutomatico(token);
       loadUser();
     } else {
       setLoading(false);
@@ -67,9 +111,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * 2️⃣ Login
-   */
+  // Limpa o timer quando o componente desmonta
+  useEffect(() => {
+    return () => {
+      if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+    };
+  }, []);
+
   async function login(data: LoginRequest): Promise<void> {
     const form = new URLSearchParams();
     form.append("username", data.username);
@@ -86,20 +134,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setToken(accessToken);
     setTokenState(accessToken);
+    agendarLogoutAutomatico(accessToken);
 
     await loadUser();
   }
 
-  /**
-   * 3️⃣ Carrega dados do usuário autenticado
-   */
   async function loadUser() {
     try {
       const res = await api.get<User>("/usuarios/me");
       setUser(res.data);
     } catch {
-      // token inválido ou expirado — o interceptor já fez clearToken,
-      // mas garantimos a limpeza do estado aqui também
       clearToken();
       setTokenState(null);
       setUser(null);
@@ -113,9 +157,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadUser();
   }
 
-  /**
-   * 4️⃣ Valor exposto pelo contexto
-   */
   const value = useMemo<AuthContextValue>(
     () => ({ isAuthenticated: !!tokenState, user, login, logout, reloadUser }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
