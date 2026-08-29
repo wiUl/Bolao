@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models.liga import Liga
 from app.models.liga_membro import LigaMembro
+from app.models.temporada import Temporada
 from app.core.utils import gerar_codigo_convite
 import logging
 
@@ -80,7 +81,7 @@ def listar_ligas_do_usuario(db: Session, usuario_id: int, temporada_id: int | No
         .join(LigaMembro, LigaMembro.liga_id == Liga.id)
         .filter(LigaMembro.usuario_id == usuario_id)
         .options(
-            joinedload(Liga.temporada).joinedload("competicao")
+            joinedload(Liga.temporada).joinedload(Temporada.competicao)
         )
     )
 
