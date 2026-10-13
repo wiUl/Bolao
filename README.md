@@ -1,215 +1,149 @@
-# 🏆 Projeto FutBolão
+# 🏆 FutBolão
 
-Sistema **fullstack** de um Bolão (inicialmente do Campeonato Brasileiro) desenvolvido com foco em **regras de negócio reais**, **arquitetura organizada**, **consultas analíticas** e **padrões próximos aos utilizados em aplicações de mercado**.
+Sistema **fullstack** de bolão do Campeonato Brasileiro, com ligas privadas, palpites por jogo, pontuação automática, rankings, controle de cobrança e notificações push. API em **FastAPI** e interface em **Next.js**.
 
-Este projeto nasceu a partir de uma experiência prática: durante o Brasileirão de 2025, gerenciei manualmente um bolão entre amigos utilizando uma planilha no Google Spreadsheets. Ao longo do campeonato, surgiram desafios como controle de palpites, cálculo de pontuação, ranking por rodada e histórico de desempenho. Ao final, a ideia foi transformar esse processo manual em um **sistema completo**, automatizado e escalável, que também servisse como **projeto de portfólio** para demonstrar domínio em backend, modelagem de dados e arquitetura de software.
+O projeto nasceu de uma experiência prática: durante o Brasileirão de 2025, gerenciei manualmente um bolão entre amigos em uma planilha do Google. Ao longo do campeonato surgiram problemas de controle de palpites, cálculo de pontuação, ranking por rodada e histórico de desempenho. O FutBolão transforma esse processo manual em um sistema automatizado, com regras de negócio reais e consultas analíticas sobre o desempenho dos participantes.
 
----
-
-## 🎯 Objetivo do Projeto
-
-O principal objetivo do sistema é permitir que usuários participem de **ligas privadas** para palpitar resultados dos jogos do Campeonato Brasileiro, oferecendo:
-
-- Gestão completa de ligas e membros  
-- Envio controlado de palpites por rodada e por jogo  
-- Cálculo automático e confiável de pontuação  
-- Rankings detalhados (geral e por rodada)  
-- Histórico de desempenho individual e coletivo  
-
-O sistema foi modelado para ser **flexível**, suportando campeonatos com diferentes quantidades de rodadas, além de permitir evolução futura das regras de pontuação e das consultas analíticas.
+- **Frontend publicado:** https://wiuls-projects-futbolao.vercel.app
+- **Estado:** em desenvolvimento ativo (último commit em 29/08/2026).
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## Funcionalidades implementadas
 
-### Backend
-- **Python**  
-- **FastAPI** – construção da API REST  
-- **SQLAlchemy (ORM)** – modelagem e persistência dos dados  
-- **Pydantic** – validação e serialização  
-- **JWT (OAuth2 Password Flow)** – autenticação  
-- **Passlib + bcrypt** – segurança de senhas  
+**Usuários e autenticação**
+- Cadastro e login com JWT; senhas armazenadas com hash (passlib + bcrypt).
+- Expiração de sessão no frontend (logout automático quando o token expira).
 
-### Banco de Dados
-- **SQLite** (ambiente de desenvolvimento)  
-  > O projeto já está preparado para migração futura para PostgreSQL.
+**Ligas**
+- Criação de ligas associadas a uma temporada e entrada por código de convite.
+- Papéis: dono, administrador e membro; alteração de papéis e remoção de membros.
+- Filtro de ligas ativas e encerradas.
 
-### Frontend
-- **Next.js (App Router)**  
-- **React**  
-- **TypeScript**  
+**Competições, temporadas, rodadas e jogos**
+- Cadastro de competições, temporadas, times e jogos, com número variável de rodadas.
+- Atualização de resultados e horários com fuso horário.
+- Scripts de importação de jogos do Brasileirão 2025 e 2026 e da Copa do Mundo 2026 (`backend/scripts/`).
 
----
+**Palpites e pontuação**
+- Envio, atualização e remoção de palpites por jogo, com validação de participação na liga.
+- Bloqueio de palpites após o início do jogo.
+- Regras de pontuação (implementadas em `backend/app/services/palpites.py`):
 
-## 🧱 Arquitetura do Projeto
+| Pontos | Critério |
+| :---: | --- |
+| 5 | Placar exato |
+| 4 | Acertou o vencedor e a diferença de gols |
+| 3 | Acertou o vencedor ou o empate |
+| 0 | Erro |
 
-O projeto segue uma **arquitetura em camadas**, separando claramente responsabilidades:
+**Rankings e análises**
+- Ranking geral e por rodada, pontuação acumulada e evolução histórica por usuário.
+- Página de gráficos por liga no frontend.
 
-- **Models**  
-  Definem as entidades do domínio e seus relacionamentos (usuário, liga, temporada, jogo, palpite, etc.).
+**Cobrança e pagamentos**
+- Controle mensal de cobrança por liga e registro de pagamentos por usuário.
 
-- **Schemas**  
-  Utilizados para validação de dados de entrada e saída da API, garantindo contratos claros entre backend e frontend.
+**Notificações push**
+- Registro de tokens de dispositivo (Firebase Cloud Messaging) e worker que envia alertas de palpites pendentes.
 
-- **CRUD**  
-  Responsável por operações básicas no banco de dados.
-
-- **Services**  
-  Camada central de regras de negócio, onde ficam:
-  - Cálculo de pontuação
-  - Rankings
-  - Consultas analíticas
-  - Validações de domínio
-
-- **Routes (Endpoints)**  
-  Camada de exposição da API REST, mantendo os endpoints simples e delegando lógica para os services.
-
-Essa organização reduz acoplamento, melhora testabilidade e facilita a evolução do sistema.
+**Painel administrativo**
+- Telas de administração de competições, temporadas, times, jogos e usuários.
 
 ---
 
-## 🗂️ Estrutura de Pastas
+## Arquitetura
 
-```
+```text
 Bolao/
 ├── backend/
 │   ├── app/
-│   │   ├── models/        # Entidades e relacionamentos (SQLAlchemy)
-│   │   ├── schemas/       # Schemas Pydantic
-│   │   ├── crud/          # Operações básicas de banco
-│   │   ├── services/      # Regras de negócio e consultas complexas
-│   │   ├── routes/        # Endpoints FastAPI
-│   │   └── core/          # Autenticação, permissões e utilitários
-│   ├── migrations/        # Versionamento de banco (Alembic)
-│   ├── scripts/           # Scripts auxiliares e carga de dados
-│   └── tests/             # Testes automatizados
-│
+│   │   ├── core/        # autenticação, permissões e utilitários
+│   │   ├── models/      # entidades SQLAlchemy
+│   │   ├── schemas/     # validação e serialização (Pydantic)
+│   │   ├── crud/        # operações básicas de banco
+│   │   ├── services/    # regras de negócio, rankings e push
+│   │   ├── routes/      # endpoints FastAPI
+│   │   └── workers/     # worker de alertas push
+│   ├── migrations/      # migrações Alembic
+│   └── scripts/         # importação de jogos e palpites, migração SQLite → PostgreSQL
 └── frontend/
-    ├── src/app/           # App Router (Next.js)
-    ├── api/               # Clients para consumo da API
-    └── auth/              # Contexto de autenticação
+    └── src/app/         # Next.js (App Router): área pública, área do usuário e administração
 ```
 
----
+O backend segue uma arquitetura em camadas: as rotas expõem a API e delegam as regras de negócio aos serviços; os modelos e schemas separam persistência e contrato de dados.
 
-## ⚙️ Funcionalidades Implementadas
+## Tecnologias
 
-### 👤 Usuários e Autenticação
-- Cadastro e login de usuários  
-- Autenticação baseada em JWT  
-- Armazenamento seguro de senhas com hash  
-
-### 🏟️ Ligas
-- Criação de ligas associadas a temporadas  
-- Entrada em ligas por código de convite  
-- Controle de membros  
-- Sistema de papéis:
-  - **Dono da liga**
-  - **Administrador**
-  - **Membro**
-- Alteração de papéis e remoção de membros  
-
-### 📅 Temporadas, Rodadas e Jogos
-- Cadastro de competições e temporadas  
-- Suporte a campeonatos com número variável de rodadas  
-- Associação de jogos às rodadas  
-- Atualização de resultados dos jogos  
-
-### ✍️ Palpites
-- Envio de palpites por jogo  
-- Remoção e atualização de palpites  
-- Validação de pertencimento à liga  
-- Bloqueio de palpites após início do jogo  
-
-### 🧮 Regras de Pontuação
-- **5 pontos**: placar exato  
-- **4 pontos**: acerto do vencedor + diferença de gols  
-- **3 pontos**: acerto do vencedor ou empate  
-- **0 pontos**: erro  
-
-### 🏆 Rankings e Estatísticas
-- Ranking geral da liga  
-- Ranking por rodada  
-- Pontuação total por rodada  
-- Quantidade de acertos por tipo  
-
-### 📈 Consultas Analíticas
-- Pontuação acumulada por rodada  
-- Evolução histórica de desempenho do usuário  
-- Pontuação acumulada de todos os usuários da liga  
-- Listagem de palpites por rodada  
-
-Essas consultas viabilizam dashboards, gráficos comparativos e análises de desempenho no frontend.
+| Camada | Tecnologias |
+| --- | --- |
+| Backend | Python, FastAPI, SQLAlchemy 2, Alembic, Pydantic, PyJWT, passlib/bcrypt, firebase-admin, pandas |
+| Banco de dados | SQLite (padrão no repositório) e PostgreSQL (driver `psycopg` e script de migração incluídos) |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| Infraestrutura | Frontend na Vercel |
 
 ---
 
-## 🔄 Fluxo Geral do Sistema
+## Como executar
 
-1. Usuário cria conta e se autentica  
-2. Usuário cria ou entra em uma liga via convite  
-3. Liga é associada a uma temporada  
-4. Temporada contém rodadas  
-5. Rodadas contêm jogos  
-6. Usuários enviam palpites  
-7. Jogos são finalizados  
-8. Pontuação é calculada automaticamente  
-9. Rankings e estatísticas são disponibilizados  
+### Pré-requisitos
+- Python 3 e Node.js.
 
----
+### 1. Variáveis de ambiente
+O backend carrega um arquivo `.env` na **raiz do repositório**. As variáveis usadas no código são:
 
-## 📦 Estado Atual do Projeto
+| Variável | Uso |
+| --- | --- |
+| `SECRET_KEY` | **Obrigatória.** Chave de assinatura do JWT (a API não inicia sem ela). |
+| `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES` | Configuração do token JWT. |
+| `DATABASE_URL` | Banco de dados. Padrão: `sqlite:///./bolao.db`. |
+| `ADMIN_LOGIN`, `ADMIN_SENHA` | Credenciais do administrador criado pelos scripts de seed. |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` ou `FIREBASE_SERVICE_ACCOUNT_PATH` | Credencial do Firebase para as notificações push. |
+| `PUSH_CRON_SECRET` | Segredo do endpoint de envio de alertas. |
+| `DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`, `DB_POOL_RECYCLE`, `USE_NULL_POOL` | Ajustes opcionais do pool de conexões. |
 
-O projeto conta atualmente com:
+No frontend, `NEXT_PUBLIC_API_URL` define o endereço da API e as variáveis `NEXT_PUBLIC_FIREBASE_*` configuram o push.
 
-- Backend completo e funcional  
-- Modelagem de domínio consolidada  
-- Regras de negócio bem definidas  
-- Consultas analíticas prontas  
-
-### Próximos Passos Planejados
-- Dashboards e gráficos no frontend  
-- Migração para PostgreSQL  
-- Deploy em ambiente de produção  
-- Testes automatizados mais abrangentes  
-
----
-
-## 🚀 Como Executar o Projeto
+### 2. Backend
 
 ```bash
-# criar ambiente virtual
+cd backend
 python -m venv venv
-
-# ativar ambiente virtual
-# Windows
-venv\Scripts\activate
-
-# Linux / Mac
-source venv/bin/activate
-
-# instalar dependências
+source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# rodar aplicação
 uvicorn app.main:app --reload
 ```
 
-A API ficará disponível em:
-```
-http://127.0.0.1:8000
+- API: http://127.0.0.1:8000
+- Documentação interativa (Swagger): http://127.0.0.1:8000/docs
+- Migrações: ficam em `backend/migrations` (Alembic).
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-Documentação automática:
-```
-http://127.0.0.1:8000/docs
+Interface em http://localhost:3000.
+
+### 4. Worker de notificações (opcional)
+
+```bash
+cd backend
+python -m app.workers.push_worker
 ```
 
 ---
 
-## 📌 Considerações Finais
+## Limitações e próximos passos
 
-Este projeto vai além de um CRUD simples, explorando regras de negócio reais, consultas analíticas e organização arquitetural. Ele foi desenvolvido com foco em aprendizado profundo de **FastAPI**, **SQLAlchemy** e **arquitetura backend**, servindo como base para um produto real e como **projeto de portfólio**.
+- **Testes automatizados:** ainda não há testes no repositório.
+- **Dashboards:** a análise de desempenho já tem página de gráficos; novas visualizações estão previstas.
+- **Banco de produção:** migração completa para PostgreSQL e deploy do backend são próximos passos planejados.
+- O repositório inclui bancos SQLite e arquivos CSV de palpites de participantes do bolão de 2025, usados na carga inicial dos dados.
 
 ---
 
-Desenvolvido por **Willian Gomes**
+Desenvolvido por **Willian Gomes**.
